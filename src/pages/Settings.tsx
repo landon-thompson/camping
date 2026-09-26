@@ -52,7 +52,7 @@ function AccountCard() {
       </>
     );
   } else if (auth?.kind === 'unavailable') {
-    body = <p className="text-ink-2">No sign-in server (local development mode).</p>;
+    body = <p className="text-ink-2">Sign-in isn’t connected yet. It turns on once the app is deployed to Azure.</p>;
   }
   return <Card title="Account">{body}</Card>;
 }

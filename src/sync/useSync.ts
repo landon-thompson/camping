@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { db } from '../db/local';
 import { SyncEngine, type SyncStatus } from './engine';
 import { onLocalChange } from './signal';
+import { IS_PREVIEW } from '../lib/preview';
 
 export const syncEngine = new SyncEngine(db);
 
@@ -15,6 +16,10 @@ let started = false;
 export function startSync(): void {
   if (started) return;
   started = true;
+  if (IS_PREVIEW) {
+    syncEngine.setLocalOnly();
+    return;
+  }
   let timer: ReturnType<typeof setTimeout> | undefined;
   const soon = (ms = DEBOUNCE_MS) => {
     clearTimeout(timer);

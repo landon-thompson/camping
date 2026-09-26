@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { isFamily, loginUrl, logoutUrl, forgetUser } from './auth/identity';
 import { Layout } from './components/Layout';
@@ -8,13 +8,17 @@ import { Dashboard } from './pages/Dashboard';
 import { Placeholder } from './pages/Placeholder';
 import { Settings } from './pages/Settings';
 import { startSync } from './sync/useSync';
+import { IS_PREVIEW } from './lib/preview';
+
+// The preview is embedded in a page whose URL we don't control.
+const Router = IS_PREVIEW ? MemoryRouter : BrowserRouter;
 
 export function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <Router>
         <Gate />
-      </BrowserRouter>
+      </Router>
     </AuthProvider>
   );
 }

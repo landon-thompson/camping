@@ -12,7 +12,9 @@ function read(): ThemePref {
 }
 
 function apply(pref: ThemePref) {
-  const dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  const host = document.documentElement.getAttribute('data-theme');
+  const systemDark = host ? host === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = pref === 'dark' || (pref === 'system' && systemDark);
   document.documentElement.classList.toggle('dark', dark);
 }
 

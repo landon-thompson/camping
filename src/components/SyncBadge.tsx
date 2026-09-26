@@ -54,7 +54,7 @@ export function describeSync(state: SyncState, message?: string): string {
     case 'waking':
       return 'The free database pauses when idle and takes about a minute to wake. Retrying automatically.';
     case 'local-only':
-      return 'Running without a sync server (local development). Data stays in this browser.';
+      return 'No sync server connected, so data stays in this browser only.';
     case 'error':
       return message ?? 'Something went wrong while syncing. It will retry.';
     default:

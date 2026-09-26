@@ -68,6 +68,11 @@ export class SyncEngine {
     for (const l of this.listeners) l();
   }
 
+  /** No sync server at all (preview build): report that and never call the API. */
+  setLocalOnly(): void {
+    this.set({ state: 'local-only' });
+  }
+
   async refreshPending(): Promise<void> {
     const [pending, last] = await Promise.all([
       this.db.records.where('dirty').equals(1).count(),

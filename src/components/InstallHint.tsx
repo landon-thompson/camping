@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IS_PREVIEW } from '../lib/preview';
 
 function isStandalone(): boolean {
   return (
@@ -23,7 +24,7 @@ export function InstallHint() {
       return false;
     }
   });
-  if (hidden || isStandalone() || !isIos()) return null;
+  if (IS_PREVIEW || hidden || isStandalone() || !isIos()) return null;
   return (
     <div role="note" className="rounded-2xl border border-warn bg-warn-bg p-4 text-ink">
       <p className="font-semibold">Add this app to your Home Screen</p>

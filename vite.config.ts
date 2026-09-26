@@ -8,6 +8,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      // The preview build runs inside a page where service workers aren't allowed.
+      disable: process.env.VITE_PREVIEW === '1',
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {

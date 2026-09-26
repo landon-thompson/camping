@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { SyncBadge } from './SyncBadge';
 import { UpdatePrompt } from './UpdatePrompt';
+import { IS_PREVIEW } from '../lib/preview';
 
 const icons = {
   home: 'M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
@@ -26,6 +27,12 @@ export function Layout() {
           <SyncBadge />
         </div>
       </header>
+
+      {IS_PREVIEW && (
+        <p role="note" className="border-b border-line bg-info-bg px-4 py-2 text-sm text-info">
+          <strong>Preview.</strong> Edits are saved in this browser only. Login, sync and offline install arrive once Azure is set up.
+        </p>
+      )}
 
       <main className="flex-1 px-4 pb-28 pt-4">
         <Outlet />

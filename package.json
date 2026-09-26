@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:preview": "node scripts/build-preview.mjs"
   },
   "engines": {
     "node": ">=22"

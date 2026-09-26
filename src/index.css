@@ -27,6 +27,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --color-bg: #0e1712;
   --color-surface: #16231b;
   --color-surface-2: #1e2f25;
@@ -46,6 +47,7 @@
 }
 
 html {
+  color-scheme: light;
   font-size: 17px;
   -webkit-text-size-adjust: 100%;
   background: var(--color-bg);
