@@ -1,0 +1,25 @@
+{
+  "platform": {
+    "apiRuntime": "node:22"
+  },
+  "routes": [
+    { "route": "/.auth/login/github", "statusCode": 404 },
+    { "route": "/api/health", "allowedRoles": ["anonymous"] },
+    { "route": "/api/*", "allowedRoles": ["family"] },
+    { "route": "/sw.js", "headers": { "cache-control": "no-cache" } },
+    { "route": "/index.html", "headers": { "cache-control": "no-cache" } }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/api/*", "/.auth/*", "/*.{png,svg,ico,webmanifest,js,css,json,txt}"]
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "X-Frame-Options": "DENY",
+    "Permissions-Policy": "geolocation=(self), camera=(self), microphone=()"
+  },
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json"
+  }
+}

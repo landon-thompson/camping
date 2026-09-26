@@ -1,0 +1,99 @@
+name: Test & deploy
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          MSSQL_SA_PASSWORD: Ci_Only_Pa55!
+        ports: ['1433:1433']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            api/package-lock.json
+
+      - name: App — install, test, build
+        run: |
+          npm ci
+          npm test
+          npm run build
+
+      - name: API — install, build
+        working-directory: api
+        run: |
+          npm ci
+          npm run build
+
+      - name: Wait for test SQL Server
+        run: |
+          for i in $(seq 1 30); do
+            docker exec ${{ job.services.mssql.id }} /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'Ci_Only_Pa55!' -Q 'SELECT 1' >/dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          echo "SQL Server did not start" && exit 1
+
+      - name: API — test (including real SQL Server)
+        working-directory: api
+        env:
+          TEST_SQL_CONNECTION_STRING: Server=localhost,1433;User Id=sa;Password=Ci_Only_Pa55!;Encrypt=true;TrustServerCertificate=true
+        run: npm test
+
+      - name: Package for deploy
+        working-directory: api
+        run: npm prune --omit=dev
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: |
+            dist
+            api/host.json
+            api/package.json
+            api/dist
+            api/node_modules
+          include-hidden-files: true
+          retention-days: 3
+
+  deploy:
+    # Deploys the `dev` branch to Azure once the deploy token secret exists (see README).
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    env:
+      SWA_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+    steps:
+      - name: Azure not set up yet
+        if: env.SWA_TOKEN == ''
+        run: echo "::notice::Skipping deploy — add the AZURE_STATIC_WEB_APPS_API_TOKEN repository secret (README step 5)."
+      - uses: actions/checkout@v4
+        if: env.SWA_TOKEN != ''
+      - uses: actions/download-artifact@v4
+        if: env.SWA_TOKEN != ''
+        with:
+          name: site
+      - uses: Azure/static-web-apps-deploy@v1
+        if: env.SWA_TOKEN != ''
+        with:
+          azure_static_web_apps_api_token: ${{ env.SWA_TOKEN }}
+          action: upload
+          app_location: dist
+          api_location: api
+          skip_app_build: true
+          skip_api_build: true
+          production_branch: dev

@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Colour tokens. Light mode is tuned for bright sun (high contrast, warm paper
+ * background); dark mode is dim and low-glare for night at camp.
+ */
+@theme {
+  --color-bg: #f4f1ea;
+  --color-surface: #ffffff;
+  --color-surface-2: #ebe6db;
+  --color-ink: #151a16;
+  --color-ink-2: #3f4a42;
+  --color-line: #cfc7b6;
+  --color-brand: #1f4d36;
+  --color-brand-ink: #ffffff;
+  --color-accent: #b4541a;
+  --color-ok: #1d6b3a;
+  --color-warn: #8a5a00;
+  --color-warn-bg: #fff1c9;
+  --color-info: #1c4f8a;
+  --color-info-bg: #dde9fb;
+  --color-bad: #a3231a;
+  --color-bad-bg: #fde2df;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dark {
+  --color-bg: #0e1712;
+  --color-surface: #16231b;
+  --color-surface-2: #1e2f25;
+  --color-ink: #e6eee8;
+  --color-ink-2: #a9b8ad;
+  --color-line: #2f4336;
+  --color-brand: #7cc49a;
+  --color-brand-ink: #0e1712;
+  --color-accent: #f0a468;
+  --color-ok: #7cc49a;
+  --color-warn: #f2c14e;
+  --color-warn-bg: #3a2f10;
+  --color-info: #9cc2f5;
+  --color-info-bg: #16283f;
+  --color-bad: #ff9b91;
+  --color-bad-bg: #3d1714;
+}
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  background: var(--color-bg);
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Keep focus clearly visible for keyboard and switch users. */
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

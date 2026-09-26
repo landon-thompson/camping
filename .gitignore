@@ -1,22 +1,18 @@
 # dependencies
 node_modules/
-.pnpm-store/
 
 # builds
-.next/
-out/
-build/
 dist/
+dev-dist/
 coverage/
+*.tsbuildinfo
 
 # env / secrets — never commit
 .env
 .env.*
 !.env.example
+api/local.settings.json
 
 # misc
 .DS_Store
 *.log
-.vercel
-*.tsbuildinfo
-next-env.d.ts
