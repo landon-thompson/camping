@@ -4,14 +4,16 @@ This file is the hand-off note between work sessions. Update it at the end of ev
 
 ## Status
 
+**2026-09-26 — owner asked to build all remaining phases in parallel.** The coordinator set up shared contracts (`docs/CONTRACTS.md`) and launched one Sonnet agent per phase (1–5), each in its own git worktree/branch. The first attempt hit the usage limit before any code landed; relaunched 18:21 UTC. Next: merge each phase branch into `dev`, integrate, test end-to-end, polish/accessibility pass, update README + preview.
+
 | Phase | Scope | Status |
 |---|---|---|
 | 0 – Foundation | Scaffold, auth, DB schema + migrations, PWA shell, deploy pipeline, README | **Done, awaiting owner review.** Azure resources not created yet (owner follows README steps 1–8) |
-| 1 – Gear, checklists, calculators | Gear CRUD + category budgets, load/tow + power calculators with tests, checklist templates | Not started |
-| 2 – Trips & map | Season map (MapLibre + OpenFreeMap), trip pages, gear/checklists per trip, readiness score, read-only share link | Not started |
-| 3 – Reservations | Campground directory (MN DNR + RIDB), booking-window countdowns (no reminders: owner declined), deep links, booking tracking | Not started |
-| 4 – Trails & offline | onX GPX/KML import **and export**, MVUM layer, pins, route flags, offline map region download | Not started |
-| 5 – Weather, journal, polish | NWS forecasts, debriefs with photos feeding checklists, accessibility pass | Not started |
+| 1 – Gear, checklists, calculators | Gear CRUD + category budgets, load/tow + power calculators with tests, checklist templates | Calculators + tests done (coordinator); UI in progress (agent) |
+| 2 – Trips & map | Season map (MapLibre + OpenFreeMap), trip pages, gear/checklists per trip, readiness score, read-only share link | In progress (agent) |
+| 3 – Reservations | Campground directory (MN DNR + RIDB), booking-window countdowns (no reminders: owner declined), deep links, booking tracking | In progress (agent) |
+| 4 – Trails & offline | onX GPX/KML import **and export**, MVUM layer, pins, route flags, offline map region download | In progress (agent) |
+| 5 – Weather, journal, polish | NWS forecasts, debriefs with photos feeding checklists, accessibility pass | In progress (agent) |
 
 Work happens on the **`dev`** branch. Pushes to `dev` deploy to Azure once the deploy secret exists.
 
