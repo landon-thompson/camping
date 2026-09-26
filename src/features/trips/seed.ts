@@ -59,7 +59,7 @@ export const tripSeeds: SeedRecord[] = [
     kinds: ['no-hookup', 'boat', 'toddler'],
     towing: true,
     notes:
-      'Lake Vermilion, Hinsdale Island USFS boat-in sites — free, first-come. Leave the GX at the landing and boat everything ' +
+      'Lake Vermilion, Hinsdale Island boat-in sites — free, first-come (the plan said USFS; research points to Kabetogama State Forest / MN DNR — verify). Leave the GX at the landing and boat everything ' +
       'in.',
   }),
   seed('trip', 'trip:5-offgrid', {

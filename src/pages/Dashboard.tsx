@@ -10,7 +10,7 @@ import { BookingDashboardCard } from '../features/reservations/DashboardCard';
 import { GearDashboardCard } from '../features/gear/DashboardCard';
 
 const fmtLb = (s: SpecNumber) =>
-  s.value === null ? '—' : (
+  s.value === null ? <span aria-label="not set">—</span> : (
     <>
       {s.value.toLocaleString()}
       <span className="text-sm font-semibold"> lb</span>
@@ -38,7 +38,7 @@ export function Dashboard() {
       </Card>
 
       {vehicle && (
-        <Card title={`${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim}`} action={<Link to="/settings" className="min-h-11 content-center font-semibold text-brand">Edit</Link>}>
+        <Card title={`${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim}`} action={<Link to="/settings" className="min-h-11 content-center font-semibold text-brand" aria-label="Edit vehicle limits">Edit</Link>}>
           <dl className="grid grid-cols-3 gap-3 text-center">
             {(
               [

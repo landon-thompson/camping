@@ -9,7 +9,7 @@ const label: Record<SyncState, string> = {
   'signed-out': 'Sign in to sync',
   'not-invited': 'Not invited',
   waking: 'Waking database…',
-  'local-only': 'This device only',
+  'local-only': 'Local only',
   error: 'Sync error',
 };
 

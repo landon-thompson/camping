@@ -15,7 +15,9 @@ On Azure's free tiers the app should run for **$0–$1 a month**.
 | Website + login | Static Web Apps, **Free** plan | $0 |
 | Server code | Functions (included with Static Web Apps) | $0 |
 | Database | Azure SQL Database **free offer** (100,000 vCore-seconds + 32 GB every month, no end date), set to *auto-pause until next month* if the allowance runs out | $0 |
-| Photos / GPX files (later phases) | Blob Storage | ~2¢ per GB per month |
+| Trip photos (optional) | Blob Storage, Standard LRS | ~2¢ per GB per month (5 GB of photos ≈ 10¢) |
+| Campground search (optional) | Recreation.gov RIDB API key | Free |
+| Maps, weather | OpenFreeMap tiles, National Weather Service | Free, no account |
 
 Two things to do so there are no surprises:
 
@@ -98,6 +100,25 @@ Your wife needs a (free) Microsoft account. She can create one at [account.micro
 ### 8. Install on each iPhone
 Open the app URL in **Safari**, tap **Share → Add to Home Screen**, then always open it from that icon. This matters: iPhone can clear offline data for sites that are only used as a Safari tab.
 
+### 9. Optional: trip photos
+Photos are always saved on the phone. To also back them up and share them with the other phone, create a small Azure Storage account. It takes about 10 minutes and costs pennies a month. Follow **[docs/phase-5.md → Azure Storage setup](docs/phase-5.md#azure-storage-setup-for-the-owner--about-10-minutes-once-azure-is-otherwise-set-up)**. That page covers creating the account, a **private** `photos` container, one CORS rule and two environment variables. Until you do this, photos stay on the phone that took them.
+
+### 10. Optional: Recreation.gov campground search
+The Book tab can search the official Recreation.gov database (RIDB) to add federal campgrounds. Sign up for a free API key at [ridb.recreation.gov](https://ridb.recreation.gov), then add it to the Static Web App's environment variables as `RIDB_API_KEY`. Without it, you can still add campgrounds by hand.
+
+---
+
+## What's in the app
+
+- **Home:** next trip countdown and readiness, booking-window countdowns, gear budget.
+- **Trips:** season map; one page per trip with details, gear to bring, a tap-to-check checklist, readiness score, reservation, weather (National Weather Service), trails and pins, a debrief with photos, and a read-only share link. Use the section buttons at the top of a trip to jump around.
+- **Book:** campground directory (MN state parks, state forest and national forest candidates), booking rules, "booking opens" countdowns, "Book now" links to the official sites, and your reservation details. Nothing is booked automatically.
+- **Gear:** everything you own or want, budget by category, and a "buy next" list.
+- **Tools:** load & tow calculator, power (EcoFlow) calculator, checklist templates, and the routes & pins library (GPX/KML import from onX and export back to onX).
+- **Settings** (gear icon, top right): household, vehicle and boat numbers, sign-in, sync, day/night display.
+
+Anything not confirmed from an official source is labeled **verify** or **estimate** in the app. See [docs/PROGRESS.md](docs/PROGRESS.md) for the list to check.
+
 ---
 
 ## How it works (for the curious)
@@ -115,6 +136,10 @@ Open the app URL in **Safari**, tap **Share → Add to Home Screen**, then alway
 |---|---|---|
 | Azure Static Web App | `SQL_CONNECTION_STRING` | Database connection (secret) |
 | Azure Static Web App | `HOUSEHOLD_ID` | Family workspace id, `family` |
+| Azure Static Web App | `STORAGE_CONNECTION_STRING` | Photo storage (secret; optional, step 9) |
+| Azure Static Web App | `PHOTO_CONTAINER` | Photo container name, default `photos` (optional) |
+| Azure Static Web App | `RIDB_API_KEY` | Recreation.gov campground search (secret; optional, step 10) |
+| Build (GitHub Actions) | `VITE_MAP_STYLE_URL` | Swap the base map provider (optional; default OpenFreeMap) |
 | GitHub secret | `AZURE_STATIC_WEB_APPS_API_TOKEN` | Lets GitHub Actions deploy (secret) |
 | Local only (`api/local.settings.json`) | `DATA_STORE=memory` | Throwaway in-memory database for development |
 
@@ -160,4 +185,6 @@ GitHub Actions runs all of this, including the SQL Server test, on every push.
 
 ## Build phases
 
-See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status, decisions and open items.
+All five phases are built. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status and the list of things to verify, [`docs/CONTRACTS.md`](docs/CONTRACTS.md) for how the code is organized, and `docs/phase-1.md` … `docs/phase-5.md` for each feature's details and sources.
+
+**Preview without Azure:** `npm run build:preview` writes a single-file copy of the app (no login or sync) to `dist-preview/camp-planner.html`.

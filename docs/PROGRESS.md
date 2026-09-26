@@ -4,18 +4,26 @@ This file is the hand-off note between work sessions. Update it at the end of ev
 
 ## Status
 
-**2026-09-26 — owner asked to build all remaining phases in parallel.** The coordinator set up shared contracts (`docs/CONTRACTS.md`) and launched one Sonnet agent per phase (1–5), each in its own git worktree/branch. The first attempt hit the usage limit before any code landed; relaunched 18:21 UTC. Next: merge each phase branch into `dev`, integrate, test end-to-end, polish/accessibility pass, update README + preview.
+**All five phases are built and merged on `dev`** (2026-09-26). The owner asked for the remaining phases in parallel: the coordinator defined shared contracts (`docs/CONTRACTS.md`), five Sonnet agents built one phase each in separate worktrees, and the coordinator merged, integrated and tested the result.
 
-| Phase | Scope | Status |
-|---|---|---|
-| 0 – Foundation | Scaffold, auth, DB schema + migrations, PWA shell, deploy pipeline, README | **Done, awaiting owner review.** Azure resources not created yet (owner follows README steps 1–8) |
-| 1 – Gear, checklists, calculators | Gear CRUD + category budgets, load/tow + power calculators with tests, checklist templates | Calculators + tests done (coordinator); UI in progress (agent) |
-| 2 – Trips & map | Season map (MapLibre + OpenFreeMap), trip pages, gear/checklists per trip, readiness score, read-only share link | In progress (agent) |
-| 3 – Reservations | Campground directory (MN DNR + RIDB), booking-window countdowns (no reminders: owner declined), deep links, booking tracking | In progress (agent) |
-| 4 – Trails & offline | onX GPX/KML import **and export**, MVUM layer, pins, route flags, offline map region download | In progress (agent) |
-| 5 – Weather, journal, polish | NWS forecasts, debriefs with photos feeding checklists, accessibility pass | In progress (agent) |
+| Phase | Scope | Status | Details |
+|---|---|---|---|
+| 0 – Foundation | Scaffold, auth, DB + migrations, PWA shell, deploy pipeline | Done | this file, README |
+| 1 – Gear, checklists, calculators | Gear CRUD, category budgets, buy-next, load/tow + power calculators, checklist templates | Done | `docs/phase-1.md` |
+| 2 – Trips & map | Season map, trip pages, per-trip checklists, readiness, read-only share links | Done | `docs/phase-2.md` |
+| 3 – Reservations | Campground directory, booking rules, booking-window countdowns, deep links, reservation tracking, RIDB search | Done | `docs/phase-3.md` |
+| 4 – Trails & offline | GPX/KML import + export (onX), route flags, pins, MVUM layer, offline tiles | Done | `docs/phase-4.md` |
+| 5 – Weather, journal, polish | NWS forecast, debriefs feeding next checklist, photos (phone + Blob Storage), accessibility review | Done | `docs/phase-5.md` |
 
-Work happens on the **`dev`** branch. Pushes to `dev` deploy to Azure once the deploy secret exists.
+Integration pass (coordinator): trip page saves only changed fields (fixed a bug where saving trip details could undo a campground chosen in the reservation section or an edit synced from the other phone); trip page section jump bar, sticky save bar, compact gear list; routes & pins linked from Tools and each trip; accessibility fixes (announced save status, reduced-motion, labelled links, theme toggle buttons); README setup steps for photos and RIDB.
+
+Tests: 148 app + 50 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
+
+**Not testable from the build sandbox (network blocked): verify on first real deploy**
+- National Weather Service API (api.weather.gov): response parsing and browser CORS. Weather is built from the documented format.
+- USFS MVUM map service (`apps.fs.usda.gov/arcx/rest/services/EDW/EDW_MVUM_02/MapServer`): reachability/CORS.
+- OpenFreeMap tiles and terms: the app caches tiles you view plus a capped "prepare offline" pass (no bulk downloader). Owner may prefer view-only caching or a provider with explicit offline terms (`VITE_MAP_STYLE_URL`).
+- Azure deployment itself (owner's Azure setup, README steps 1–10).
 
 ## Owner answers (from kickoff)
 
@@ -47,9 +55,17 @@ Work happens on the **`dev`** branch. Pushes to `dev` deploy to Azure once the d
 
 ## Open items / to verify
 
-- [ ] Owner: complete README Azure steps 1–8; report the app URL.
-- [ ] Owner: door-jamb payload figure; owner's manual roof limit and towing section.
-- [ ] Owner: boat scale ticket (CAT scale) when possible.
-- [ ] Phase 2: confirm OpenFreeMap tile terms allow offline caching of a trip region before building offline maps.
-- [ ] Phase 3: verify MN DNR booking rules against the official site; get a RIDB API key (free) → store as `RIDB_API_KEY` env var.
-- [ ] Phase 4: confirm the USFS MVUM GIS source and license.
+Owner:
+- [ ] Complete README Azure steps 1–8 (+ optional 9 photos, 10 RIDB key); report the app URL.
+- [ ] Door-jamb payload figure; owner's manual roof limit and towing section.
+- [ ] Boat scale ticket (CAT scale) when possible; real people weights in Tools → Load & tow.
+- [ ] Decide on offline map approach (see above).
+
+Facts marked **verify** in the app (all research was via search summaries; official sites were blocked from the sandbox):
+- [ ] MN state park booking rules (120 days / 8:00 AM CT / 14 nights / permit / fees) against dnr.state.mn.us / ReserveMN.
+- [ ] Every campground in the directory (location, booking system, electric, boat launch, URLs, RIDB ids) — `docs/phase-3.md` lists sources.
+- [ ] **Hinsdale Island (trip 4)**: the plan said USFS; research points to Kabetogama State Forest / MN DNR (contact via Soudan Underground Mine State Park). Confirm managing agency and site details.
+- [ ] Norway Point (trip 5) dispersed site details.
+- [ ] Recreation.gov booking windows per federal campground.
+- [ ] MVUM layer source/licence (see above); the printed MVUM is always the legal reference.
+- [ ] Gear prices/weights (research estimates) and vehicle specs.

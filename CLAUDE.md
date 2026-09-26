@@ -3,7 +3,7 @@
 Family camping/overland trip planner (2 adults + toddler, Minnesota, 2027 season, Lexus GX550). Built in review-gated phases; **read `docs/PROGRESS.md` first** for status, the owner's answers, and open items. The owner later asked for all remaining phases to be built in parallel (see `docs/CONTRACTS.md` for ownership and integration slots).
 
 ## Layout
-- `src/`: React PWA (Vite, Tailwind 4, Dexie). `model/schemas.ts` defines every record type; `sync/` is the local-first sync engine; `seed/` holds starting data.
+- `src/`: React PWA (Vite, Tailwind 4, Dexie). `model/*.ts` define every record type (registry in `model/schemas.ts`); `features/<gear|trips|reservations|trails|journal>/` hold each phase's screens, logic, seeds and tests; `calc/` the pure calculators; `sync/` the local-first sync engine.
 - `api/`: Azure Functions (Node 22, TS, CommonJS). `lib/store.ts` (interface + MemoryStore), `lib/sqlStore.ts` (Azure SQL), `lib/migrations.ts`.
 - `public/staticwebapp.config.json`: SWA routes/roles (`/api/*` requires role `family`).
 - `.github/workflows/ci-deploy.yml`: tests (incl. SQL Server service container), then deploys `dev` to Azure if `AZURE_STATIC_WEB_APPS_API_TOKEN` exists.

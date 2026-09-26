@@ -18,6 +18,11 @@ export function ToolsIndexPage() {
           <p className="text-ink-2">EcoFlow battery budget for a trip: consumption, solar and drive charging.</p>
         </Card>
       </Link>
+      <Link to="/trails">
+        <Card title="Routes & pins">
+          <p className="text-ink-2">Every imported onX/GPX route and map pin, with the MVUM layer. Import and export GPX here.</p>
+        </Card>
+      </Link>
       <Link to="/tools/checklists">
         <Card title="Checklists">
           <p className="text-ink-2">Edit the packing checklist templates used on trips.</p>

@@ -14,7 +14,7 @@ export function UpdatePrompt() {
 
   if (!needRefresh) return null;
   return (
-    <div role="status" className="fixed inset-x-3 bottom-24 z-50 rounded-2xl bg-ink p-4 text-bg shadow-lg">
+    <div role="region" aria-label="App update" aria-live="polite" className="fixed inset-x-3 bottom-24 z-50 rounded-2xl bg-ink p-4 text-bg shadow-lg">
       <p className="font-semibold">A new version is ready.</p>
       <div className="mt-2 flex gap-3">
         <button className="min-h-11 rounded-xl bg-brand px-4 font-semibold text-brand-ink" onClick={() => void updateServiceWorker(true)}>

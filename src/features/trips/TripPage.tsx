@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { newId, saveRecord, useRecord, useRecords } from '../../db/records';
 import { getCachedUser } from '../../auth/identity';
@@ -20,6 +20,18 @@ const KIND_OPTIONS: { value: TripKind; label: string }[] = [
   { value: 'boat', label: 'Boat' },
   { value: 'off-grid', label: 'Off-grid' },
   { value: 'toddler', label: 'Toddler' },
+];
+
+const SECTIONS: [string, string][] = [
+  ['t-details', 'Details'],
+  ['t-gear', 'Gear'],
+  ['t-checklist', 'Checklist'],
+  ['t-readiness', 'Readiness'],
+  ['t-reservation', 'Reservation'],
+  ['t-weather', 'Weather'],
+  ['t-trails', 'Trails'],
+  ['t-debrief', 'Debrief'],
+  ['t-share', 'Share'],
 ];
 
 const STATUS_OPTIONS: TripStatus[] = ['idea', 'planned', 'booked', 'done', 'cancelled'];
@@ -62,14 +74,13 @@ export function TripPage() {
 }
 
 function TripEditor({ id, trip }: { id: string; trip: Trip }) {
-  const [draft, setDraft] = useState(trip);
+  // Edits are kept as a patch over the live record: saving writes only the
+  // fields changed here, so a campground chosen in the reservation section or
+  // an edit synced from the other phone is never overwritten.
+  const [patch, setPatch] = useState<Partial<Trip>>({});
   const [saved, setSaved] = useState(false);
-  const tripJson = JSON.stringify(trip);
-  useEffect(() => {
-    setDraft((prev) => (JSON.stringify(prev) === tripJson ? prev : trip));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripJson]);
-  const dirty = JSON.stringify(draft) !== tripJson;
+  const draft: Trip = { ...trip, ...patch };
+  const dirty = (Object.keys(patch) as (keyof Trip)[]).some((k) => JSON.stringify(patch[k]) !== JSON.stringify(trip[k]));
 
   const settings = useRecords('settings');
   const campgrounds = useRecords('campground');
@@ -110,12 +121,13 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
 
   async function save() {
     await saveRecord('trip', id, draft);
+    setPatch({});
     setSaved(true);
   }
 
-  function update(patch: Partial<Trip>) {
+  function update(change: Partial<Trip>) {
     setSaved(false);
-    setDraft((d) => ({ ...d, ...patch }));
+    setPatch((p) => ({ ...p, ...change }));
   }
 
   function toggleKind(kind: TripKind) {
@@ -139,6 +151,18 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
         {draft.name || 'Trip'}
       </PageTitle>
 
+      <nav aria-label="Trip sections" className="sticky top-[calc(env(safe-area-inset-top)+3.75rem)] z-30 -mx-4 overflow-x-auto border-b border-line bg-bg/95 px-4 py-2 backdrop-blur">
+        <ul className="flex gap-2 whitespace-nowrap">
+          {SECTIONS.map(([anchor, label]) => (
+            <li key={anchor}>
+              <a href={`#${anchor}`} className="inline-flex min-h-11 items-center rounded-full border border-line bg-surface px-3 text-sm font-semibold">
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
       <Card>
         <TripMap
           center={mapCenter}
@@ -149,6 +173,7 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
         />
       </Card>
 
+      <section id="t-details" className="scroll-mt-36">
       <Card title="Details">
         <div className="space-y-3">
           <Field label="Name">
@@ -209,20 +234,17 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
             <span className="font-semibold">Towing the boat</span>
           </label>
 
-          <Field label="Campground">
-            <select
-              className={inputClass}
-              value={draft.campgroundId ?? ''}
-              onChange={(e) => update({ campgroundId: e.target.value || null })}
-            >
-              <option value="">None chosen yet</option>
-              {campgrounds.rows.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.data.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <p className="text-sm text-ink-2">
+            Campground:{' '}
+            <span className="font-semibold text-ink">
+              {campground?.name ?? 'none chosen yet'}
+            </span>{' '}
+            — pick it in{' '}
+            <a href="#t-reservation" className="font-semibold text-brand">
+              Reservation
+            </a>
+            .
+          </p>
 
           <LocationFields
             label="Location"
@@ -262,9 +284,13 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
           </div>
         </div>
       </Card>
+      </section>
 
-      <GearCard trip={draft} gearRows={gear.rows} onChange={(gearIds) => update({ gearIds })} />
+      <section id="t-gear" className="scroll-mt-36">
+        <GearCard trip={draft} gearRows={gear.rows} onChange={(gearIds) => update({ gearIds })} />
+      </section>
 
+      <section id="t-checklist" className="scroll-mt-36">
       <ChecklistCard
         tripId={id}
         trip={draft}
@@ -274,15 +300,44 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
         allTrips={allTrips.rows}
         debriefs={debriefs.rows}
       />
+      </section>
 
-      <ReadinessCard parts={readiness.parts} score={readiness.score} />
+      <section id="t-readiness" className="scroll-mt-36">
+        <ReadinessCard parts={readiness.parts} score={readiness.score} />
+      </section>
 
-      <ShareCard tripId={id} activeShare={activeShare} />
+      <section id="t-reservation" className="scroll-mt-36">
+        <TripReservationSection tripId={id} />
+      </section>
+      <section id="t-weather" className="scroll-mt-36">
+        <TripWeatherSection tripId={id} />
+      </section>
+      <section id="t-trails" className="scroll-mt-36">
+        <TripTrailsSection tripId={id} />
+        <Link to="/trails" className="mt-2 inline-flex min-h-11 items-center font-semibold text-brand">
+          All routes &amp; pins →
+        </Link>
+      </section>
+      <section id="t-debrief" className="scroll-mt-36">
+        <TripDebriefSection tripId={id} />
+      </section>
+      <section id="t-share" className="scroll-mt-36">
+        <ShareCard tripId={id} activeShare={activeShare} />
+      </section>
 
-      <TripReservationSection tripId={id} />
-      <TripWeatherSection tripId={id} />
-      <TripTrailsSection tripId={id} />
-      <TripDebriefSection tripId={id} />
+      {dirty && (
+        <div role="status" className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-40 mx-auto flex max-w-2xl items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-3 shadow-lg">
+          <span className="font-semibold">Unsaved trip changes</span>
+          <div className="flex gap-2">
+            <Button type="button" variant="ghost" onClick={() => setPatch({})}>
+              Discard
+            </Button>
+            <Button type="button" onClick={() => void save()}>
+              Save
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -366,6 +421,8 @@ function GearCard({
   onChange: (ids: string[]) => void;
 }) {
   const suggested = useMemo(() => new Set(defaultGearIds(trip, gearRows)), [trip, gearRows]);
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? gearRows : gearRows.filter((g) => trip.gearIds.includes(g.id));
   if (gearRows.length === 0) {
     return (
       <Card title="Gear to bring">
@@ -382,8 +439,11 @@ function GearCard({
         </Button>
       }
     >
+      <p className="mb-2 text-sm text-ink-2">
+        {trip.gearIds.length} of {gearRows.length} items packed for this trip.
+      </p>
       <ul className="space-y-1">
-        {gearRows.map((g) => {
+        {visible.map((g) => {
           const checked = trip.gearIds.includes(g.id);
           return (
             <li key={g.id}>
@@ -401,6 +461,9 @@ function GearCard({
           );
         })}
       </ul>
+      <Button type="button" variant="secondary" className="mt-2 w-full" aria-expanded={showAll} onClick={() => setShowAll((v) => !v)}>
+        {showAll ? 'Show only packed items' : `Choose from all ${gearRows.length} items`}
+      </Button>
     </Card>
   );
 }

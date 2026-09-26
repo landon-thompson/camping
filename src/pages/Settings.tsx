@@ -82,12 +82,12 @@ function ThemeCard() {
   ];
   return (
     <Card title="Display">
-      <div role="radiogroup" aria-label="Theme" className="grid grid-cols-3 gap-2">
+      <div role="group" aria-label="Theme" className="grid grid-cols-3 gap-2">
         {opts.map((o) => (
           <button
             key={o.v}
-            role="radio"
-            aria-checked={pref === o.v}
+            type="button"
+            aria-pressed={pref === o.v}
             onClick={() => setPref(o.v)}
             className={`min-h-12 rounded-xl border font-semibold ${
               pref === o.v ? 'border-brand bg-brand text-brand-ink' : 'border-line bg-surface-2'
@@ -142,7 +142,9 @@ function SaveRow({ dirty, saved, error }: { dirty: boolean; saved: boolean; erro
           Couldn’t save: check the values.
         </span>
       ) : (
-        saved && !dirty && <span className="text-sm text-ok">Saved on this phone</span>
+        <span role="status" className="text-sm text-ok">
+          {saved && !dirty ? 'Saved on this phone' : ''}
+        </span>
       )}
     </div>
   );
