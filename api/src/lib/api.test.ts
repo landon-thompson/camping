@@ -80,4 +80,45 @@ describe('MemoryStore (reference behaviour for SqlStore)', () => {
     expect(p3.records).toEqual([]);
     expect(p3.cursor).toBe(p2.cursor);
   });
+
+  it('finds a record by type+id and by type+tripId, isolated by household', async () => {
+    const s = new MemoryStore();
+    const typed = (id: string, type: string, data: unknown): IncomingRecord => ({ id, type, data, updatedAt: 1, deleted: false });
+    await s.push('h', 'u', [
+      typed('trip:1', 'trip', { name: 'Shakedown' }),
+      typed('reservation:1', 'reservation', { tripId: 'trip:1', site: 'A1' }),
+      typed('reservation:2', 'reservation', { tripId: 'trip:2', site: 'B2' }),
+    ]);
+    await s.push('other', 'u', [typed('reservation:3', 'reservation', { tripId: 'trip:1', site: 'X' })]);
+
+    expect(await s.getRecord('h', 'trip', 'trip:1')).toMatchObject({ id: 'trip:1', data: { name: 'Shakedown' } });
+    expect(await s.getRecord('h', 'trip', 'trip:missing')).toBeNull();
+    expect(await s.getRecord('h', 'reservation', 'trip:1')).toBeNull(); // wrong type
+
+    const forTrip1 = await s.getRecordsByTripId('h', 'reservation', 'trip:1');
+    expect(forTrip1.map((r) => r.id)).toEqual(['reservation:1']);
+    expect(await s.getRecordsByTripId('other', 'reservation', 'trip:1')).toHaveLength(1);
+  });
+
+  it('does not return a deleted record from getRecord', async () => {
+    const s = new MemoryStore();
+    await s.push('h', 'u', [rec('trip:1', 1, { name: 'x' })]);
+    await s.push('h', 'u', [rec('trip:1', 2, { name: 'x' }, true)]);
+    expect(await s.getRecord('h', 'trip', 'trip:1')).toBeNull();
+  });
+
+  it('creates, looks up and revokes share links, scoped by household', async () => {
+    const s = new MemoryStore();
+    await s.createShareLink('h', 'tok1', 'trip:1', 'u1');
+    expect(await s.getShareLink('h', 'tok1')).toEqual({ tripId: 'trip:1', revoked: false });
+    expect(await s.getShareLink('other', 'tok1')).toBeNull();
+    expect(await s.getShareLink('h', 'unknown')).toBeNull();
+
+    expect(await s.revokeShareLink('other', 'tok1')).toBe(false);
+    expect(await s.revokeShareLink('h', 'tok1')).toBe(true);
+    expect(await s.getShareLink('h', 'tok1')).toEqual({ tripId: 'trip:1', revoked: true });
+    // Revoking again is idempotent, not an error.
+    expect(await s.revokeShareLink('h', 'tok1')).toBe(true);
+    expect(await s.revokeShareLink('h', 'never-existed')).toBe(false);
+  });
 });

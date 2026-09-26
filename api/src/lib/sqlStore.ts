@@ -1,6 +1,6 @@
 import sql from 'mssql';
 import { MIGRATIONS } from './migrations';
-import type { IncomingRecord, Member, PullResult, PushResult, Store, StoredRecord } from './store';
+import type { IncomingRecord, Member, PullResult, PushResult, ShareLinkRow, Store, StoredRecord } from './store';
 
 /** Thrown when the database can't be reached yet; the API answers 503 and the app retries. */
 export class StoreUnavailableError extends Error {}
@@ -182,6 +182,71 @@ export class SqlStore implements Store {
       const page = (more ? rows.slice(0, limit) : rows).map(toStored);
       const last = page[page.length - 1];
       return { records: page, cursor: last ? last.rev : since, more };
+    });
+  }
+
+  async getRecord(householdId: string, type: string, id: string): Promise<StoredRecord | null> {
+    return this.withRetry(async (pool) => {
+      const res = await pool
+        .request()
+        .input('h', sql.NVarChar(64), householdId)
+        .input('type', sql.NVarChar(40), type)
+        .input('id', sql.NVarChar(128), id).query<Row>(`
+          SELECT TOP (1) id, type, data, client_updated_at, updated_by, deleted, CAST(rv AS BIGINT) AS rv
+          FROM dbo.records WHERE household_id = @h AND type = @type AND id = @id AND deleted = 0;`);
+      const row = res.recordset[0];
+      return row ? toStored(row) : null;
+    });
+  }
+
+  async getRecordsByTripId(householdId: string, type: string, tripId: string): Promise<StoredRecord[]> {
+    return this.withRetry(async (pool) => {
+      const res = await pool
+        .request()
+        .input('h', sql.NVarChar(64), householdId)
+        .input('type', sql.NVarChar(40), type)
+        .input('tripId', sql.NVarChar(128), tripId).query<Row>(`
+          SELECT id, type, data, client_updated_at, updated_by, deleted, CAST(rv AS BIGINT) AS rv
+          FROM dbo.records
+          WHERE household_id = @h AND type = @type AND deleted = 0 AND JSON_VALUE(data, '$.tripId') = @tripId;`);
+      return res.recordset.map(toStored);
+    });
+  }
+
+  async createShareLink(householdId: string, token: string, tripId: string, createdBy: string | null): Promise<void> {
+    await this.withRetry(async (pool) => {
+      await pool
+        .request()
+        .input('token', sql.NVarChar(64), token)
+        .input('h', sql.NVarChar(64), householdId)
+        .input('tripId', sql.NVarChar(128), tripId)
+        .input('by', sql.NVarChar(128), createdBy)
+        .query('INSERT INTO dbo.share_links (token, household_id, trip_id, created_by) VALUES (@token, @h, @tripId, @by);');
+    });
+  }
+
+  async getShareLink(householdId: string, token: string): Promise<ShareLinkRow | null> {
+    return this.withRetry(async (pool) => {
+      const res = await pool
+        .request()
+        .input('token', sql.NVarChar(64), token)
+        .input('h', sql.NVarChar(64), householdId).query<{ trip_id: string; revoked_at: Date | null }>(`
+          SELECT trip_id, revoked_at FROM dbo.share_links WHERE token = @token AND household_id = @h;`);
+      const row = res.recordset[0];
+      return row ? { tripId: row.trip_id, revoked: row.revoked_at !== null } : null;
+    });
+  }
+
+  async revokeShareLink(householdId: string, token: string): Promise<boolean> {
+    return this.withRetry(async (pool) => {
+      const res = await pool
+        .request()
+        .input('token', sql.NVarChar(64), token)
+        .input('h', sql.NVarChar(64), householdId).query<{ affected: number }>(`
+          UPDATE dbo.share_links SET revoked_at = COALESCE(revoked_at, SYSUTCDATETIME())
+          WHERE token = @token AND household_id = @h;
+          SELECT @@ROWCOUNT AS affected;`);
+      return (res.recordset[0]?.affected ?? 0) > 0;
     });
   }
 

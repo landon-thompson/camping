@@ -1,7 +1,11 @@
 import { Route } from 'react-router-dom';
-import { Placeholder } from '../../pages/Placeholder';
+import { TripsListPage } from './TripsListPage';
+import { TripPage } from './TripPage';
 
-/** Phase 2 screens: /trips/* (season map, trip detail pages). */
+/** Phase 2 screens: /trips/* (season map, trip pages). */
 export const tripRoutes = (
-  <Route path="trips/*" element={<Placeholder title="Trips" phase="Phase 2" items={['Season map and trip pages']} />} />
+  <Route path="trips">
+    <Route index element={<TripsListPage />} />
+    <Route path=":id" element={<TripPage />} />
+  </Route>
 );
