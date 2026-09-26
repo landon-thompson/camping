@@ -17,3 +17,6 @@ api/local.settings.json
 # misc
 .DS_Store
 *.log
+
+# agent worktrees (temporary)
+.claude/worktrees/
