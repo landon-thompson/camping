@@ -21,6 +21,12 @@ export const bookingRuleSchema = z.object({
   reservationRequired: z.boolean().nullable(),
   /** Reservations open this many days before arrival (null = no advance booking). */
   windowDays: specNumber,
+  /**
+   * Some agencies (federal Recreation.gov) publish the window in calendar
+   * months rather than a fixed day count, so a month subtracts correctly
+   * across short/long months. When set, this takes priority over `windowDays`.
+   */
+  windowMonths: specNumber.nullable().optional(),
   /** Local opening time on the first day, "HH:MM", in `timeZone`. */
   openTime: z.string().nullable(),
   timeZone: z.string(),
@@ -48,6 +54,8 @@ export const campgroundSchema = z.object({
   ridbFacilityId: z.string().nullable(),
   /** Overrides the agency rule (e.g. a Recreation.gov facility's own window). */
   windowDaysOverride: specNumber.nullable(),
+  /** Overrides the agency rule in calendar months (see `windowMonths`). */
+  windowMonthsOverride: specNumber.nullable().optional(),
   electric: z.boolean().nullable(),
   boatLaunch: z.boolean().nullable(),
   rules: z.array(z.string()),
