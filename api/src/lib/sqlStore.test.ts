@@ -57,4 +57,28 @@ describe.skipIf(!master)('SqlStore against SQL Server', () => {
     const other = await store.pull('someone-else', '0', 10);
     expect(other.records).toEqual([]);
   }, 60_000);
+
+  it('finds records by type+id and type+tripId, and manages share links', async () => {
+    await store.push('family', 'u1', [
+      { id: 'trip:1', type: 'trip', data: { name: 'Shakedown' }, updatedAt: 1, deleted: false },
+      { id: 'reservation:1', type: 'reservation', data: { tripId: 'trip:1', site: 'A1' }, updatedAt: 1, deleted: false },
+      { id: 'reservation:2', type: 'reservation', data: { tripId: 'trip:2', site: 'B2' }, updatedAt: 1, deleted: false },
+    ]);
+
+    expect(await store.getRecord('family', 'trip', 'trip:1')).toMatchObject({ id: 'trip:1', data: { name: 'Shakedown' } });
+    expect(await store.getRecord('family', 'trip', 'trip:missing')).toBeNull();
+    expect(await store.getRecord('family', 'reservation', 'trip:1')).toBeNull();
+
+    const forTrip1 = await store.getRecordsByTripId('family', 'reservation', 'trip:1');
+    expect(forTrip1.map((r) => r.id)).toEqual(['reservation:1']);
+
+    await store.createShareLink('family', 'tok-abc', 'trip:1', 'u1');
+    expect(await store.getShareLink('family', 'tok-abc')).toEqual({ tripId: 'trip:1', revoked: false });
+    expect(await store.getShareLink('family', 'unknown-token')).toBeNull();
+
+    expect(await store.revokeShareLink('family', 'tok-abc')).toBe(true);
+    expect(await store.getShareLink('family', 'tok-abc')).toEqual({ tripId: 'trip:1', revoked: true });
+    expect(await store.revokeShareLink('family', 'tok-abc')).toBe(true); // idempotent
+    expect(await store.revokeShareLink('family', 'never-existed')).toBe(false);
+  }, 60_000);
 });
