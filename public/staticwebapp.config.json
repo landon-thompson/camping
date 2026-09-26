@@ -5,6 +5,7 @@
   "routes": [
     { "route": "/.auth/login/github", "statusCode": 404 },
     { "route": "/api/health", "allowedRoles": ["anonymous"] },
+    { "route": "/api/share/*", "allowedRoles": ["anonymous"] },
     { "route": "/api/*", "allowedRoles": ["family"] },
     { "route": "/sw.js", "headers": { "cache-control": "no-cache" } },
     { "route": "/index.html", "headers": { "cache-control": "no-cache" } }

@@ -1,13 +1,18 @@
 import { useEffect } from 'react';
-import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { isFamily, loginUrl, logoutUrl, forgetUser } from './auth/identity';
 import { Layout } from './components/Layout';
 import { LinkButton } from './components/ui';
 import { Dashboard } from './pages/Dashboard';
-import { Placeholder } from './pages/Placeholder';
 import { Settings } from './pages/Settings';
 import { startSync } from './sync/useSync';
+import { gearRoutes } from './features/gear/routes';
+import { tripRoutes } from './features/trips/routes';
+import { reservationRoutes } from './features/reservations/routes';
+import { trailRoutes } from './features/trails/routes';
+import { journalRoutes } from './features/journal/routes';
+import { SharePage } from './features/trips/SharePage';
 import { IS_PREVIEW } from './lib/preview';
 
 // The preview is embedded in a page whose URL we don't control.
@@ -17,10 +22,23 @@ export function App() {
   return (
     <AuthProvider>
       <Router>
-        <Gate />
+        <PublicOrGate />
       </Router>
     </AuthProvider>
   );
+}
+
+/** Read-only trip links (/s/:token) are public; everything else needs sign-in. */
+function PublicOrGate() {
+  const { pathname } = useLocation();
+  if (pathname.startsWith('/s/')) {
+    return (
+      <Routes>
+        <Route path="/s/:token" element={<SharePage />} />
+      </Routes>
+    );
+  }
+  return <Gate />;
 }
 
 function Gate() {
@@ -39,31 +57,11 @@ function Gate() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
-        <Route
-          path="gear"
-          element={
-            <Placeholder
-              title="Gear"
-              phase="Phase 1"
-              items={[
-                'Everything we own or plan to buy, with priority, status, cost, weight and power draw',
-                'Where it rides: roof / cargo / cab / boat / trailer',
-                'Budget totals by category and a “buy next” list',
-                'Load & tow and power calculators',
-              ]}
-            />
-          }
-        />
-        <Route
-          path="trips"
-          element={
-            <Placeholder
-              title="Trips"
-              phase="Phase 2"
-              items={['All five 2027 trips on one map', 'Trip pages with dates, site, launch, checklist and notes', 'Readiness score and read-only share link']}
-            />
-          }
-        />
+        {gearRoutes}
+        {tripRoutes}
+        {reservationRoutes}
+        {trailRoutes}
+        {journalRoutes}
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Dashboard />} />
       </Route>

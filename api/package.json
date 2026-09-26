@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@azure/functions": "^4.16.5",
+    "@azure/storage-blob": "^12.34.0",
     "mssql": "^12.7.2"
   },
   "devDependencies": {

@@ -47,6 +47,37 @@ export function useRecord<T extends RecordType>(type: T, id: string): Loaded<Rec
   return { loading: false, data: parsed.data as RecordData<T> };
 }
 
+export interface Row<T> {
+  id: string;
+  data: T;
+  updatedAt: number;
+  updatedBy: string | null;
+}
+
+/**
+ * Live-updating list of every (non-deleted) record of a type. Rows that fail
+ * validation are skipped, so one bad record can't break a screen.
+ */
+export function useRecords<T extends RecordType>(type: T): { loading: boolean; rows: Row<RecordData<T>>[] } {
+  const rows = useLiveQuery(() => db.records.where('[type+deleted]').equals([type, 0]).toArray(), [type], null);
+  if (rows === null) return { loading: true, rows: [] };
+  const out: Row<RecordData<T>>[] = [];
+  for (const r of rows) {
+    const parsed = recordSchemas[type].safeParse(r.data);
+    if (parsed.success) out.push({ id: r.id, data: parsed.data as RecordData<T>, updatedAt: r.updatedAt, updatedBy: r.updatedBy });
+  }
+  return { loading: false, rows: out };
+}
+
+/** New record id, e.g. `gear:1f0c…`. Allowed characters match the server's id rule. */
+export function newId(type: RecordType): string {
+  const rand =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return `${type}:${rand}`;
+}
+
 /**
  * Insert any seed record this phone has never seen (including deleted ones).
  * Seeds carry timestamp 0 so they never overwrite a real edit during sync.

@@ -1,17 +1,18 @@
-import type { RecordData, RecordType } from '../model/schemas';
+import type { SeedRecord } from './types';
+import { gearSeeds } from '../features/gear/seed';
+import { tripSeeds } from '../features/trips/seed';
+import { reservationSeeds } from '../features/reservations/seed';
+import { trailSeeds } from '../features/trails/seed';
+import { journalSeeds } from '../features/journal/seed';
 
-export interface SeedRecord<T extends RecordType = RecordType> {
-  type: T;
-  id: string;
-  data: RecordData<T>;
-}
+export type { SeedRecord } from './types';
 
 /**
  * Starting values from the planning brief. Seeds use fixed IDs so both phones
  * create the *same* records; they are written with timestamp 0 so any real
  * edit (on either phone) always wins.
  */
-export const SEED_RECORDS: SeedRecord[] = [
+const CORE_SEEDS: SeedRecord[] = [
   {
     type: 'settings',
     id: 'settings',
@@ -90,4 +91,14 @@ export const SEED_RECORDS: SeedRecord[] = [
       tonguePctMax: 15,
     },
   },
+];
+
+/** Core seeds plus each feature's own starting data. */
+export const SEED_RECORDS: SeedRecord[] = [
+  ...CORE_SEEDS,
+  ...gearSeeds,
+  ...tripSeeds,
+  ...reservationSeeds,
+  ...trailSeeds,
+  ...journalSeeds,
 ];

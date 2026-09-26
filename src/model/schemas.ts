@@ -1,76 +1,51 @@
-import { z } from 'zod';
-
 /**
- * How much we trust a number. Per the working rules, nothing gets presented as
- * fact unless it came from an official source or our own measurement.
- *  - verified: checked against the official source / sticker / scale ticket
- *  - verify:   from research or an owner report; check before relying on it
- *  - estimate: a placeholder guess; replace with a real measurement
+ * Registry of every record type the app stores, and the one import path for
+ * schemas. Each feature owns its own schema file:
+ *   core.ts (shared) · gear.ts (Phase 1) · trips.ts (2) · reservations.ts (3)
+ *   trails.ts (4) · journal.ts (5)
+ * Records sync independently, so keep them fine-grained.
  */
-export const specStatus = z.enum(['verified', 'verify', 'estimate']);
-export type SpecStatus = z.infer<typeof specStatus>;
+import { settingsSchema, trailerSchema, vehicleSchema } from './core';
+import { budgetCategorySchema, checklistTemplateSchema, gearSchema, loadProfileSchema, powerProfileSchema } from './gear';
+import { shareLinkSchema, tripChecklistItemSchema, tripSchema } from './trips';
+import { bookingRuleSchema, campgroundSchema, permitSchema, reservationSchema } from './reservations';
+import { pinSchema, routeSchema } from './trails';
+import { debriefSchema, photoSchema } from './journal';
+import type { z } from 'zod';
 
-export const specNumber = z.object({
-  value: z.number().nullable(),
-  status: specStatus,
-  source: z.string().optional(),
-  note: z.string().optional(),
-});
-export type SpecNumber = z.infer<typeof specNumber>;
+export * from './core';
+export * from './gear';
+export * from './trips';
+export * from './reservations';
+export * from './trails';
+export * from './journal';
 
-export const settingsSchema = z.object({
-  householdName: z.string().min(1),
-  seasonYear: z.number().int(),
-  homeBase: z.object({
-    name: z.string(),
-    lat: z.number().nullable(),
-    lng: z.number().nullable(),
-  }),
-  people: z.object({
-    adults: z.number().int().min(0),
-    children: z.number().int().min(0),
-    notes: z.string().optional(),
-  }),
-  /** Season gear budget in USD. Category budgets arrive in Phase 1. */
-  seasonBudgetUsd: z.number().min(0),
-});
-export type Settings = z.infer<typeof settingsSchema>;
-
-export const vehicleSchema = z.object({
-  name: z.string().min(1),
-  year: z.number().int(),
-  make: z.string(),
-  model: z.string(),
-  trim: z.string(),
-  payloadLb: specNumber,
-  towRatingLb: specNumber,
-  roofLimitLb: specNumber,
-  features: z.array(z.string()),
-  notes: z.array(z.string()),
-});
-export type Vehicle = z.infer<typeof vehicleSchema>;
-
-export const trailerSchema = z.object({
-  name: z.string().min(1),
-  description: z.string(),
-  /** Boat + motor + fuel + gear + trailer, low and high guesses until weighed. */
-  weightLowLb: specNumber,
-  weightHighLb: specNumber,
-  /** A real scale ticket overrides the estimate range everywhere. */
-  scaleTicketLb: specNumber,
-  tonguePctMin: z.number().min(0).max(100),
-  tonguePctMax: z.number().min(0).max(100),
-});
-export type Trailer = z.infer<typeof trailerSchema>;
-
-/**
- * Every record type the app stores. Each record syncs independently, so keep
- * them fine-grained (one checklist item = one record) to avoid edit conflicts.
- */
 export const recordSchemas = {
+  // core
   settings: settingsSchema,
   vehicle: vehicleSchema,
   trailer: trailerSchema,
+  // Phase 1
+  gear: gearSchema,
+  budget_category: budgetCategorySchema,
+  checklist_template: checklistTemplateSchema,
+  load_profile: loadProfileSchema,
+  power_profile: powerProfileSchema,
+  // Phase 2
+  trip: tripSchema,
+  trip_checklist_item: tripChecklistItemSchema,
+  share_link: shareLinkSchema,
+  // Phase 3
+  booking_rule: bookingRuleSchema,
+  campground: campgroundSchema,
+  reservation: reservationSchema,
+  permit: permitSchema,
+  // Phase 4
+  route: routeSchema,
+  pin: pinSchema,
+  // Phase 5
+  debrief: debriefSchema,
+  photo: photoSchema,
 } as const;
 
 export type RecordType = keyof typeof recordSchemas;
