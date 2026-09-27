@@ -350,10 +350,11 @@ export interface SourceReport {
 export const SD_GFP_PARKS_FOLDER = 'https://gfpgis.sd.gov/arcgis/rest/services/Parks';
 
 /**
- * USGS Protected Areas Database (PAD-US), state-managed lands layer, as served
- * by Esri Living Atlas. Nationwide and public; filtered to one state's parks.
+ * USGS Protected Areas Database (PAD-US 3.0), USGS's own public service (the
+ * "Manager_Name" layer the FedData R package reads). Esri's Living Atlas copy
+ * needs a subscriber token, so it isn't used. Filtered to one state's parks.
  */
-export const PADUS_STATE_LAYER = 'https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Protected_Areas_State/FeatureServer/0';
+export const PADUS_STATE_LAYER = 'https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Manager_Name/FeatureServer/0';
 const PADUS_STATE: Record<ParkRegion, string> = { mn: 'MN', sd: 'SD' };
 
 /** PAD-US query for a state's state parks (SP) and state recreation areas (SREC). */
@@ -469,7 +470,7 @@ export async function fetchParksFromService(
       if (base.startsWith('padus:')) {
         const res = await fetchFn(padusQueryUrl(region));
         if (!res.ok) throw await httpError(res);
-        const r = { ...parseParksDetailed(fromPadus(await res.json()), true, region), layerName: 'USA Protected Areas (state)', source: PADUS_STATE_LAYER };
+        const r = { ...parseParksDetailed(fromPadus(await res.json()), true, region), layerName: 'PAD-US 3.0 (USGS)', source: PADUS_STATE_LAYER };
         reports.push({ source: base, label, outcome: `${r.parks.length} parks from ${r.featureCount} areas (layer “${r.layerName}”)` });
         if (!best || r.parks.length > best.parks.length) best = r;
         if (r.parks.length > 40) break;

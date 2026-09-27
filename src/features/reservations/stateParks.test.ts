@@ -297,6 +297,6 @@ describe('PAD-US (national protected areas)', () => {
     const r = await fetchParksFromService(fake, 'sd');
     expect(r.parks).toHaveLength(50);
     expect(urls).toHaveLength(1);
-    expect(urls[0]).toContain('USA_Protected_Areas_State/FeatureServer/0/query');
+    expect(urls[0]).toContain('v01gqwM5QqNysAAi/arcgis/rest/services/Manager_Name/FeatureServer/0/query');
   });
 });
