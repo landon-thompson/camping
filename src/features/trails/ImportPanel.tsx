@@ -118,12 +118,6 @@ export function ImportPanel({ tripId }: { tripId: string | null }) {
   return (
     <Card title="Import GPX / KML">
       <div className="space-y-3">
-        <p className="text-sm text-ink-2">
-          From onX Offroad: the onX app exports <strong>GPX only</strong>; the onX web map can export GPX or KML (roughly 3,000
-          markups / 4 MB per file — verify current limits on onX's own help pages). Only your own exported files are used here —
-          nothing is scraped from onX or Gaia.
-        </p>
-
         <Field label="Source" hint="Where these files came from.">
           <select value={source} onChange={(e) => setSource(e.target.value as Source)} className={inputClass}>
             <option value="onx">onX Offroad</option>
@@ -157,6 +151,15 @@ export function ImportPanel({ tripId }: { tripId: string | null }) {
             className="block min-h-12 w-full rounded-xl border border-line bg-surface px-3 py-2 text-base text-ink file:mr-3 file:min-h-11 file:rounded-lg file:border-0 file:bg-brand file:px-3 file:font-semibold file:text-brand-ink"
           />
         </Field>
+
+        <details className="text-sm text-ink-2">
+          <summary className="cursor-pointer font-semibold text-ink">About onX files</summary>
+          <p className="mt-2">
+            From onX Offroad: the onX app exports <strong>GPX only</strong>; the onX web map can export GPX or KML (roughly 3,000
+            markups / 4 MB per file — verify current limits on onX's own help pages). Only your own exported files are used here —
+            nothing is scraped from onX or Gaia.
+          </p>
+        </details>
 
         {saved && <p className="rounded-xl bg-info-bg px-3 py-2 text-sm text-info">{saved}</p>}
 

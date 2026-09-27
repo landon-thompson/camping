@@ -7,8 +7,10 @@ import { downloadGpx, buildGpxDocument, gpxFileName } from './gpxExport';
 export function ExportPanel({ tripId }: { tripId: string | null }) {
   const { rows: routeRows } = useRecords('route');
   const { rows: pinRows } = useRecords('pin');
+  const { rows: trips } = useRecords('trip');
   const routes = routeRows.filter((r) => (tripId ? r.data.tripId === tripId : true));
   const pins = pinRows.filter((p) => (tripId ? p.data.tripId === tripId : true));
+  const tripName = (id: string | null) => (id ? (trips.find((t) => t.id === id)?.data.name ?? 'Unknown trip') : 'no trip yet');
 
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
 
@@ -52,7 +54,10 @@ export function ExportPanel({ tripId }: { tripId: string | null }) {
               <label className="flex min-h-11 items-center gap-2">
                 <input type="checkbox" className="h-6 w-6 shrink-0" checked={!excluded.has(r.id)} onChange={() => toggle(r.id)} />
                 <span className="text-sm">
-                  {r.data.name} <span className="text-ink-2">({r.data.distanceMi.toFixed(1)} mi)</span>
+                  {r.data.name}{' '}
+                  <span className="text-ink-2">
+                    ({r.data.distanceMi.toFixed(1)} mi · {tripName(r.data.tripId)})
+                  </span>
                 </span>
               </label>
             </li>
@@ -61,7 +66,9 @@ export function ExportPanel({ tripId }: { tripId: string | null }) {
             <li key={p.id}>
               <label className="flex min-h-11 items-center gap-2">
                 <input type="checkbox" className="h-6 w-6 shrink-0" checked={!excluded.has(p.id)} onChange={() => toggle(p.id)} />
-                <span className="text-sm">{p.data.name || 'Unnamed pin'}</span>
+                <span className="text-sm">
+                  {p.data.name || 'Unnamed pin'} <span className="text-ink-2">({tripName(p.data.tripId)})</span>
+                </span>
               </label>
             </li>
           ))}
