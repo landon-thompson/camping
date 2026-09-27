@@ -54,8 +54,11 @@ if [ -z "$SQL_SERVER" ]; then
     --admin-user "$SQL_ADMIN" --admin-password "$SQL_PASSWORD" -o none
   echo "SQL admin password (save it in your password manager): $SQL_PASSWORD"
 else
-  echo "SQL server $SQL_SERVER already exists. Re-running needs its password:"
-  read -r -s -p "SQL admin password: " SQL_PASSWORD; echo
+  # Re-run: set a fresh admin password (Cloud Shell doesn't keep the old output).
+  SQL_PASSWORD="Cp9-$(openssl rand -hex 14)-Qz"
+  step "SQL server $SQL_SERVER already exists — setting a new admin password"
+  az sql server update -g "$RG" -n "$SQL_SERVER" --admin-password "$SQL_PASSWORD" -o none
+  echo "New SQL admin password (save it in your password manager): $SQL_PASSWORD"
 fi
 
 step "Allow Azure services (the app's API) to reach the database"
