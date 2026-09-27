@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Card } from '../../components/ui';
 import { saveRecord } from '../../db/records';
 import { useCampgrounds } from './data';
-import { fetchParksFromService, MN_PARKS_DATASET_URL, MN_PARKS_SERVICE, parseParks, planImport, type ParkPoint } from './stateParks';
+import { fetchParksFromService, MN_PARKS_DATASET_URL, MN_PARKS_SERVICE, parseParksDetailed, planImport, type ParkPoint, type ParseResult } from './stateParks';
 
 /** Load every Minnesota state park / recreation area (name + map pin) from official GIS data. */
 export function StateParkImport() {
@@ -11,6 +11,13 @@ export function StateParkImport() {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showFile, setShowFile] = useState(false);
+
+  function explainEmpty(r: ParseResult, where: string) {
+    setError(
+      `${where} sent ${r.featureCount} map areas, but none could be read as a Minnesota state park. ` +
+        `Fields: ${r.sampleFields.join(', ') || 'none'}. Please send a screenshot of this message.`,
+    );
+  }
 
   async function apply(parks: ParkPoint[], source: string) {
     const plan = planImport(parks, campgrounds.rows, source);
@@ -26,7 +33,13 @@ export function StateParkImport() {
     setError(null);
     setStatus(null);
     try {
-      await apply(await fetchParksFromService(), MN_PARKS_SERVICE);
+      const r = await fetchParksFromService();
+      if (r.parks.length === 0) {
+        explainEmpty(r, `The state map service (layer “${r.layerName}”)`);
+        setShowFile(true);
+        return;
+      }
+      await apply(r.parks, MN_PARKS_SERVICE);
     } catch (e) {
       const why = e instanceof TypeError || !(e instanceof Error) ? 'Couldn’t reach the state map service.' : e.message;
       setError(`${why} Try the file option below.`);
@@ -41,7 +54,9 @@ export function StateParkImport() {
     if (!file) return;
     setError(null);
     try {
-      await apply(parseParks(JSON.parse(await file.text())), `File: ${file.name}`);
+      const r = parseParksDetailed(JSON.parse(await file.text()));
+      if (r.parks.length === 0) return explainEmpty(r, 'That file');
+      await apply(r.parks, `File: ${file.name}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Couldn’t read that file.');
     }
