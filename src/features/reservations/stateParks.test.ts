@@ -232,3 +232,33 @@ describe('South Dakota parks', () => {
     expect(isGenericBookingUrl('https://www.campsd.com/')).toBe(true);
   });
 });
+
+describe('South Dakota parks from the GFP map server', () => {
+  it('finds the park boundary layer in the Parks folder and imports from it', async () => {
+    const urls: string[] = [];
+    const fake = (async (url: string) => {
+      urls.push(url);
+      if (url === 'https://gfpgis.sd.gov/arcgis/rest/services/Parks?f=json') {
+        return Response.json({ services: [{ name: 'Parks/BoatRamps', type: 'FeatureServer' }, { name: 'Parks/ParkBoundaries', type: 'MapServer' }] });
+      }
+      if (url.includes('Parks/ParkBoundaries/MapServer/layers')) {
+        return Response.json({ layers: [{ id: 0, name: 'Campsites', geometryType: 'esriGeometryPoint' }, { id: 2, name: 'State Park Boundaries', geometryType: 'esriGeometryPolygon' }] });
+      }
+      if (url.includes('Parks/ParkBoundaries/MapServer/2/query')) {
+        return Response.json({
+          features: Array.from({ length: 45 }, (_, i) => ({
+            attributes: { ParkName: `Park ${i}`, Type: i % 2 ? 'Recreation Area' : 'State Park' },
+            geometry: { rings: [[[-100 + i * 0.05, 44], [-99.95 + i * 0.05, 44], [-99.95 + i * 0.05, 44.05]]] },
+          })),
+        });
+      }
+      return new Response('{"error":{"message":"Item does not exist or is inaccessible."}}', { status: 400 });
+    }) as typeof fetch;
+    const r = await fetchParksFromService(fake, 'sd');
+    expect(r.parks).toHaveLength(45);
+    expect(r.parks.some((p) => p.name === 'Park 1 Recreation Area')).toBe(true);
+    expect(r.source).toBe('https://gfpgis.sd.gov/arcgis/rest/services/Parks/ParkBoundaries/MapServer/2');
+    expect(urls.some((u) => u.includes('BoatRamps'))).toBe(false);
+    expect(r.reports[0]?.outcome).toMatch(/^45 parks/);
+  });
+});

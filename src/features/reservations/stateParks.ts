@@ -346,7 +346,46 @@ export interface SourceReport {
   outcome: string;
 }
 
-const SD_SOURCES: [string, string][] = SD_PARKS_ITEMS.map((id): [string, string] => [`item:${id}`, 'SD open data: Parks and Recreation Areas (GFP)']);
+/** GFP's own map server; its Parks folder holds the park boundary layer (found by name — the address isn't documented). */
+export const SD_GFP_PARKS_FOLDER = 'https://gfpgis.sd.gov/arcgis/rest/services/Parks';
+
+const SD_SOURCES: [string, string][] = [
+  [`gfp:${SD_GFP_PARKS_FOLDER}`, 'SD GFP map server (Parks folder)'],
+  ...SD_PARKS_ITEMS.map((id): [string, string] => [`item:${id}`, 'SD open data: Parks and Recreation Areas']),
+];
+
+/**
+ * Find the park-boundary layer in an ArcGIS folder: services named like parks
+ * first, then a polygon layer whose name says park / boundary / recreation area.
+ * Returns a layer URL (…/MapServer/3) that fetchFromService queries directly.
+ */
+export async function discoverParkLayer(folderUrl: string, fetchFn: typeof fetch): Promise<string> {
+  const res = await fetchFn(`${folderUrl}?f=json`);
+  if (!res.ok) throw await httpError(res);
+  const folder = (await res.json()) as { services?: { name: string; type: string }[]; error?: { message?: string } };
+  if (folder.error) throw new Error(folder.error.message ?? 'folder listing failed');
+  const root = folderUrl.replace(/\/[^/]+$/, '');
+  const services = (folder.services ?? []).filter((x) => /^(MapServer|FeatureServer)$/.test(x.type));
+  const score = (n: string) => (/boundar/i.test(n) ? 0 : /state_?park|park/i.test(n) ? 1 : 2);
+  const ordered = services.filter((x) => !/ramp|trail|campsite|asset|cartegraph/i.test(x.name)).sort((a, b) => score(a.name) - score(b.name));
+  const tried: string[] = [];
+  for (const svc of ordered.slice(0, 8)) {
+    const base = `${root}/${svc.name}/${svc.type}`;
+    tried.push(svc.name);
+    try {
+      const lr = await fetchFn(`${base}/layers?f=json`);
+      if (!lr.ok) continue;
+      const layers = ((await lr.json()) as { layers?: { id: number; name: string; geometryType?: string }[] }).layers ?? [];
+      const poly = layers.filter((l) => /polygon/i.test(l.geometryType ?? 'polygon'));
+      const layer =
+        poly.find((l) => /state park|recreation area|park boundar|parks?_?boundar/i.test(l.name)) ?? poly.find((l) => /park|boundar/i.test(l.name));
+      if (layer) return `${base}/${layer.id}`;
+    } catch {
+      /* next service */
+    }
+  }
+  throw new Error(tried.length ? `no park boundary layer in ${tried.join(', ')}` : 'no map services in the folder');
+}
 
 const SOURCES: [string, string][] = [
   ...MN_PARKS_ITEMS.map((id, i): [string, string] => [`item:${id}`, i === 0 ? 'MN Geospatial Commons (DNR)' : 'UMN copy of DNR data']),
@@ -391,7 +430,11 @@ export async function fetchParksFromService(
   const reports: SourceReport[] = [];
   for (const [base, label] of region === 'sd' ? SD_SOURCES : SOURCES) {
     try {
-      const service = base.startsWith('item:') ? await resolveItem(base.slice(5), fetchFn) : base;
+      const service = base.startsWith('item:')
+        ? await resolveItem(base.slice(5), fetchFn)
+        : base.startsWith('gfp:')
+          ? await discoverParkLayer(base.slice(4), fetchFn)
+          : base;
       const r = { ...(await fetchFromService(service, fetchFn, region)), source: service };
       reports.push({ source: base, label, outcome: `${r.parks.length} parks from ${r.featureCount} areas (layer “${r.layerName}”)` });
       if (!best || r.parks.length > best.parks.length) best = r;
