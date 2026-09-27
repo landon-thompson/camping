@@ -17,7 +17,7 @@ This file is the hand-off note between work sessions. Update it at the end of ev
 
 Integration pass (coordinator): trip page saves only changed fields (fixed a bug where saving trip details could undo a campground chosen in the reservation section or an edit synced from the other phone); trip page section jump bar, sticky save bar, compact gear list; routes & pins linked from Tools and each trip; accessibility fixes (announced save status, reduced-motion, labelled links, theme toggle buttons); README setup steps for photos and RIDB.
 
-Tests: 176 app + 50 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
+Tests: 190 app + 53 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
 
 **Not testable from the build sandbox (network blocked): verify on first real deploy**
 - National Weather Service API (api.weather.gov): response parsing and browser CORS. Weather is built from the documented format.
@@ -69,6 +69,13 @@ The Azure SQL free offer wouldn't create on the owner's free-trial subscription 
 - Trip location now follows the campground picked in Book (replaces the old pin; a hand-set spot is kept only if the new campground has no pin). Plan tab has "Use <campground>'s location".
 - Booking hand-off (no scraping/auto-booking): tapping Book now and coming back to the app shows "Back from booking?"; **Paste confirmation** reads a pasted ReserveMN/Recreation.gov email (confirmation #, site, arrival, nights, cost, fees, cancel-by) into the form for checking. Saving a booked reservation sets the trip's dates and marks the trip booked; a cancelled one moves a booked trip back to planned. Email layouts aren't published, so the parser looks for common labels. **Verify** against a real confirmation email and adjust `src/features/reservations/confirmation.ts` if a field is missed.
 - Fixed: cost/fee and other decimal fields rejected cents on save (missing `step`); latitude/longitude fields used the iPhone decimal keypad, which has no minus key.
+
+## Owner feedback round 3 (2026-09-27)
+- **Home page season map**: every trip pinned (its own location, else its campground's); tap a pin to open the trip. Trips page map does the same.
+- **Campground location lookup** (Book tab, automatic when a campground without a pin is picked; also "Find location" in the directory): state parks from the DNR park list (pin = middle of the park), national forest campgrounds from the USFS recreation sites service (`EDW_RecreationOpportunities_01`). Source and a verify note are saved on the campground.
+- **Lake & fish tab** (new trip tab): public boat launches within ~6 mi from the DNR "Public Water Access Sites" dataset (nearest one fills the trip's boat launch if empty; directions link), and fish surveys from DNR LakeFinder for the chosen lake(s): share of all fish caught, fish per net by species per net type, average weight, and below/typical/above vs. the DNR's range for similar lakes. Cached on the phone (`lake_survey:<dow>`, `trip_nearby:<tripId>`) for offline use.
+- `/api/gis` allowlist now also covers DNR LakeFinder (lake survey by DOW, lakes by point/name) and the USFS EDW MapServers.
+- **Verify on the phone** (all unreachable from the build sandbox; each shows a per-source report if it fails): water access service address `enterprise.gisdata.mn.gov/aghost/rest/services/us_mn_state_dnr/loc_water_access_sites` (named after the Commons dataset `loc-water-access-sites`, not confirmed), its field names (parsed loosely), LakeFinder `by_point` JSON shape and `detail.cgi?type=lake_survey` field names (taken from the DNR Sentinel Lakes R package), USFS recreation layer/fields.
 
 ## Open items / to verify
 

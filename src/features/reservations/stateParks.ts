@@ -258,7 +258,7 @@ export function planImport(
   return { add, fill };
 }
 
-async function httpError(res: Response): Promise<Error> {
+export async function httpError(res: Response): Promise<Error> {
   let detail = '';
   try {
     detail = ((await res.json()) as { error?: string | { message?: string } }).error as string;

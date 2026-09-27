@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { newId, saveRecord, useRecord } from '../../db/records';
 import { Button, Card, inputClass } from '../../components/ui';
-import type { Reservation, ReservationStatus, Trip } from '../../model/schemas';
+import type { Campground, Reservation, ReservationStatus, Trip } from '../../model/schemas';
 import { campgroundTakesReservations, cancelDeadlineInfo, checkMaxNights, daysBetween, daysUntil, formatOpensAt, resolveBooking } from './booking';
+import { useCampgroundLookup } from '../places/useCampgroundLookup';
+import { db } from '../../db/local';
 import { locationForCampground, parseConfirmation, tripUpdateFromReservation } from './confirmation';
 import { reservationForTrip, useBookingRules, useCampgrounds, useReservations } from './data';
 import { BookingStateBadge, bookingLink, ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, numOrNull, SaveRow, useDraft } from './shared';
@@ -39,6 +41,7 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
   const [backFromBooking, setBackFromBooking] = useState(() => readBookingFlag(tripId));
   const [pasteOpen, setPasteOpen] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  const { status: lookupStatus, lookup } = useCampgroundLookup();
 
   useEffect(() => {
     const onVisible = () => {
@@ -59,6 +62,13 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
   const resolved = campground && rule ? resolveBooking(now, tripData.startDate, rule, campground.data) : null;
   const nights = tripData.startDate && tripData.endDate ? daysBetween(tripData.startDate, tripData.endDate) : null;
   const booked = reservation?.data.status === 'booked';
+  const findLocation = (cgId: string, cg: Campground) =>
+    lookup(cgId, cg, async (found) => {
+      // Only move the pin if the trip still uses this campground.
+      const latest = (await db.records.get(tripId))?.data as Trip | undefined;
+      if (!latest || latest.campgroundId !== cgId || !found.location) return;
+      await saveRecord('trip', tripId, { ...latest, location: { ...found.location, label: found.name } });
+    });
   const startBooking = () => {
     setBookingFlag(tripId, true);
     setBackFromBooking(false); // shown when the app comes back into view
@@ -87,6 +97,8 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
               if (reservation && reservation.data.status !== 'booked') {
                 void saveRecord('reservation', reservation.id, { ...reservation.data, campgroundId: id });
               }
+              // No pin yet: look it up in official data, then move the trip there.
+              if (id && next && !next.location) void findLocation(id, next);
             }}
           >
             <option value="">Choose a campground…</option>
@@ -99,13 +111,27 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
                 </option>
               ))}
           </select>
-          {campground && !campground.data.location && (
+          {lookupStatus.state === 'busy' && (
+            <span role="status" className="mt-1 block text-sm text-ink-2">
+              Looking up the campground’s location in official data…
+            </span>
+          )}
+          {lookupStatus.state === 'found' && campground?.data.location && (
+            <span role="status" className="mt-1 block text-sm text-ok">
+              Location found ({lookupStatus.source}). The trip’s map pin moved there.
+            </span>
+          )}
+          {campground && !campground.data.location && lookupStatus.state !== 'busy' && (
             <span className="mt-1 block text-sm text-ink-2">
-              No map pin for this campground yet, so the trip keeps its own location. Add one in the{' '}
+              {lookupStatus.state === 'failed' ? `${lookupStatus.message} ` : 'No map pin for this campground yet. '}
+              <button type="button" className="min-h-11 font-semibold text-brand underline" onClick={() => void findLocation(campground.id, campground.data)}>
+                {lookupStatus.state === 'failed' ? 'Try again' : 'Find location'}
+              </button>
+              , add it in the{' '}
               <Link to={`/book/campgrounds/${encodeURIComponent(campground.id)}`} className="font-semibold text-brand underline">
                 campground directory
-              </Link>{' '}
-              (or Import state parks there), or tap the map on the Plan tab.
+              </Link>
+              , or tap the map on the Plan tab.
             </span>
           )}
         </label>

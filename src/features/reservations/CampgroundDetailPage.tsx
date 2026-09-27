@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { newId, saveRecord, useRecord } from '../../db/records';
-import { Card, inputClass, PageTitle, StatusChip } from '../../components/ui';
+import { Button, Card, inputClass, PageTitle, StatusChip } from '../../components/ui';
 import type { Agency, BookingSystem, Campground } from '../../model/schemas';
 import { AGENCY_LABEL, useBookingRules } from './data';
 import { campgroundTakesReservations } from './booking';
 import { bookingLink, ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, NavButton, numOrNull, SaveRow, SpecEditor, useDraft } from './shared';
 import { RidbImport } from './RidbImport';
+import { viaAppServer } from './stateParks';
+import { findCampgroundLocation, withFoundLocation } from '../places/campgroundLocation';
 
 /** /book/campgrounds/:id — details for one campground, or (:id === "new") the add-campground flow. */
 export function CampgroundDetailPage() {
@@ -207,6 +209,7 @@ function CampgroundFields({ draft, setDraft }: { draft: Campground; setDraft: (c
         </label>
       </div>
       <p className="text-sm text-ink-2">Leave latitude/longitude blank unless you're entering coordinates read from an official page.</p>
+      <FindLocationButton draft={draft} onFound={(cg) => setDraft(cg)} />
 
       <div className="flex flex-wrap gap-4">
         <TriState label="Electric sites" value={draft.electric} onChange={(v) => setDraft({ ...draft, electric: v })} />
@@ -322,6 +325,38 @@ function NewCampground() {
           </button>
         </form>
       </Card>
+    </div>
+  );
+}
+
+/** Looks the campground up in official data (DNR parks / USFS recreation sites); the owner then saves. */
+function FindLocationButton({ draft, onFound }: { draft: Campground; onFound: (cg: Campground) => void }) {
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="space-y-1">
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setMsg(null);
+          const r = await findCampgroundLocation(draft, viaAppServer);
+          setBusy(false);
+          if (r.ok) {
+            onFound(withFoundLocation(draft, r.found));
+            setMsg({ ok: true, text: `Found: ${r.found.source}. ${r.found.verify} Tap Save to keep it.` });
+          } else setMsg({ ok: false, text: r.message });
+        }}
+      >
+        {busy ? 'Looking up…' : draft.location ? 'Look up location again' : 'Find location'}
+      </Button>
+      {msg && (
+        <p role="status" className={`text-sm ${msg.ok ? 'text-ok' : 'text-warn'}`}>
+          {msg.text}
+        </p>
+      )}
     </div>
   );
 }

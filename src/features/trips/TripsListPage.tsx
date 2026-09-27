@@ -2,9 +2,8 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { newId, saveRecord, useRecords } from '../../db/records';
 import { Button, Card, PageTitle } from '../../components/ui';
-import { MN_CENTER } from '../../lib/map';
 import type { Trip, TripStatus } from '../../model/schemas';
-import { TripMap, type TripMapMarker } from './TripMap';
+import { SeasonMap } from './SeasonMap';
 import { compareTripOrder, tripNights } from './utils';
 import { computeReadiness } from './readiness';
 
@@ -36,7 +35,6 @@ function formatDates(trip: Trip): string {
 
 export function TripsListPage() {
   const navigate = useNavigate();
-  const settings = useRecords('settings');
   const trips = useRecords('trip');
   const checklist = useRecords('trip_checklist_item');
   const reservations = useRecords('reservation');
@@ -47,32 +45,12 @@ export function TripsListPage() {
   const loadProfiles = useRecords('load_profile');
   const powerProfiles = useRecords('power_profile');
 
-  const homeBase = settings.rows[0]?.data.homeBase ?? null;
   const vehicleData = vehicle.rows[0]?.data ?? null;
   const trailerData = trailer.rows[0]?.data ?? null;
   const loadProfile = loadProfiles.rows[0]?.data ?? null;
   const powerProfile = powerProfiles.rows[0]?.data ?? null;
 
   const sorted = useMemo(() => [...trips.rows].sort((a, b) => compareTripOrder(a.data, b.data)), [trips.rows]);
-
-  const campgroundLocations = useMemo(
-    () => new Map(campgrounds.rows.flatMap((c) => (c.data.location ? [[c.id, c.data.location] as const] : []))),
-    [campgrounds.rows],
-  );
-
-  const markers: TripMapMarker[] = useMemo(() => {
-    const out: TripMapMarker[] = [];
-    if (homeBase?.lat != null && homeBase.lng != null) {
-      out.push({ id: 'home', lat: homeBase.lat, lng: homeBase.lng, label: '⌂', variant: 'home' });
-    }
-    for (const t of sorted) {
-      const loc = t.data.location ?? campgroundLocations.get(t.data.campgroundId ?? '') ?? null;
-      if (loc) out.push({ id: t.id, lat: loc.lat, lng: loc.lng, label: String(t.data.level) });
-    }
-    return out;
-  }, [homeBase, sorted, campgroundLocations]);
-
-  const center: [number, number] = homeBase?.lat != null && homeBase.lng != null ? [homeBase.lng, homeBase.lat] : MN_CENTER;
 
   async function addTrip() {
     const id = newId('trip');
@@ -102,7 +80,7 @@ export function TripsListPage() {
       <PageTitle sub="The 2027 season, one trip per progression level">Trips</PageTitle>
 
       <Card title="Season map">
-        <TripMap center={center} zoom={6} markers={markers} tripId={null} className="h-[55vh] min-h-72 w-full" />
+        <SeasonMap className="h-[55vh] min-h-72 w-full" />
       </Card>
 
       <div className="space-y-3">

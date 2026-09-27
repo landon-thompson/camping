@@ -11,6 +11,7 @@ import { computeReadiness, type ReadinessPart } from './readiness';
 import { defaultGearIds, tripNights } from './utils';
 import { TripReservationSection } from '../reservations/TripReservationSection';
 import { TripWeatherSection } from '../journal/TripWeatherSection';
+import { TripLakeSection } from '../fishing/TripLakeSection';
 import { TripTrailsSection } from '../trails/TripTrailsSection';
 import { TripDebriefSection } from '../journal/TripDebriefSection';
 import { useSyncStatus } from '../../sync/useSync';
@@ -28,6 +29,7 @@ const SECTIONS: [string, string][] = [
   ['t-gear', 'Gear'],
   ['t-checklist', 'Checklist'],
   ['t-reservation', 'Book'],
+  ['t-lake', 'Lake & fish'],
   ['t-weather', 'Weather'],
   ['t-trails', 'Trails'],
   ['t-debrief', 'Debrief'],
@@ -160,7 +162,10 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
     : homeBase?.lat != null && homeBase.lng != null
       ? [homeBase.lng, homeBase.lat]
       : MN_CENTER;
-  const markers: TripMapMarker[] = draft.location ? [{ id, lat: draft.location.lat, lng: draft.location.lng, label: String(draft.level) }] : [];
+  const markers: TripMapMarker[] = [
+    ...(draft.location ? [{ id, lat: draft.location.lat, lng: draft.location.lng, label: String(draft.level), title: draft.location.label || draft.name }] : []),
+    ...(draft.boatLaunch ? [{ id: 'launch', lat: draft.boatLaunch.lat, lng: draft.boatLaunch.lng, label: '⚓', variant: 'plain' as const, title: draft.boatLaunch.name || 'Boat launch' }] : []),
+  ];
 
   return (
     <div className="space-y-4">
@@ -361,6 +366,12 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
         <TripReservationSection tripId={id} />
       </section>
       )}
+      {tab === 't-lake' && (
+      <section id="t-lake">
+        <TripLakeSection tripId={id} />
+      </section>
+      )}
+
       {tab === 't-weather' && (
       <section id="t-weather">
         <TripWeatherSection tripId={id} />

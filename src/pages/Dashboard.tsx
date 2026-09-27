@@ -6,6 +6,7 @@ import { describeSync } from '../components/SyncBadge';
 import { useSyncStatus } from '../sync/useSync';
 import type { SpecNumber } from '../model/schemas';
 import { TripsDashboardCard } from '../features/trips/DashboardCard';
+import { SeasonMap } from '../features/trips/SeasonMap';
 import { BookingDashboardCard } from '../features/reservations/DashboardCard';
 import { GearDashboardCard } from '../features/gear/DashboardCard';
 
@@ -29,6 +30,10 @@ export function Dashboard() {
       </PageTitle>
 
       <InstallHint />
+
+      <Card title="Season map" action={<Link to="/trips" className="min-h-11 content-center font-semibold text-brand">All trips</Link>}>
+        <SeasonMap className="h-[45vh] min-h-64 w-full" />
+      </Card>
 
       <Card title="Sync">
         <p className="text-ink-2">{describeSync(sync.state, sync.message)}</p>

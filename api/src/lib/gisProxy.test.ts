@@ -24,4 +24,16 @@ describe('GIS proxy allowlist', () => {
     expect(allowedGisUrl('https://user:pw@arcgis.dnr.state.mn.us/host/rest/services/X/FeatureServer/layers?f=json')).toBeNull();
     expect(allowedGisUrl('file:///etc/passwd')).toBeNull();
   });
+
+  it('allows DNR LakeFinder lookups and USFS recreation sites, nothing else on those hosts', () => {
+    expect(allowedGisUrl('https://maps.dnr.state.mn.us/cgi-bin/lakefinder/detail.cgi?type=lake_survey&id=69025400')).not.toBeNull();
+    expect(allowedGisUrl('https://maps.dnr.state.mn.us/cgi-bin/lakefinder/detail.cgi?type=other&id=69025400')).toBeNull();
+    expect(allowedGisUrl('https://maps.dnr.state.mn.us/cgi-bin/lakefinder/detail.cgi?type=lake_survey&id=../x')).toBeNull();
+    expect(allowedGisUrl('https://services.dnr.state.mn.us/api/lakefinder/by_point/v1?lat=47.8&lon=-92.1&radius=3000')).not.toBeNull();
+    expect(allowedGisUrl('https://services.dnr.state.mn.us/api/lakefinder/by_point/v1?lat=abc&lon=-92.1')).toBeNull();
+    expect(allowedGisUrl('https://services.dnr.state.mn.us/api/lakefinder/by_name/v1?name=Bear%20Head')).not.toBeNull();
+    expect(allowedGisUrl('https://services.dnr.state.mn.us/api/other/v1?name=x')).toBeNull();
+    expect(allowedGisUrl('https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_RecreationOpportunities_01/MapServer/0/query?where=1%3D1&f=json')).not.toBeNull();
+    expect(allowedGisUrl('https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_RecreationOpportunities_01/MapServer/0/query?f=html')).toBeNull();
+  });
 });

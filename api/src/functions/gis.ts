@@ -11,7 +11,7 @@ export async function gisProxy(req: HttpRequest, ctx: InvocationContext): Promis
   const target = allowedGisUrl(req.query.get('url'));
   if (!target) return json(400, { error: 'That map service address isn’t allowed.' });
   try {
-    const res = await fetch(target, { signal: AbortSignal.timeout(25_000), headers: { accept: 'application/json', 'user-agent': 'CampPlanner/1.0 (family trip planner; reads public park boundaries)' } });
+    const res = await fetch(target, { signal: AbortSignal.timeout(25_000), headers: { accept: 'application/json', 'user-agent': 'CampPlanner/1.0 (family trip planner; reads public park, lake and boat launch data)' } });
     const text = await res.text();
     if (text.length > MAX_GIS_BYTES) return json(502, { error: 'The map service sent too much data.' });
     return {
