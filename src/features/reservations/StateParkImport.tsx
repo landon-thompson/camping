@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Card } from '../../components/ui';
 import { saveRecord } from '../../db/records';
 import { useCampgrounds } from './data';
-import { fetchParksFromService, MN_PARKS_DATASET_URL, parseParksDetailed, planImport, type ParkPoint, type ParseResult } from './stateParks';
+import { fetchParksFromService, MN_PARKS_DATASET_URL, parseParksDetailed, planImport, type ParkPoint, type ParseResult, type SourceReport } from './stateParks';
 
 /** Load every Minnesota state park / recreation area (name + map pin) from official GIS data. */
 export function StateParkImport() {
@@ -11,6 +11,7 @@ export function StateParkImport() {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showFile, setShowFile] = useState(false);
+  const [reports, setReports] = useState<SourceReport[]>([]);
 
   function explainEmpty(r: ParseResult, where: string) {
     setError(
@@ -34,6 +35,7 @@ export function StateParkImport() {
     setStatus(null);
     try {
       const r = await fetchParksFromService();
+      setReports(r.reports);
       if (r.parks.length === 0) {
         explainEmpty(r, `The state map service (layer “${r.layerName}”)`);
         setShowFile(true);
@@ -41,6 +43,7 @@ export function StateParkImport() {
       }
       await apply(r.parks, r.source);
     } catch (e) {
+      setReports((e as { reports?: SourceReport[] }).reports ?? []);
       const why = e instanceof TypeError || !(e instanceof Error) ? 'Couldn’t reach the state map service.' : e.message;
       setError(`${why} Try the file option below.`);
       setShowFile(true);
@@ -94,6 +97,15 @@ export function StateParkImport() {
             <input type="file" accept=".geojson,.json,application/geo+json,application/json" className="sr-only" onChange={(e) => void fromFile(e.target.files)} />
           </label>
         </div>
+      )}
+      {reports.length > 0 && (
+        <ul className="mt-2 space-y-1 text-xs text-ink-2">
+          {reports.map((r) => (
+            <li key={r.source}>
+              <strong>{r.label}:</strong> {r.outcome}
+            </li>
+          ))}
+        </ul>
       )}
       <p role="status" className="mt-2 text-sm text-ok">
         {status ?? ''}

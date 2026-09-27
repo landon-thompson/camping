@@ -83,7 +83,8 @@ describe('state park import', () => {
     const r = await fetchParksFromService(fake);
     expect(r.parks).toHaveLength(3);
     expect(r.layerName).toBe('DNR State Parks');
-    expect(r.source).toContain('metc'); // fell back from the DNR service
+    expect(r.source).toContain('metc'); // fell back from the DNR services
+    expect(r.reports.map((x) => x.outcome)).toEqual(['HTTP 500', 'HTTP 500', expect.stringMatching(/^3 parks from 6 areas/)]);
     expect(calls.some((c) => c.includes('/5/query?'))).toBe(true);
   });
 });
@@ -150,5 +151,17 @@ describe('statewide DNR data', () => {
     // Existing Itasca had a generic link (''), so it gets its park page; Afton is new.
     expect(plan.fill[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00181');
     expect(plan.add[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100');
+  });
+});
+
+describe('Esri JSON input', () => {
+  it('reads attributes + rings, and reports service errors', () => {
+    const esri = {
+      features: [
+        { attributes: { AREA_NAME: 'Itasca', UNIT_TYPE: 'State Park', AREA_ID: 'spk00181' }, geometry: { rings: [[[-95.2, 47.2], [-95.1, 47.2], [-95.1, 47.3], [-95.2, 47.3]]] } },
+      ],
+    };
+    expect(parseParksDetailed(esri, true).parks).toEqual([{ name: 'Itasca State Park', lat: 47.25, lng: -95.15, unitId: 'spk00181' }]);
+    expect(() => parseParksDetailed({ error: { code: 499, message: 'Token Required' } })).toThrow(/499 Token Required/);
   });
 });
