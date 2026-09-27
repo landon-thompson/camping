@@ -6,8 +6,19 @@ import type { Campground } from '../../model/schemas';
  * automatic source below is best-effort and a file import is the fallback.
  */
 
-/** Metropolitan Council's public map service, which republishes DNR layers. Unverified from the build sandbox. */
+/**
+ * Official sources, tried in order (unverified from the build sandbox, which can't reach them):
+ *  1. MN DNR's statewide Division of Parks and Trails area boundaries (hosted feature service).
+ *  2. Metropolitan Council's parks service (Twin Cities metro only) as a fallback.
+ */
+export const MN_DNR_PARKS_SERVICE =
+  'https://arcgis.dnr.state.mn.us/host/rest/services/Hosted/DNR_Division_of_Parks_and_Trails_Area_Boundaries/FeatureServer';
 export const MN_PARKS_SERVICE = 'https://gis.metc.state.mn.us/arcgis/rest/services/LPH/Parks/MapServer';
+
+/** A park's own official DNR page, from its DNR unit id (e.g. spk00181 = Itasca). */
+export function dnrParkPageUrl(unitId: string): string {
+  return `https://www.dnr.state.mn.us/state_parks/park.html?id=${unitId.toLowerCase()}`;
+}
 
 /** Official download page for the statewide boundary file (GeoJSON), for the file fallback. */
 export const MN_PARKS_DATASET_URL = 'https://gisdata.mn.gov/dataset?q=state+park+boundaries';
@@ -16,6 +27,8 @@ export interface ParkPoint {
   name: string;
   lat: number;
   lng: number;
+  /** DNR unit id like spk00181, when the data carries it. */
+  unitId?: string;
 }
 
 type Position = number[];
@@ -127,14 +140,18 @@ export function parseParksDetailed(geojson: unknown, parksLayer = false): ParseR
       .join(' ');
     if (/wayside/i.test(raw) || (/wayside/i.test(allText) && !/state park/i.test(allText))) continue;
     const typed = /state park|recreation area|\bSP\b|\bSRA\b/i;
-    if (!parksLayer && !typed.test(raw) && !typed.test(allText)) continue;
+    const isPark = typed.test(raw) || typed.test(allText);
+    // Statewide parks-and-trails layers also hold state trails, forests, water accesses…
+    const notAPark = /\btrail\b|forest|water access|wildlife|fish|scientific|wayside|office|district|region|area \d/i;
+    if (!isPark && (!parksLayer || notAPark.test(raw) || notAPark.test(allText))) continue;
     let name = raw.replace(/\bSP\b/, 'State Park').replace(/\bSRA\b/, 'State Recreation Area');
     if (!/state (park|recreation area)/i.test(name)) {
       name += /recreation area|\bSRA\b/i.test(allText) ? ' State Recreation Area' : ' State Park';
     }
     name = name.replace(/\s+/g, ' ').trim();
     const c = centroid(f.geometry);
-    if (c && !byName.has(normalizeName(name))) byName.set(normalizeName(name), { name, ...c });
+    const unitId = Object.values(f.properties ?? {}).find((v): v is string => typeof v === 'string' && /^s(pk|ra)\d{5}$/i.test(v.trim()));
+    if (c && !byName.has(normalizeName(name))) byName.set(normalizeName(name), { name, ...c, ...(unitId ? { unitId: unitId.trim().toLowerCase() } : {}) });
   }
   return {
     parks: [...byName.values()].sort((a, b) => a.name.localeCompare(b.name)),
@@ -166,7 +183,7 @@ export function parkCampground(p: ParkPoint, source: string): Campground {
     bookingSystem: 'reservemn',
     unit: p.name,
     location: { lat: p.lat, lng: p.lng },
-    bookingUrl: 'https://www.mndnr.gov/reservations',
+    bookingUrl: p.unitId ? dnrParkPageUrl(p.unitId) : 'https://www.mndnr.gov/reservations',
     ridbFacilityId: null,
     windowDaysOverride: null,
     electric: null,
@@ -178,6 +195,8 @@ export function parkCampground(p: ParkPoint, source: string): Campground {
     notes: '',
   };
 }
+
+const GENERIC_LINK = /^https?:\/\/(www\.)?mndnr\.gov\/reservations\/?$|^$/i;
 
 /** Plan an import: new parks to add, and existing records (same name) whose missing location can be filled. */
 export function planImport(
@@ -191,7 +210,18 @@ export function planImport(
   for (const p of parks) {
     const match = byName.get(normalizeName(p.name));
     if (match) {
-      if (!match.data.location) fill.push({ id: match.id, data: { ...match.data, location: { lat: p.lat, lng: p.lng } } });
+      const needsLocation = !match.data.location;
+      const betterLink = p.unitId && GENERIC_LINK.test(match.data.bookingUrl);
+      if (needsLocation || betterLink) {
+        fill.push({
+          id: match.id,
+          data: {
+            ...match.data,
+            location: match.data.location ?? { lat: p.lat, lng: p.lng },
+            bookingUrl: betterLink ? dnrParkPageUrl(p.unitId!) : match.data.bookingUrl,
+          },
+        });
+      }
     } else {
       add.push({ id: parkId(p.name), data: parkCampground(p, source) });
     }
@@ -199,15 +229,32 @@ export function planImport(
   return { add, fill };
 }
 
-/** Automatic source: find the state-park layer in the published service and fetch it as GeoJSON. */
-export async function fetchParksFromService(fetchFn: typeof fetch = fetch): Promise<ParseResult & { layerName: string }> {
-  const layersRes = await fetchFn(`${MN_PARKS_SERVICE}/layers?f=json`);
+async function fetchFromService(base: string, fetchFn: typeof fetch): Promise<ParseResult & { layerName: string }> {
+  const layersRes = await fetchFn(`${base}/layers?f=json`);
   if (!layersRes.ok) throw new Error(`The state map service answered ${layersRes.status}.`);
   const layers = ((await layersRes.json()) as { layers?: { id: number; name: string }[] }).layers ?? [];
-  const layer = layers.find((l) => /state park/i.test(l.name));
-  if (!layer) throw new Error('The state map service has no state-park layer.');
-  const q = `${MN_PARKS_SERVICE}/${layer.id}/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson`;
+  const layer = layers.find((l) => /state park/i.test(l.name)) ?? layers.find((l) => /park/i.test(l.name)) ?? layers[0];
+  if (!layer) throw new Error('The state map service has no park layer.');
+  const q = `${base}/${layer.id}/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson`;
   const res = await fetchFn(q);
   if (!res.ok) throw new Error(`The state map service answered ${res.status}.`);
   return { ...parseParksDetailed(await res.json(), true), layerName: layer.name };
+}
+
+/** Automatic source: statewide DNR data first; the metro-only service if that fails or is empty. */
+export async function fetchParksFromService(
+  fetchFn: typeof fetch = fetch,
+): Promise<ParseResult & { layerName: string; source: string }> {
+  let first: (ParseResult & { layerName: string; source: string }) | null = null;
+  for (const base of [MN_DNR_PARKS_SERVICE, MN_PARKS_SERVICE]) {
+    try {
+      const r = { ...(await fetchFromService(base, fetchFn)), source: base };
+      if (r.parks.length > 10) return r;
+      first ??= r;
+    } catch {
+      /* try the next source */
+    }
+  }
+  if (first) return first;
+  throw new Error('Couldn’t reach the state map services.');
 }

@@ -76,13 +76,15 @@ describe('state park import', () => {
     const calls: string[] = [];
     const fake = (async (url: string) => {
       calls.push(url);
+      if (url.includes('arcgis.dnr.state.mn.us')) return new Response('nope', { status: 500 });
       const body = url.includes('/layers') ? { layers: [{ id: 3, name: 'Trails' }, { id: 5, name: 'DNR State Parks' }] } : fc;
       return new Response(JSON.stringify(body), { status: 200 });
     }) as typeof fetch;
     const r = await fetchParksFromService(fake);
     expect(r.parks).toHaveLength(3);
     expect(r.layerName).toBe('DNR State Parks');
-    expect(calls[1]).toContain('/5/query?');
+    expect(r.source).toContain('metc'); // fell back from the DNR service
+    expect(calls.some((c) => c.includes('/5/query?'))).toBe(true);
   });
 });
 
@@ -125,5 +127,28 @@ describe('real-world data shapes', () => {
     expect(r.parks.map((p) => p.name)).toEqual(['Afton State Park', 'Cuyuna Country State Recreation Area', 'Itasca State Park']);
     expect(r.featureCount).toBe(4);
     expect(r.sampleFields).toEqual(['PARK_NAME', 'UNIT_TYPE']);
+  });
+});
+
+describe('statewide DNR data', () => {
+  it('keeps parks, drops trails/forests, and links each park to its own DNR page', () => {
+    const sq = (lng: number, lat: number) => [[[lng, lat], [lng + 0.1, lat], [lng + 0.1, lat + 0.1], [lng, lat + 0.1]]];
+    const data = {
+      features: [
+        { properties: { altd_name: 'Itasca', unit_type: 'State Park', area_id: 'SPK00181' }, geometry: { type: 'Polygon', coordinates: sq(-95.2, 47.2) } },
+        { properties: { altd_name: 'Gateway', unit_type: 'State Trail' }, geometry: { type: 'Polygon', coordinates: sq(-93, 45) } },
+        { properties: { altd_name: 'Paul Bunyan', unit_type: 'State Forest' }, geometry: { type: 'Polygon', coordinates: sq(-94.9, 47.1) } },
+        { properties: { altd_name: 'Afton', unit_type: 'State Park', area_id: 'spk00100' }, geometry: { type: 'Polygon', coordinates: sq(-92.8, 44.85) } },
+      ],
+    };
+    const parks = parseParksDetailed(data, true).parks;
+    expect(parks.map((p) => [p.name, p.unitId])).toEqual([
+      ['Afton State Park', 'spk00100'],
+      ['Itasca State Park', 'spk00181'],
+    ]);
+    const plan = planImport(parks, [{ id: 'campground:itasca', data: cg('Itasca State Park', { lat: 47.2, lng: -95.2 }) }], 'dnr');
+    // Existing Itasca had a generic link (''), so it gets its park page; Afton is new.
+    expect(plan.fill[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00181');
+    expect(plan.add[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100');
   });
 });

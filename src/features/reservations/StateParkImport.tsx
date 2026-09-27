@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Card } from '../../components/ui';
 import { saveRecord } from '../../db/records';
 import { useCampgrounds } from './data';
-import { fetchParksFromService, MN_PARKS_DATASET_URL, MN_PARKS_SERVICE, parseParksDetailed, planImport, type ParkPoint, type ParseResult } from './stateParks';
+import { fetchParksFromService, MN_PARKS_DATASET_URL, parseParksDetailed, planImport, type ParkPoint, type ParseResult } from './stateParks';
 
 /** Load every Minnesota state park / recreation area (name + map pin) from official GIS data. */
 export function StateParkImport() {
@@ -23,7 +23,7 @@ export function StateParkImport() {
     const plan = planImport(parks, campgrounds.rows, source);
     for (const r of [...plan.add, ...plan.fill]) await saveRecord('campground', r.id, r.data);
     setStatus(
-      `Found ${parks.length} parks: added ${plan.add.length}, filled in the location for ${plan.fill.length}` +
+      `Found ${parks.length} parks: added ${plan.add.length}, updated ${plan.fill.length} (location or park page)` +
         (parks.length - plan.add.length - plan.fill.length > 0 ? `, ${parks.length - plan.add.length - plan.fill.length} already up to date.` : '.'),
     );
   }
@@ -39,7 +39,7 @@ export function StateParkImport() {
         setShowFile(true);
         return;
       }
-      await apply(r.parks, MN_PARKS_SERVICE);
+      await apply(r.parks, r.source);
     } catch (e) {
       const why = e instanceof TypeError || !(e instanceof Error) ? 'Couldn’t reach the state map service.' : e.message;
       setError(`${why} Try the file option below.`);
