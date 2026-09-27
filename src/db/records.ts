@@ -86,7 +86,19 @@ export async function ensureSeeds(): Promise<number> {
   let added = 0;
   await db.transaction('rw', db.records, async () => {
     for (const seed of SEED_RECORDS) {
-      if (await db.records.get(seed.id)) continue;
+      const existing = await db.records.get(seed.id);
+      if (existing) {
+        // A seed nobody has edited (updatedAt still 0) picks up improved seed
+        // text from a newer app version; anything the family changed is kept.
+        if (existing.updatedAt === 0 && !existing.deleted) {
+          const data = recordSchemas[seed.type].parse(seed.data);
+          if (JSON.stringify(data) !== JSON.stringify(existing.data)) {
+            await db.records.put({ ...existing, data, dirty: 1 });
+            added++;
+          }
+        }
+        continue;
+      }
       await db.records.add({
         id: seed.id,
         type: seed.type,
