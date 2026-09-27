@@ -1,11 +1,29 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { newId, saveRecord, useRecords } from '../../db/records';
 import { Button, Card, PageTitle } from '../../components/ui';
 import type { Trip, TripStatus } from '../../model/schemas';
 import { SeasonMap } from './SeasonMap';
-import { compareTripOrder, tripNights } from './utils';
+import { compareTripOrder, readinessBarColor, tripNights } from './utils';
 import { computeReadiness } from './readiness';
+
+const SHOW_MAP_KEY = 'tripsListShowMap';
+
+function readShowMap(): boolean {
+  try {
+    return sessionStorage.getItem(SHOW_MAP_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeShowMap(show: boolean) {
+  try {
+    sessionStorage.setItem(SHOW_MAP_KEY, show ? '1' : '0');
+  } catch {
+    /* ignore — just won't be remembered this session */
+  }
+}
 
 const statusLabel: Record<TripStatus, string> = {
   idea: 'Idea',
@@ -35,6 +53,7 @@ function formatDates(trip: Trip): string {
 
 export function TripsListPage() {
   const navigate = useNavigate();
+  const [showMap, setShowMap] = useState(readShowMap);
   const trips = useRecords('trip');
   const checklist = useRecords('trip_checklist_item');
   const reservations = useRecords('reservation');
@@ -79,10 +98,6 @@ export function TripsListPage() {
     <div className="space-y-4">
       <PageTitle sub="The 2027 season, one trip per progression level">Trips</PageTitle>
 
-      <Card title="Season map">
-        <SeasonMap className="h-[55vh] min-h-72 w-full" />
-      </Card>
-
       <div className="space-y-3">
         {sorted.map((t) => {
           const items = checklist.rows.filter((i) => i.data.tripId === t.id).map((i) => i.data);
@@ -112,18 +127,29 @@ export function TripsListPage() {
                   <p className="text-sm font-semibold text-ink-2">Level {t.data.level}</p>
                   <p className="text-lg font-bold">{t.data.name}</p>
                   <p className="text-sm text-ink-2">{formatDates(t.data)}</p>
+                  {campground && <p className="text-sm text-ink-2">{campground.name}</p>}
                 </div>
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${statusStyle[t.data.status]}`}>
                   {statusLabel[t.data.status]}
                 </span>
               </div>
-              <div className="mt-3 flex items-center gap-4 text-sm text-ink-2">
-                <span>Readiness {readiness.score}%</span>
-                {items.length > 0 && (
-                  <span>
-                    Checklist {checked}/{items.length}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-sm text-ink-2">
+                  <span>Readiness</span>
+                  <span className="font-semibold">
+                    {readiness.score}%{items.length > 0 && ` · Checklist ${checked}/${items.length}`}
                   </span>
-                )}
+                </div>
+                <div
+                  className="mt-1 h-2 overflow-hidden rounded-full bg-surface-2"
+                  role="progressbar"
+                  aria-label={`${t.data.name} readiness`}
+                  aria-valuenow={readiness.score}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div className={`h-2 rounded-full ${readinessBarColor(readiness.score)}`} style={{ width: `${readiness.score}%` }} />
+                </div>
               </div>
             </button>
           );
@@ -134,6 +160,32 @@ export function TripsListPage() {
       <Button onClick={() => void addTrip()} className="w-full">
         + New trip
       </Button>
+
+      <Card
+        title="Map"
+        action={
+          <Button
+            type="button"
+            variant="secondary"
+            aria-expanded={showMap}
+            onClick={() => {
+              setShowMap((prev) => {
+                const next = !prev;
+                writeShowMap(next);
+                return next;
+              });
+            }}
+          >
+            {showMap ? 'Hide map' : 'Show map'}
+          </Button>
+        }
+      >
+        {showMap ? (
+          <SeasonMap className="h-[55vh] min-h-72 w-full" />
+        ) : (
+          <p className="text-ink-2">Every trip with a location, on one map.</p>
+        )}
+      </Card>
     </div>
   );
 }

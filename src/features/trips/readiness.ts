@@ -5,6 +5,17 @@ import { tripNights } from './utils';
 
 export type ReadinessKey = 'checklist' | 'reservation' | 'dates' | 'location' | 'gear' | 'load' | 'power';
 
+/**
+ * Where the trip page should send someone who wants to fix a part that isn't
+ * at 100% — a tab key from TripPage's SECTIONS, and optionally the id of the
+ * element to scroll to and focus once that tab is showing.
+ */
+export interface ReadinessTarget {
+  tab: string;
+  label: string;
+  focusId?: string;
+}
+
 export interface ReadinessPart {
   key: ReadinessKey;
   label: string;
@@ -13,6 +24,8 @@ export interface ReadinessPart {
   /** 0–100. */
   score: number;
   reason: string;
+  /** Set (and shown as a button) while score < 100 and there's somewhere to fix it. */
+  target: ReadinessTarget | null;
 }
 
 export interface ReadinessResult {
@@ -51,15 +64,22 @@ export interface ReadinessInput {
 const round = (n: number) => Math.round(n);
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
 
+const BOOK_TARGET: ReadinessTarget = { tab: 't-reservation', label: 'Go to Book' };
+const PACK_TARGET: ReadinessTarget = { tab: 't-pack', label: 'Go to Pack' };
+const PLAN_DATES_TARGET: ReadinessTarget = { tab: 't-details', label: 'Go to Plan', focusId: 'plan-trip-dates' };
+const PLAN_WHERE_TARGET: ReadinessTarget = { tab: 't-details', label: 'Go to Plan', focusId: 'plan-where' };
+
 function checklistPart(items: TripChecklistItem[]): ReadinessPart {
   const total = items.length;
   const checked = items.filter((i) => i.checked).length;
+  const score = total === 0 ? 0 : round((checked / total) * 100);
   return {
     key: 'checklist',
     label: 'Checklist',
     weight: READINESS_WEIGHTS.checklist,
-    score: total === 0 ? 0 : round((checked / total) * 100),
+    score,
     reason: total === 0 ? 'No checklist yet — generate one on the trip page.' : `${checked} of ${total} items checked.`,
+    target: score < 100 ? PACK_TARGET : null,
   };
 }
 
@@ -71,12 +91,13 @@ function reservationPart(trip: Trip, campground: Campground | null, reservation:
       ...base,
       score: 100,
       reason: campground.bookingSystem === 'first-come' ? 'First-come, first-served — no reservation needed.' : 'Dispersed camping — no reservation needed.',
+      target: null,
     };
   }
-  if (reservation?.status === 'booked') return { ...base, score: 100, reason: 'Booked.' };
-  if (reservation?.status === 'waitlisted') return { ...base, score: 50, reason: 'Waitlisted.' };
-  if (!trip.campgroundId) return { ...base, score: 0, reason: 'No campground chosen yet.' };
-  return { ...base, score: 0, reason: 'Not booked yet.' };
+  if (reservation?.status === 'booked') return { ...base, score: 100, reason: 'Booked.', target: null };
+  if (reservation?.status === 'waitlisted') return { ...base, score: 50, reason: 'Waitlisted.', target: BOOK_TARGET };
+  if (!trip.campgroundId) return { ...base, score: 0, reason: 'No campground chosen yet.', target: BOOK_TARGET };
+  return { ...base, score: 0, reason: 'Not booked yet.', target: BOOK_TARGET };
 }
 
 function datesPart(trip: Trip): ReadinessPart {
@@ -87,6 +108,7 @@ function datesPart(trip: Trip): ReadinessPart {
     weight: READINESS_WEIGHTS.dates,
     score: set ? 100 : 0,
     reason: set ? 'Dates set.' : trip.targetWindow ? `No firm dates yet — target window "${trip.targetWindow}".` : 'Dates not set yet.',
+    target: set ? null : PLAN_DATES_TARGET,
   };
 }
 
@@ -98,19 +120,22 @@ function locationPart(trip: Trip): ReadinessPart {
     weight: READINESS_WEIGHTS.location,
     score: loc ? 100 : 0,
     reason: loc ? `Location set${loc.label ? `: ${loc.label}` : ''}.` : 'No location pinned yet.',
+    target: loc ? null : PLAN_WHERE_TARGET,
   };
 }
 
 function gearPart(tripGear: Gear[]): ReadinessPart {
   const weight = READINESS_WEIGHTS.gear;
-  if (tripGear.length === 0) return { key: 'gear', label: 'Gear', weight, score: 0, reason: 'No gear assigned to this trip yet.' };
+  if (tripGear.length === 0) return { key: 'gear', label: 'Gear', weight, score: 0, reason: 'No gear assigned to this trip yet.', target: PACK_TARGET };
   const have = tripGear.filter((g) => g.status !== 'wishlist').length;
+  const score = round((have / tripGear.length) * 100);
   return {
     key: 'gear',
     label: 'Gear',
     weight,
-    score: round((have / tripGear.length) * 100),
+    score,
     reason: `${have} of ${tripGear.length} items owned or ordered.`,
+    target: score < 100 ? PACK_TARGET : null,
   };
 }
 
@@ -123,7 +148,7 @@ function scoreFromLimitStatus(status: 'ok' | 'near' | 'over' | 'unknown'): numbe
 function loadPart(trip: Trip, tripGear: Gear[], vehicle: Vehicle | null, trailer: Trailer | null, loadProfile: LoadProfile | null): ReadinessPart {
   const weight = READINESS_WEIGHTS.load;
   const base = { key: 'load' as const, label: 'Load & tow', weight };
-  if (!loadProfile) return { ...base, score: 100, reason: 'No load profile set up yet (Phase 1).' };
+  if (!loadProfile) return { ...base, score: 100, reason: 'No load profile set up yet (Phase 1).', target: null };
   const gear: LoadGear[] = tripGear.map((g) => ({ name: g.name, quantity: g.quantity, weightLb: g.weightLb.value, location: g.location }));
   const result = computeLoad({
     payloadLimitLb: vehicle?.payloadLb.value ?? null,
@@ -143,13 +168,13 @@ function loadPart(trip: Trip, tripGear: Gear[], vehicle: Vehicle | null, trailer
     otherLb: loadProfile.otherLb,
     gear,
   });
-  return { ...base, score: scoreFromLimitStatus(result.overall), reason: result.warnings[0] ?? 'Within limits.' };
+  return { ...base, score: scoreFromLimitStatus(result.overall), reason: result.warnings[0] ?? 'Within limits.', target: null };
 }
 
 function powerPart(trip: Trip, powerProfile: PowerProfile | null): ReadinessPart {
   const weight = READINESS_WEIGHTS.power;
   const base = { key: 'power' as const, label: 'Power', weight };
-  if (!powerProfile) return { ...base, score: 100, reason: 'No power profile set up yet (Phase 1).' };
+  if (!powerProfile) return { ...base, score: 100, reason: 'No power profile set up yet (Phase 1).', target: null };
   const nights = tripNights(trip);
   const result = computePower({
     batteryWh: powerProfile.batteryWh.value ?? 0,
@@ -167,7 +192,7 @@ function powerPart(trip: Trip, powerProfile: PowerProfile | null): ReadinessPart
       : result.status === 'near'
         ? `Ends the trip around ${round(result.endPct)}% charge — cutting it close.`
         : 'Power should last the trip.';
-  return { ...base, score, reason };
+  return { ...base, score, reason, target: null };
 }
 
 export function computeReadiness(input: ReadinessInput): ReadinessResult {

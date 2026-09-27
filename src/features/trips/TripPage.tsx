@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { newId, saveRecord, useRecord, useRecords } from '../../db/records';
 import { getCachedUser } from '../../auth/identity';
@@ -7,8 +7,8 @@ import { MN_CENTER } from '../../lib/map';
 import type { LatLng, Trip, TripChecklistItem, TripKind, TripStatus } from '../../model/schemas';
 import { TripMap, type TripMapMarker } from './TripMap';
 import { generateChecklist, missingChecklistItems, pastDebriefsFor, templatesForTrip } from './checklist';
-import { computeReadiness, type ReadinessPart } from './readiness';
-import { defaultGearIds, tripNights } from './utils';
+import { computeReadiness, type ReadinessPart, type ReadinessTarget } from './readiness';
+import { defaultGearIds, readinessChipStyle, readinessTextColor, tripNights } from './utils';
 import { TripReservationSection } from '../reservations/TripReservationSection';
 import { TripWeatherSection } from '../journal/TripWeatherSection';
 import { TripLakeSection } from '../fishing/TripLakeSection';
@@ -24,10 +24,11 @@ const KIND_OPTIONS: { value: TripKind; label: string }[] = [
   { value: 'toddler', label: 'Toddler' },
 ];
 
+// The Gear and Checklist tabs merged into one "Pack" tab (both were about
+// packing, and Gear was nearly empty on its own).
 const SECTIONS: [string, string][] = [
   ['t-details', 'Plan'],
-  ['t-gear', 'Gear'],
-  ['t-checklist', 'Checklist'],
+  ['t-pack', 'Pack'],
   ['t-reservation', 'Book'],
   ['t-lake', 'Lake & fish'],
   ['t-weather', 'Weather'],
@@ -36,9 +37,13 @@ const SECTIONS: [string, string][] = [
   ['t-share', 'Share'],
 ];
 
+/** Old saved tab keys from before Gear/Checklist merged into Pack. */
+const TAB_ALIASES: Record<string, string> = { 't-gear': 't-pack', 't-checklist': 't-pack' };
+
 function readTab(): string {
   try {
-    const t = sessionStorage.getItem('tripTab');
+    const raw = sessionStorage.getItem('tripTab');
+    const t = raw ? (TAB_ALIASES[raw] ?? raw) : null;
     return t && SECTIONS.some(([k]) => k === t) ? t : 't-details';
   } catch {
     return 't-details';
@@ -91,6 +96,7 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
   const [patch, setPatch] = useState<Partial<Trip>>({});
   const [saved, setSaved] = useState(false);
   const [tab, setTabState] = useState(readTab);
+  const [pendingFocus, setPendingFocus] = useState<string | null>(null);
   const setTab = (t: string) => {
     setTabState(t);
     try {
@@ -100,6 +106,22 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
     }
     window.scrollTo({ top: 0 });
   };
+  /** From a readiness part's "Go to …" button: switch tab, then scroll/focus the fix. */
+  function goToReadinessTarget(target: ReadinessTarget) {
+    setTab(target.tab);
+    setPendingFocus(target.focusId ?? null);
+  }
+  useEffect(() => {
+    if (!pendingFocus) return;
+    const focusId = pendingFocus;
+    const raf = requestAnimationFrame(() => {
+      const el = document.getElementById(focusId);
+      el?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      el?.querySelector<HTMLElement>('input, select, textarea, button')?.focus();
+      setPendingFocus(null);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [pendingFocus, tab]);
   const draft: Trip = { ...trip, ...patch };
   const dirty = (Object.keys(patch) as (keyof Trip)[]).some((k) => JSON.stringify(patch[k]) !== JSON.stringify(trip[k]));
 
@@ -169,11 +191,17 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
 
   return (
     <div className="space-y-4">
-      <PageTitle sub={`Level ${draft.level} · readiness ${readiness.score}%${dirty ? ' · unsaved changes' : ''}`}>
+      <PageTitle sub={`Level ${draft.level}${dirty ? ' · unsaved changes' : ''}`}>
         <Link to="/trips" className="mr-2 text-ink-2">
           ←
         </Link>
         {draft.name || 'Trip'}
+        <span
+          className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 align-middle text-xs font-bold ${readinessChipStyle(readiness.score)}`}
+          aria-label={`Readiness ${readiness.score}%`}
+        >
+          {readiness.score}%
+        </span>
       </PageTitle>
 
       <nav aria-label="Trip sections" className="sticky top-[calc(env(safe-area-inset-top)+3.75rem)] z-30 -mx-4 overflow-x-auto border-b border-line bg-bg/95 px-4 py-2 backdrop-blur">
@@ -196,168 +224,169 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
       </nav>
 
       {tab === 't-details' && (
-      <Card>
-        <TripMap
-          center={mapCenter}
-          zoom={draft.location ? 11 : 6}
-          markers={markers}
-          tripId={id}
-          onPick={(lat, lng) => update({ location: { lat, lng, label: draft.location?.label ?? '' } })}
-        />
-      </Card>
-      )}
+      <div className="space-y-4">
+        <section id="plan-trip">
+        <Card title="Trip">
+          <div className="space-y-3">
+            <Field label="Name">
+              <input className={inputClass} value={draft.name} onChange={(e) => update({ name: e.target.value })} />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Level">
+                <select className={inputClass} value={draft.level} onChange={(e) => update({ level: Number(e.target.value) })}>
+                  {[1, 2, 3, 4, 5].map((l) => (
+                    <option key={l} value={l}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Status">
+                <select className={inputClass} value={draft.status} onChange={(e) => update({ status: e.target.value as TripStatus })}>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
 
-      {tab === 't-details' && (
-      <section id="t-details">
-      <Card title="Details">
-        <div className="space-y-3">
-          <Field label="Name">
-            <input className={inputClass} value={draft.name} onChange={(e) => update({ name: e.target.value })} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Level">
-              <select className={inputClass} value={draft.level} onChange={(e) => update({ level: Number(e.target.value) })}>
-                {[1, 2, 3, 4, 5].map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
+            <Field label="Target window" hint="Free text, e.g. “late May / early June” — used until firm dates are set.">
+              <input className={inputClass} value={draft.targetWindow} onChange={(e) => update({ targetWindow: e.target.value })} />
             </Field>
-            <Field label="Status">
-              <select className={inputClass} value={draft.status} onChange={(e) => update({ status: e.target.value as TripStatus })}>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+            <div id="plan-trip-dates" className="grid grid-cols-2 gap-3">
+              <Field label="Start date">
+                <input
+                  type="date"
+                  className={inputClass}
+                  value={draft.startDate ?? ''}
+                  onChange={(e) => update({ startDate: e.target.value || null })}
+                />
+              </Field>
+              <Field label="End date">
+                <input type="date" className={inputClass} value={draft.endDate ?? ''} onChange={(e) => update({ endDate: e.target.value || null })} />
+              </Field>
+            </div>
+            {nights !== null && <p className="text-sm text-ink-2">{nights} night{nights === 1 ? '' : 's'}</p>}
+
+            <div>
+              <span className="mb-1 block text-sm font-semibold text-ink-2">Trip kinds</span>
+              <div className="flex flex-wrap gap-2">
+                {KIND_OPTIONS.map((k) => (
+                  <Chip key={k.value} active={draft.kinds.includes(k.value)} onClick={() => toggleKind(k.value)}>
+                    {k.label}
+                  </Chip>
                 ))}
-              </select>
-            </Field>
+              </div>
+            </div>
+
+            <label className="flex min-h-12 items-center gap-3">
+              <input type="checkbox" className="h-6 w-6" checked={draft.towing} onChange={(e) => update({ towing: e.target.checked })} />
+              <span className="font-semibold">Towing the boat</span>
+            </label>
           </div>
+        </Card>
+        </section>
 
-          <Field label="Target window" hint="Free text, e.g. “late May / early June” — used until firm dates are set.">
-            <input className={inputClass} value={draft.targetWindow} onChange={(e) => update({ targetWindow: e.target.value })} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Start date">
+        <section id="plan-where">
+        <Card title="Where">
+          <div className="space-y-3">
+            <p className="text-sm text-ink-2">
+              Campground:{' '}
+              <span className="font-semibold text-ink">
+                {campground?.name ?? 'none chosen yet'}
+              </span>{' '}
+              — pick it in{' '}
+              <button type="button" onClick={() => setTab('t-reservation')} className="font-semibold text-brand underline">
+                Book
+              </button>
+              .
+            </p>
+
+            <TripMap
+              center={mapCenter}
+              zoom={draft.location ? 11 : 6}
+              markers={markers}
+              tripId={id}
+              onPick={(lat, lng) => update({ location: { lat, lng, label: draft.location?.label ?? '' } })}
+            />
+
+            <LocationFields
+              label="Location"
+              value={draft.location}
+              onChange={(v) => update({ location: v })}
+              hint="Set from the campground you pick in Book. To use another spot, tap the map above or type coordinates."
+              withName={false}
+            />
+            {campground?.location &&
+              (draft.location?.lat !== campground.location.lat || draft.location?.lng !== campground.location.lng) && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() =>
+                    campground.location &&
+                    update({ location: { lat: campground.location.lat, lng: campground.location.lng, label: campground.name } })
+                  }
+                >
+                  Use {campground.name}’s location
+                </Button>
+              )}
+            <LocationFields
+              label="Boat launch"
+              value={draft.boatLaunch}
+              onChange={(v) => update({ boatLaunch: v as (LatLng & { name: string }) | null })}
+              withName
+            />
+
+            <Field label="Peak sun hours" hint="For the power calculator on this trip, if different from the usual estimate.">
               <input
-                type="date"
+                type="number"
+                min={0}
+                max={24}
+                step={0.5}
                 className={inputClass}
-                value={draft.startDate ?? ''}
-                onChange={(e) => update({ startDate: e.target.value || null })}
+                value={draft.peakSunHours ?? ''}
+                onChange={(e) => update({ peakSunHours: e.target.value === '' ? null : Number(e.target.value) })}
               />
             </Field>
-            <Field label="End date">
-              <input type="date" className={inputClass} value={draft.endDate ?? ''} onChange={(e) => update({ endDate: e.target.value || null })} />
-            </Field>
           </div>
-          {nights !== null && <p className="text-sm text-ink-2">{nights} night{nights === 1 ? '' : 's'}</p>}
+        </Card>
+        </section>
 
-          <div>
-            <span className="mb-1 block text-sm font-semibold text-ink-2">Trip kinds</span>
-            <div className="flex flex-wrap gap-2">
-              {KIND_OPTIONS.map((k) => (
-                <Chip key={k.value} active={draft.kinds.includes(k.value)} onClick={() => toggleKind(k.value)}>
-                  {k.label}
-                </Chip>
-              ))}
-            </div>
-          </div>
-
-          <label className="flex min-h-12 items-center gap-3">
-            <input type="checkbox" className="h-6 w-6" checked={draft.towing} onChange={(e) => update({ towing: e.target.checked })} />
-            <span className="font-semibold">Towing the boat</span>
-          </label>
-
-          <p className="text-sm text-ink-2">
-            Campground:{' '}
-            <span className="font-semibold text-ink">
-              {campground?.name ?? 'none chosen yet'}
-            </span>{' '}
-            — pick it in{' '}
-            <button type="button" onClick={() => setTab('t-reservation')} className="font-semibold text-brand underline">
-              Book
-            </button>
-            .
-          </p>
-
-          <LocationFields
-            label="Location"
-            value={draft.location}
-            onChange={(v) => update({ location: v })}
-            hint="Set from the campground you pick in Book. To use another spot, tap the map above or type coordinates."
-            withName={false}
-          />
-          {campground?.location &&
-            (draft.location?.lat !== campground.location.lat || draft.location?.lng !== campground.location.lng) && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() =>
-                  campground.location &&
-                  update({ location: { lat: campground.location.lat, lng: campground.location.lng, label: campground.name } })
-                }
-              >
-                Use {campground.name}’s location
-              </Button>
-            )}
-          <LocationFields
-            label="Boat launch"
-            value={draft.boatLaunch}
-            onChange={(v) => update({ boatLaunch: v as (LatLng & { name: string }) | null })}
-            withName
-          />
-
-          <Field label="Peak sun hours" hint="For the power calculator on this trip, if different from the usual estimate.">
-            <input
-              type="number"
-              min={0}
-              max={24}
-              step={0.5}
-              className={inputClass}
-              value={draft.peakSunHours ?? ''}
-              onChange={(e) => update({ peakSunHours: e.target.value === '' ? null : Number(e.target.value) })}
-            />
-          </Field>
-
+        <section id="plan-notes">
+        <Card title="Notes">
           <Field label="Notes">
             <textarea className={`${inputClass} min-h-24 py-2`} value={draft.notes} onChange={(e) => update({ notes: e.target.value })} />
           </Field>
+        </Card>
+        </section>
 
-          <div className="flex items-center gap-3">
-            <Button type="button" disabled={!dirty} onClick={() => void save()}>
-              Save
-            </Button>
-            {saved && !dirty && <span className="text-sm text-ok">Saved</span>}
-          </div>
+        <div className="flex items-center gap-3">
+          <Button type="button" disabled={!dirty} onClick={() => void save()}>
+            Save
+          </Button>
+          {saved && !dirty && <span className="text-sm text-ok">Saved</span>}
         </div>
-      </Card>
-      </section>
+
+        <section id="t-readiness">
+          <ReadinessCard parts={readiness.parts} score={readiness.score} onNavigate={goToReadinessTarget} />
+        </section>
+      </div>
       )}
 
-      {tab === 't-gear' && (
-      <section id="t-gear">
+      {tab === 't-pack' && (
+      <section id="t-pack" className="space-y-4">
         <GearCard trip={draft} gearRows={gear.rows} onChange={(gearIds) => update({ gearIds })} />
-      </section>
-      )}
-
-      {tab === 't-checklist' && (
-      <section id="t-checklist">
-      <ChecklistCard
-        tripId={id}
-        trip={draft}
-        items={items}
-        templates={templates.rows}
-        gearRows={gear.rows}
-        allTrips={allTrips.rows}
-        debriefs={debriefs.rows}
-      />
-      </section>
-      )}
-
-      {tab === 't-details' && (
-      <section id="t-readiness">
-        <ReadinessCard parts={readiness.parts} score={readiness.score} />
+        <ChecklistCard
+          tripId={id}
+          trip={draft}
+          items={items}
+          templates={templates.rows}
+          gearRows={gear.rows}
+          allTrips={allTrips.rows}
+          debriefs={debriefs.rows}
+        />
       </section>
       )}
 
@@ -690,23 +719,39 @@ function ChecklistCard({
   );
 }
 
-function partColor(score: number): string {
-  if (score >= 80) return 'text-ok';
-  if (score >= 50) return 'text-warn';
-  return 'text-bad';
-}
-
-function ReadinessCard({ parts, score }: { parts: ReadinessPart[]; score: number }) {
+function ReadinessCard({
+  parts,
+  score,
+  onNavigate,
+}: {
+  parts: ReadinessPart[];
+  score: number;
+  onNavigate: (target: ReadinessTarget) => void;
+}) {
   return (
     <Card title="Readiness">
-      <p className={`text-3xl font-bold ${partColor(score)}`}>{score}%</p>
+      <p className={`text-3xl font-bold ${readinessTextColor(score)}`}>{score}%</p>
       <ul className="mt-3 space-y-2">
-        {parts.map((p) => (
-          <li key={p.key} className="flex items-start justify-between gap-3 text-sm">
-            <span className="text-ink-2">{p.reason}</span>
-            <span className={`shrink-0 font-bold ${partColor(p.score)}`}>{p.score}%</span>
-          </li>
-        ))}
+        {parts.map((p) => {
+          const target = p.target;
+          return (
+            <li key={p.key} className="flex items-start justify-between gap-3 border-b border-line pb-2 text-sm last:border-0 last:pb-0">
+              <div className="flex-1">
+                <p className="text-ink-2">{p.reason}</p>
+                {target && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate(target)}
+                    className="mt-1 inline-flex min-h-11 items-center font-semibold text-brand underline"
+                  >
+                    {target.label}
+                  </button>
+                )}
+              </div>
+              <span className={`shrink-0 font-bold ${readinessTextColor(p.score)}`}>{p.score}%</span>
+            </li>
+          );
+        })}
       </ul>
     </Card>
   );

@@ -30,3 +30,25 @@ export function isEarlierTrip(a: Trip, b: Trip): boolean {
 export function defaultGearIds(trip: Pick<Trip, 'kinds'>, gear: { id: string; data: { packFor: TripKind[] } }[]): string[] {
   return gear.filter((g) => g.data.packFor.includes('all') || g.data.packFor.some((k) => trip.kinds.includes(k))).map((g) => g.id);
 }
+
+/**
+ * Shared color scale for a 0–100 readiness (or part) score, used by the trip
+ * cards' readiness bar, the trip page header chip and the readiness card.
+ */
+export function readinessTextColor(score: number): string {
+  if (score >= 80) return 'text-ok';
+  if (score >= 50) return 'text-warn';
+  return 'text-bad';
+}
+
+export function readinessBarColor(score: number): string {
+  if (score >= 80) return 'bg-ok';
+  if (score >= 50) return 'bg-warn';
+  return 'bg-bad';
+}
+
+export function readinessChipStyle(score: number): string {
+  if (score >= 80) return 'bg-ok/10 text-ok';
+  if (score >= 50) return 'bg-warn-bg text-warn';
+  return 'bg-bad-bg text-bad';
+}

@@ -62,16 +62,17 @@ export function TripMap({
     let cancelled = false;
     let cleanupTrails = () => undefined as void;
     let map: MapLibreMap;
+    const coordHint = () => (onPickRef.current ? ' You can still enter coordinates by hand.' : '');
     try {
       map = new MapLibreMap({ container, style: MAP_STYLE_URL, center, zoom, attributionControl: false });
     } catch {
-      setError('The map couldn’t load. You can still enter coordinates by hand.');
+      setError(`The map couldn’t load.${coordHint()}`);
       return;
     }
     mapRef.current = map;
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
     map.on('error', () => {
-      if (!cancelled) setError('Map tiles are unavailable right now (offline, or the tile server is unreachable). You can still enter coordinates by hand.');
+      if (!cancelled) setError(`Map tiles are unavailable right now (offline, or the tile server is unreachable).${coordHint()}`);
     });
     map.on('load', () => {
       if (cancelled) return;
