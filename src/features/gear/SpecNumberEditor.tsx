@@ -30,6 +30,7 @@ export function SpecNumberEditor({
           className={inputClass}
           inputMode="decimal"
           type="number"
+          step="any"
           min={0}
           placeholder={unit}
           value={spec.value ?? ''}

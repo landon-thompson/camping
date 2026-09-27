@@ -111,3 +111,13 @@ html.camp-map-open,
 html.camp-map-open body {
   overflow: hidden;
 }
+
+.maplibregl-popup-content {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--color-surface); }
+.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--color-surface); }
+.maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: var(--color-surface); }
+.maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: var(--color-surface); }
+.maplibregl-popup-close-button { color: var(--color-ink); font-size: 22px; min-width: 44px; min-height: 44px; }

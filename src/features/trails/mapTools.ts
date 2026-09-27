@@ -1,5 +1,6 @@
 import type { IControl, Map as MapLibreMap } from 'maplibre-gl';
 import { MVUM_LAYER_IDS, MVUM_SERVICE_URL } from './mvum';
+import { classifyVehicles, MVUM_VECTOR_MIN_ZOOM, VEHICLE_CLASS_STYLE } from './mvumVehicles';
 
 /**
  * Shared map tools added to every app map by attachTrailLayers:
@@ -110,18 +111,20 @@ const FIELD_LABELS: Record<string, string> = {
   SBS_SYMBOL_NAME: 'Symbol',
 };
 
-const HIDDEN = /^(objectid|shape|shape_length|shape_area|gis_|globalid|rte_cn|cn$|gis_miles|seg_length|bmp|emp|fid|forest|district|admin_org|securityid|symbol$|mvum_symbol|revision|mvumdate|ignore)/i;
+const HIDDEN = /^(adminorg|admin_org|objectid|shape|shape_length|shape_area|gis_|globalid|rte_cn|cn$|gis_miles|seg_length|bmp|emp|fid|forest|district|admin_org|securityid|symbol$|mvum_symbol|revision|mvumdate|ignore)/i;
 
 export function describeMvumAttributes(attrs: Record<string, unknown>): [string, string][] {
   const rows: [string, string][] = [];
   for (const [k, v] of Object.entries(attrs)) {
     if (v === null || v === undefined) continue;
-    const text = String(v).trim();
+    let text = String(v).trim();
+    if (/^\s*0?1\/0?1\s*-\s*12\/31\s*$/.test(text)) text = 'All year';
     if (!text || text === 'Null' || text === 'N/A' || HIDDEN.test(k)) continue;
     const key = k.toUpperCase();
     const label =
       FIELD_LABELS[key] ??
       k
+        .replace(/_?DATESOPEN$/i, ' (dates open)')
         .replace(/_/g, ' ')
         .toLowerCase()
         .replace(/^\w/, (c) => c.toUpperCase());
@@ -156,6 +159,21 @@ async function identify(map: MapLibreMap, lng: number, lat: number) {
   return data.results ?? [];
 }
 
+/** The app's own color key for vehicle-coded roads. */
+function colorKey(): string {
+  const rows = Object.values(VEHICLE_CLASS_STYLE)
+    .map(
+      (v) =>
+        `<div style="display:flex;align-items:center;gap:6px;margin:3px 0"><span style="display:inline-block;flex:0 0 26px;width:26px;height:5px;border-radius:3px;background:${v.color}"></span><span><strong>${v.label}</strong> — ${v.note}</span></div>`,
+    )
+    .join('');
+  return (
+    `<p style="margin:0 0 4px;font-weight:700">Road colors (zoom ${MVUM_VECTOR_MIN_ZOOM}+)</p>${rows}` +
+    '<div style="display:flex;align-items:center;gap:6px;margin:3px 0"><span style="display:inline-block;flex:0 0 26px;width:26px;border-top:4px dashed #555"></span><span>Dashed = seasonal (open part of the year)</span></div>' +
+    '<p style="margin:4px 0 0;font-size:11px">From Forest Service data. The printed/official MVUM is the legal reference.</p>'
+  );
+}
+
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 }
@@ -165,39 +183,77 @@ export class MvumInfoControl implements IControl {
   private container: HTMLElement | null = null;
   private map: MapLibreMap | null = null;
   private infoOn = false;
-  private popup: import('maplibre-gl').Popup | null = null;
+  private sheet: HTMLElement | null = null;
+  private marker: import('maplibre-gl').Marker | null = null;
 
   constructor(
-    private popupFactory: () => import('maplibre-gl').Popup,
+    private markerFactory: () => import('maplibre-gl').Marker,
     private ensureMvumVisible: () => void,
   ) {}
+
+  /** Readable info panel along the bottom of the map (above the map buttons), with a Close button. */
+  private show(html: string) {
+    const map = this.map;
+    if (!map) return;
+    if (!this.sheet) {
+      const el = document.createElement('div');
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', 'Road info');
+      el.style.cssText =
+        'position:absolute;left:8px;right:8px;bottom:8px;z-index:5;max-height:55%;overflow:auto;' +
+        'background:var(--color-surface);color:var(--color-ink);border:1px solid var(--color-line);' +
+        'border-radius:14px;padding:12px 14px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:15px;line-height:1.35';
+      map.getContainer().appendChild(el);
+      this.sheet = el;
+    }
+    this.sheet.innerHTML =
+      '<button type="button" data-close style="float:right;min-height:44px;min-width:44px;margin:-8px -8px 0 8px;' +
+      'border:0;background:transparent;color:var(--color-ink);font-size:22px;font-weight:700" aria-label="Close road info">✕</button>' +
+      html;
+    this.sheet.querySelector('[data-close]')?.addEventListener('click', () => this.hide());
+  }
+
+  private hide() {
+    this.sheet?.remove();
+    this.sheet = null;
+    this.marker?.remove();
+    this.marker = null;
+  }
 
   private onClick = async (e: { lngLat: { lng: number; lat: number } }) => {
     const map = this.map;
     if (!map || !this.infoOn) return;
     const { lng, lat } = e.lngLat;
-    this.popup?.remove();
-    this.popup = this.popupFactory().setLngLat([lng, lat]).setHTML('<p style="margin:0">Looking up this road…</p>').addTo(map);
+    this.marker?.remove();
+    this.marker = this.markerFactory().setLngLat([lng, lat]).addTo(map);
+    this.show('<p style="margin:0">Looking up this road…</p>');
     try {
       const results = await identify(map, lng, lat);
       if (results.length === 0) {
-        this.popup.setHTML('<p style="margin:0">No MVUM road or trail right here. Tap directly on a line.</p>');
+        this.show('<p style="margin:0">No MVUM road or trail right here. Tap directly on a line.</p>');
         return;
       }
       const html = results
         .slice(0, 3)
         .map((r) => {
           const rows = describeMvumAttributes(r.attributes ?? {})
-            .map(([k, v]) => `<tr><th style="text-align:left;padding:2px 8px 2px 0;font-weight:600">${escapeHtml(k)}</th><td>${escapeHtml(v)}</td></tr>`)
+            .map(
+              ([k, v]) =>
+                `<tr><th style="text-align:left;vertical-align:top;padding:3px 10px 3px 0;font-weight:600;color:var(--color-ink-2)">${escapeHtml(k)}</th><td style="padding:3px 0;font-weight:600">${escapeHtml(v)}</td></tr>`,
+            )
             .join('');
-          return `<p style="margin:0 0 4px;font-weight:700">${escapeHtml(r.layerName ?? 'MVUM')}</p><table style="font-size:13px;border-collapse:collapse">${rows}</table>`;
+          const { cls } = classifyVehicles(r.attributes ?? {});
+          const style = VEHICLE_CLASS_STYLE[cls];
+          return (
+            `<p style="margin:0 0 6px;font-weight:700;font-size:16px">${escapeHtml(r.layerName ?? 'MVUM')}</p>` +
+            `<p style="margin:0 0 8px;display:flex;align-items:center;gap:8px"><span style="flex:0 0 22px;height:6px;border-radius:3px;background:${style.color}"></span><span><strong>${escapeHtml(style.label)}</strong> — ${escapeHtml(style.note)}</span></p>` +
+            `<table style="border-collapse:collapse;width:100%">${rows}</table>`
+          );
         })
         .join('<hr style="margin:8px 0">');
-      this.popup.setHTML(
-        `<div style="max-height:50vh;overflow:auto">${html}<p style="margin:8px 0 0;font-size:12px">The printed/official MVUM is the legal reference.</p></div>`,
-      );
+      this.show(`${html}<p style="margin:10px 0 0;font-size:13px;color:var(--color-ink-2)">The printed/official MVUM is the legal reference.</p>`);
     } catch {
-      this.popup.setHTML('<p style="margin:0">Couldn’t reach the Forest Service map service. Check your signal.</p>');
+      this.show('<p style="margin:0">Couldn’t reach the Forest Service map service. Check your signal.</p>');
     }
   };
 
@@ -213,7 +269,7 @@ export class MvumInfoControl implements IControl {
       pressed(info, this.infoOn);
       setRoadInfoMode(map, this.infoOn);
       if (this.infoOn) this.ensureMvumVisible();
-      else this.popup?.remove();
+      else this.hide();
     });
     const legendBtn = button('Legend', 'MVUM symbols');
     pressed(legendBtn, false);
@@ -242,7 +298,7 @@ export class MvumInfoControl implements IControl {
       const wanted: number[] = [MVUM_LAYER_IDS.roads, MVUM_LAYER_IDS.trails];
       const layers = (data.layers ?? []).filter((l) => wanted.includes(l.layerId));
       if (layers.length === 0) throw new Error('empty');
-      el.innerHTML = layers
+      el.innerHTML = colorKey() + '<p style="margin:8px 0 4px;font-weight:700">Official MVUM symbols (zoomed out)</p>' + layers
         .map(
           (l) =>
             `<p style="margin:4px 0;font-weight:700">${escapeHtml(l.layerName)}</p>` +
@@ -256,14 +312,14 @@ export class MvumInfoControl implements IControl {
         .join('');
       el.dataset.loaded = '1';
     } catch {
-      el.textContent = 'Couldn’t load the legend from the Forest Service.';
+      el.innerHTML = colorKey() + '<p style="margin:8px 0 0">Couldn’t load the official symbols from the Forest Service.</p>';
     }
   }
 
   onRemove(): void {
     this.map?.off('click', this.onClick);
     if (this.map) setRoadInfoMode(this.map, false);
-    this.popup?.remove();
+    this.hide();
     this.container?.remove();
     this.map = null;
   }

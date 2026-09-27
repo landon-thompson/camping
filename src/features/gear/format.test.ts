@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { itemCost } from '../../calc/budget';
+import { buyNext, itemCost } from '../../calc/budget';
 import type { Gear } from '../../model/schemas';
-import { costLabel, formatUsd, gearForLoad, priorityLabel } from './format';
+import { costLabel, formatUsd, gearForLoad, priorityLabel, splitBuyNext } from './format';
 
 const gear = (over: Partial<Gear> = {}): Gear => ({
   name: 'Item',
@@ -44,6 +44,22 @@ describe('priorityLabel', () => {
   it('formats P1–P5 or a dash', () => {
     expect(priorityLabel(1)).toBe('P1');
     expect(priorityLabel(null)).toBe('—');
+  });
+});
+
+describe('splitBuyNext', () => {
+  it('keeps priced items in buying order and groups unpriced ones separately', () => {
+    const items = [
+      gear({ name: 'Fridge', priority: 1, costLowUsd: 475, costHighUsd: 475 }),
+      gear({ name: 'Straps', priority: 1 }), // unpriced
+      gear({ name: 'Awning', priority: 2, costLowUsd: 389, costHighUsd: 499 }),
+      gear({ name: 'Table', priority: 3 }), // unpriced
+    ];
+    const { priced, unpriced } = splitBuyNext(buyNext(items, 1000));
+    expect(priced.map((r) => r.item.name)).toEqual(['Fridge', 'Awning']);
+    expect(unpriced.map((r) => r.item.name)).toEqual(['Straps', 'Table']);
+    // Unpriced items don't interrupt the running total.
+    expect(priced.map((r) => r.cumulative)).toEqual([475, 919]);
   });
 });
 

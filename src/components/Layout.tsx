@@ -25,9 +25,9 @@ export function Layout() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
       <header className="safe-top sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur">
-        <div className="flex items-center justify-between gap-3 px-4 py-2">
-          <span className="truncate whitespace-nowrap text-lg font-bold text-brand">Camp Planner</span>
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between gap-2 px-4 py-2">
+          <span className="shrink-0 whitespace-nowrap text-lg font-bold text-brand">Camp Planner</span>
+          <div className="flex shrink-0 items-center gap-1">
             <SyncBadge />
             <NavLink to="/settings" aria-label="Settings" className="grid h-11 w-11 place-items-center rounded-full text-ink-2">
               <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden>

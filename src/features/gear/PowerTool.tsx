@@ -8,7 +8,7 @@ import { SpecNumberEditor } from './SpecNumberEditor';
 import { useAutoSaveDraft } from './useAutoSaveDraft';
 
 const OUTLET_NOTE =
-  "The GX550's cargo 120 V outlet is limited to 400 W and turns off with the car — set the EcoFlow AC charging limit to ~300 W when charging from it.";
+  "GX550 cargo outlet: 400 W max, off with the car. Set EcoFlow AC charge limit to ~300 W when using it.";
 
 let loadIdSeq = 0;
 function newLoadId() {
@@ -162,6 +162,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 value={profile.solar.panelW}
@@ -172,6 +173,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 max={24}
@@ -183,6 +185,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 max={100}
@@ -200,6 +203,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
             <input
               className={inputClass}
               type="number"
+              step="any"
               inputMode="decimal"
               min={0}
               value={profile.driveCharge.watts}
@@ -210,6 +214,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
             <input
               className={inputClass}
               type="number"
+              step="any"
               inputMode="decimal"
               min={0}
               max={24}
@@ -300,6 +305,7 @@ function LoadRow({
           <input
             className={inputClass}
             type="number"
+            step="any"
             inputMode="decimal"
             min={0}
             value={load.whPerDay ?? 0}
@@ -312,6 +318,7 @@ function LoadRow({
             <input
               className={inputClass}
               type="number"
+              step="any"
               inputMode="decimal"
               min={0}
               value={load.watts ?? 0}
@@ -322,6 +329,7 @@ function LoadRow({
             <input
               className={inputClass}
               type="number"
+              step="any"
               inputMode="decimal"
               min={0}
               max={24}

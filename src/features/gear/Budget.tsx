@@ -50,35 +50,38 @@ function BudgetView({
 
       {categorySum > seasonBudget && (
         <div className="rounded-xl bg-warn-bg p-3 text-sm font-semibold text-warn" role="alert">
-          Category budgets add up to {formatUsd(categorySum)}, which is {formatUsd(categorySum - seasonBudget)} over the season
-          budget.
+          Category budgets add up to {formatUsd(categorySum)}, {formatUsd(categorySum - seasonBudget)} over the season budget.
         </div>
       )}
 
       <Card title="Season total">
         <dl className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
           <Stat label="Spent" value={formatUsd(overall.spent)} />
-          <Stat label="Planned" value={overall.planned === overall.plannedLow && overall.plannedLow === overall.plannedHigh
-            ? formatUsd(overall.planned)
-            : `${formatUsd(overall.plannedLow)}–${formatUsd(overall.plannedHigh)}`} />
+          <Stat
+            label="Planned"
+            value={
+              overall.planned === overall.plannedLow && overall.plannedLow === overall.plannedHigh
+                ? formatUsd(overall.planned)
+                : `${formatUsd(overall.plannedLow)}–${formatUsd(overall.plannedHigh)}`
+            }
+          />
           <Stat label="Remaining" value={formatUsd(overall.remaining)} bad={overall.remaining < 0} />
         </dl>
         {overall.unpriced > 0 && (
-          <p className="mt-3 text-sm text-ink-2">
-            {overall.unpriced} wishlist item{overall.unpriced === 1 ? '' : 's'} with no price yet — the plan will cost more than
-            shown.
-          </p>
+          <p className="mt-3 text-sm text-ink-2">{overall.unpriced} wishlist item{overall.unpriced === 1 ? '' : 's'} with no price yet.</p>
         )}
-        {overall.optional > 0 && (
-          <p className="mt-1 text-sm text-ink-2">Plus {formatUsd(overall.optional)} in optional extras (not counted above).</p>
-        )}
+        {overall.optional > 0 && <p className="mt-1 text-sm text-ink-2">Plus {formatUsd(overall.optional)} in optional extras.</p>}
       </Card>
 
-      {sortedCategories.map((c) => {
-        const t = catTotalsById.get(c.id);
-        if (!t) return null;
-        return <CategoryCard key={c.id} id={c.id} data={c.data} totals={t} />;
-      })}
+      <Card title="Categories">
+        <ul className="divide-y divide-line">
+          {sortedCategories.map((c) => {
+            const t = catTotalsById.get(c.id);
+            if (!t) return null;
+            return <CategoryRow key={c.id} id={c.id} data={c.data} totals={t} />;
+          })}
+        </ul>
+      </Card>
     </>
   );
 }
@@ -132,55 +135,63 @@ function SeasonBudgetCard({ settings }: { settings: Settings }) {
   );
 }
 
-function CategoryCard({ id, data, totals: t }: { id: string; data: BudgetCategory; totals: CategoryTotals }) {
+/** One compact row per category: name, bar, planned-vs-budget; tap to edit that category's budget. */
+function CategoryRow({ id, data, totals: t }: { id: string; data: BudgetCategory; totals: CategoryTotals }) {
+  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(data.budgetUsd));
   useEffect(() => setDraft(String(data.budgetUsd)), [data.budgetUsd]);
+
+  const budget = t.budget;
+  const committed = t.spent + t.planned;
+  const pct = budget > 0 ? Math.min(100, (committed / budget) * 100) : committed > 0 ? 100 : 0;
+  const over = committed > budget;
 
   async function saveBudget() {
     const n = Number(draft);
     if (!Number.isFinite(n) || n < 0) return;
     await saveRecord('budget_category', id, { ...data, budgetUsd: n });
+    setEditing(false);
   }
 
-  const budget = t.budget;
-  const spentPct = budget > 0 ? Math.min(100, (t.spent / budget) * 100) : t.spent > 0 ? 100 : 0;
-  const plannedPct = budget > 0 ? Math.min(100 - spentPct, (t.planned / budget) * 100) : 0;
-  const over = t.spent + t.planned > budget;
-
   return (
-    <Card title={data.name}>
-      <div className="flex items-end gap-3">
-        <Field label="Category budget (USD)">
-          <input
-            className={inputClass}
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step={25}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={() => void saveBudget()}
-          />
-        </Field>
-      </div>
+    <li className="py-2">
+      <button
+        type="button"
+        className="flex min-h-12 w-full items-center gap-3 text-left"
+        onClick={() => setEditing((v) => !v)}
+        aria-expanded={editing}
+      >
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold">{data.name}</p>
+          <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-surface-2">
+            <div className={`h-full ${over ? 'bg-bad' : 'bg-brand'}`} style={{ width: `${pct}%` }} />
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className={`text-sm font-semibold ${over ? 'text-bad' : ''}`}>
+            {formatUsd(committed)} / {formatUsd(budget)}
+          </p>
+          {t.unpriced > 0 && <p className="text-xs text-ink-2">+{t.unpriced} unpriced</p>}
+        </div>
+      </button>
 
-      <div className="mt-3 flex h-3 w-full overflow-hidden rounded-full bg-surface-2">
-        <div className="h-full bg-brand" style={{ width: `${spentPct}%` }} />
-        <div className="h-full bg-info" style={{ width: `${plannedPct}%` }} />
-      </div>
-
-      <dl className="mt-3 grid grid-cols-3 gap-3 text-center">
-        <Stat label="Spent" value={formatUsd(t.spent)} />
-        <Stat label="Planned" value={formatUsd(t.planned)} />
-        <Stat label="Remaining" value={formatUsd(t.remaining)} bad={over} />
-      </dl>
-      {over && <p className="mt-2 text-sm font-semibold text-warn">Over this category's budget.</p>}
-      {t.unpriced > 0 && (
-        <p className="mt-2 text-sm text-ink-2">
-          {t.unpriced} item{t.unpriced === 1 ? '' : 's'} with no price yet.
-        </p>
+      {editing && (
+        <div className="mt-2 flex items-end gap-3">
+          <Field label={`${data.name} budget (USD)`}>
+            <input
+              className={inputClass}
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step={25}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              autoFocus
+            />
+          </Field>
+          <Button onClick={() => void saveBudget()}>Save</Button>
+        </div>
       )}
-      {t.optional > 0 && <p className="mt-1 text-sm text-ink-2">Plus {formatUsd(t.optional)} optional.</p>}
-    </Card>
+    </li>
   );
 }

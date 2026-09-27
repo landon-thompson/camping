@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fetchParksFromService, parkId, parseParks, parseParksDetailed, planImport, toLonLat } from './stateParks';
 import type { Campground } from '../../model/schemas';
-import { isGenericBookingUrl } from './shared';
+import { bookingLink, isGenericBookingUrl } from './shared';
 
 const square = (lng: number, lat: number) => [
   [
@@ -77,13 +77,21 @@ describe('state park import', () => {
     const fake = (async (url: string) => {
       calls.push(url);
       if (url.includes('arcgis.dnr.state.mn.us')) return new Response('nope', { status: 500 });
+      if (url.includes('/sharing/rest/content/items/')) return new Response(JSON.stringify({ id: 'x' }), { status: 200 });
       const body = url.includes('/layers') ? { layers: [{ id: 3, name: 'Trails' }, { id: 5, name: 'DNR State Parks' }] } : fc;
       return new Response(JSON.stringify(body), { status: 200 });
     }) as typeof fetch;
     const r = await fetchParksFromService(fake);
     expect(r.parks).toHaveLength(3);
     expect(r.layerName).toBe('DNR State Parks');
-    expect(r.source).toContain('metc'); // fell back from the DNR service
+    expect(r.source).toContain('metc'); // fell back from the DNR services
+    expect(r.reports.map((x) => x.outcome)).toEqual([
+      'item has no service address',
+      'item has no service address',
+      'HTTP 500',
+      'HTTP 500',
+      expect.stringMatching(/^3 parks from 6 areas/),
+    ]);
     expect(calls.some((c) => c.includes('/5/query?'))).toBe(true);
   });
 });
@@ -148,7 +156,55 @@ describe('statewide DNR data', () => {
     ]);
     const plan = planImport(parks, [{ id: 'campground:itasca', data: cg('Itasca State Park', { lat: 47.2, lng: -95.2 }) }], 'dnr');
     // Existing Itasca had a generic link (''), so it gets its park page; Afton is new.
-    expect(plan.fill[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00181');
-    expect(plan.add[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100');
+    expect(plan.fill[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00181#reservations');
+    expect(plan.add[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100#reservations');
+  });
+});
+
+describe('Esri JSON input', () => {
+  it('reads attributes + rings, and reports service errors', () => {
+    const esri = {
+      features: [
+        { attributes: { AREA_NAME: 'Itasca', UNIT_TYPE: 'State Park', AREA_ID: 'spk00181' }, geometry: { rings: [[[-95.2, 47.2], [-95.1, 47.2], [-95.1, 47.3], [-95.2, 47.3]]] } },
+      ],
+    };
+    expect(parseParksDetailed(esri, true).parks).toEqual([{ name: 'Itasca State Park', lat: 47.25, lng: -95.15, unitId: 'spk00181' }]);
+    expect(() => parseParksDetailed({ error: { code: 499, message: 'Token Required' } })).toThrow(/499 Token Required/);
+  });
+});
+
+describe('official dataset item', () => {
+  it('follows the catalog item to its layer and stops once a statewide list is found', async () => {
+    const many = {
+      features: Array.from({ length: 45 }, (_, i) => ({
+        attributes: { AREA_NAME: `Park ${i} State Park` },
+        geometry: { rings: [[[-94 + i * 0.01, 46], [-93.9 + i * 0.01, 46], [-93.9 + i * 0.01, 46.1]]] },
+      })),
+    };
+    const urls: string[] = [];
+    const fake = (async (url: string) => {
+      urls.push(url);
+      if (url.includes('/sharing/rest/content/items/')) {
+        return new Response(JSON.stringify({ url: 'https://services1.arcgis.com/Org/arcgis/rest/services/Parks/FeatureServer/0' }));
+      }
+      return new Response(JSON.stringify(many));
+    }) as typeof fetch;
+    const r = await fetchParksFromService(fake);
+    expect(r.parks).toHaveLength(45);
+    expect(r.source).toContain('services1.arcgis.com');
+    expect(urls).toHaveLength(2); // item lookup + one query; other sources not needed
+    expect(urls[1]).toContain('/FeatureServer/0/query?');
+  });
+});
+
+describe('Book now link', () => {
+  it('jumps to the Reservations section of a DNR park page', () => {
+    expect(bookingLink('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100')).toBe(
+      'https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100#reservations',
+    );
+    expect(bookingLink('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100#reservations')).toBe(
+      'https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100#reservations',
+    );
+    expect(bookingLink('https://www.recreation.gov/camping/campgrounds/233144')).toBe('https://www.recreation.gov/camping/campgrounds/233144');
   });
 });

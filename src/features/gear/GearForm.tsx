@@ -181,6 +181,7 @@ function GearEditor({
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 value={draft.costLowUsd ?? ''}
@@ -191,6 +192,7 @@ function GearEditor({
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 value={draft.costHighUsd ?? ''}
@@ -201,6 +203,7 @@ function GearEditor({
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 value={draft.costActualUsd ?? ''}
@@ -239,6 +242,7 @@ function GearEditor({
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 value={draft.powerW ?? ''}
@@ -249,6 +253,7 @@ function GearEditor({
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 value={draft.energyWhPerDay ?? ''}
@@ -345,6 +350,7 @@ function QuickActions({ data, onChanged }: { data: Gear; onChanged: (g: Gear) =>
             className={`${inputClass} w-28`}
             inputMode="decimal"
             type="number"
+            step="any"
             min={0}
             placeholder="Price paid"
             value={price}
@@ -426,6 +432,7 @@ function PriceLink({ draft, onChange }: { draft: Gear; onChange: (g: Gear) => vo
             <input
               className={inputClass}
               type="number"
+              step="any"
               inputMode="decimal"
               min={0}
               value={seen}

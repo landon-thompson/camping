@@ -114,10 +114,8 @@ export function OfflinePanel({ tripId, map, tripLocation }: OfflinePanelProps) {
     <Card title="Offline map">
       <div className="space-y-3">
         <p className="text-sm text-ink-2">
-          We don't bulk-download map tiles — OpenFreeMap's public terms don't clearly allow that (see docs/phase-4.md). Instead,
-          "prepare offline" pans the map across your trip area at a few zoom levels so those tiles get cached on this phone, the
-          same as if you'd viewed them. The <strong>MVUM overlay is a convenience layer — the printed/official MVUM is the legal
-          reference</strong> and isn't guaranteed to be cached offline.
+          Caches map tiles for your trip area on this phone by panning through them at a few zoom levels — not a full offline
+          map download.
         </p>
 
         {!bbox && <p className="text-sm text-ink-2">Import routes/pins (or set a trip location) first, so there's an area to prepare.</p>}
@@ -172,12 +170,23 @@ export function OfflinePanel({ tripId, map, tripLocation }: OfflinePanelProps) {
             <Button variant="secondary" onClick={() => void clearAll()}>
               Free up tile storage (clears all cached map tiles)
             </Button>
-            <p className="text-xs text-ink-2">
-              Deleting a saved area removes it from this list; "free up tile storage" clears every cached map tile at once — we
-              can't yet evict just one area's tiles without re-downloading anything (see docs/phase-4.md).
-            </p>
           </div>
         )}
+
+        <details className="text-sm text-ink-2">
+          <summary className="cursor-pointer font-semibold text-ink">About offline maps</summary>
+          <div className="mt-2 space-y-2">
+            <p>
+              We don't bulk-download map tiles — OpenFreeMap's public terms don't clearly allow that. Instead, "prepare offline"
+              pans the map across your trip area at a few zoom levels so those tiles get cached on this phone, the same as if
+              you'd viewed them. The MVUM overlay isn't guaranteed to be cached by this pass.
+            </p>
+            <p>
+              Deleting a saved area removes it from this list; "free up tile storage" clears every cached map tile at once — we
+              can't yet evict just one area's tiles without re-downloading anything.
+            </p>
+          </div>
+        </details>
       </div>
     </Card>
   );

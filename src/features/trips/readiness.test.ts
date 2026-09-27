@@ -216,4 +216,42 @@ describe('computeReadiness', () => {
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.score).toBeLessThanOrEqual(100);
   });
+
+  describe('actionable targets (each links back to where to fix it)', () => {
+    it('sends an incomplete checklist and missing gear to Pack', () => {
+      const result = computeReadiness(baseInput());
+      expect(result.parts.find((p) => p.key === 'checklist')?.target).toMatchObject({ tab: 't-pack' });
+      expect(result.parts.find((p) => p.key === 'gear')?.target).toMatchObject({ tab: 't-pack' });
+    });
+
+    it('sends a trip with no campground/reservation to Book', () => {
+      const result = computeReadiness(baseInput());
+      expect(result.parts.find((p) => p.key === 'reservation')?.target).toMatchObject({ tab: 't-reservation' });
+    });
+
+    it('sends missing dates and location to Plan, with a focus id', () => {
+      const result = computeReadiness(baseInput());
+      expect(result.parts.find((p) => p.key === 'dates')?.target).toMatchObject({ tab: 't-details', focusId: 'plan-trip-dates' });
+      expect(result.parts.find((p) => p.key === 'location')?.target).toMatchObject({ tab: 't-details', focusId: 'plan-where' });
+    });
+
+    it('clears the target once a part is fully satisfied', () => {
+      const result = computeReadiness(
+        baseInput({
+          checklistItems: [checklistItem(true)],
+          trip: trip({ startDate: '2027-06-01', endDate: '2027-06-03', location: { lat: 46, lng: -93, label: '' } }),
+          tripGear: [gear({ status: 'own' })],
+        }),
+      );
+      for (const key of ['checklist', 'gear', 'dates', 'location'] as const) {
+        expect(result.parts.find((p) => p.key === key)?.target).toBeNull();
+      }
+    });
+
+    it('never sends a target for load or power (no owned screen to send them to)', () => {
+      const result = computeReadiness(baseInput({ vehicle: vehicle(), trailer: trailer(), loadProfile: loadProfile(), powerProfile: powerProfile() }));
+      expect(result.parts.find((p) => p.key === 'load')?.target).toBeNull();
+      expect(result.parts.find((p) => p.key === 'power')?.target).toBeNull();
+    });
+  });
 });

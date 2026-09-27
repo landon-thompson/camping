@@ -2,8 +2,16 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { saveRecord } from '../../db/records';
 import { Button, inputClass, StatusChip } from '../../components/ui';
-import type { RecordData, RecordType, SpecNumber, SpecStatus } from '../../model/schemas';
+import type { BookingSystem, RecordData, RecordType, SpecNumber, SpecStatus } from '../../model/schemas';
 import type { BookingState } from './booking';
+
+export const SYSTEM_LABEL: Record<BookingSystem, string> = {
+  reservemn: 'ReserveMN',
+  'recreation-gov': 'Recreation.gov',
+  'first-come': 'First-come',
+  dispersed: 'Dispersed',
+  other: 'Other',
+};
 
 /** An internal-navigation counterpart to ui.tsx's `LinkButton` (which is for external/absolute hrefs). */
 export function NavButton({ to, children, variant = 'primary' }: { to: string; children: ReactNode; variant?: 'primary' | 'secondary' }) {
@@ -20,7 +28,7 @@ export function NavButton({ to, children, variant = 'primary' }: { to: string; c
  * src/pages/Settings.tsx: an in-progress edit is never clobbered by an
  * incoming sync, but a fresh sync is picked up once you've saved.
  */
-export function useDraft<T extends RecordType>(type: T, id: string, initial: RecordData<T>) {
+export function useDraft<T extends RecordType>(type: T, id: string, initial: RecordData<T>, onSaved?: (data: RecordData<T>) => void | Promise<void>) {
   const [draft, setDraft] = useState(initial);
   const [base, setBase] = useState(initial);
   const [saved, setSaved] = useState(false);
@@ -39,6 +47,7 @@ export function useDraft<T extends RecordType>(type: T, id: string, initial: Rec
       await saveRecord(type, id, draft);
       setError(null);
       setSaved(true);
+      await onSaved?.(draft);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -97,6 +106,7 @@ export function SpecEditor({
           className={inputClass}
           inputMode="decimal"
           type="number"
+          step="any"
           placeholder={unit ?? 'value'}
           value={spec.value ?? ''}
           onChange={(e) => onChange({ ...spec, value: numOrNull(e.target.value) })}
@@ -143,10 +153,20 @@ export function BookingStateBadge({ state }: { state: BookingState }) {
 }
 
 /** An external "Book now" style link — ui.tsx's LinkButton has no target/rel, and an official booking page always needs `target="_blank" rel="noopener"`. */
-export function ExternalLinkButton({ href, children, variant = 'primary' }: { href: string; children: ReactNode; variant?: 'primary' | 'secondary' }) {
+export function ExternalLinkButton({
+  href,
+  children,
+  variant = 'primary',
+  onClick,
+}: {
+  href: string;
+  children: ReactNode;
+  variant?: 'primary' | 'secondary';
+  onClick?: () => void;
+}) {
   const styles = variant === 'primary' ? 'bg-brand text-brand-ink' : 'border border-line bg-surface-2 text-ink';
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={`inline-flex min-h-12 items-center justify-center rounded-xl px-4 font-semibold ${styles}`}>
+    <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={`inline-flex min-h-12 items-center justify-center rounded-xl px-4 font-semibold ${styles}`}>
       {children}
     </a>
   );
@@ -187,4 +207,21 @@ export function GenericLinkHint({ name, editHref }: { name: string; editHref?: s
       )}
     </p>
   );
+}
+
+/**
+ * The link "Book now" should open. A DNR state park page goes straight to its
+ * Reservations section (e.g. park.html?id=spk00100#reservations).
+ */
+export function bookingLink(url: string): string {
+  try {
+    const u = new URL(url);
+    if (/(^|\.)dnr\.state\.mn\.us$/.test(u.hostname) && u.pathname === '/state_parks/park.html' && u.searchParams.get('id') && !u.hash) {
+      u.hash = 'reservations';
+      return u.toString();
+    }
+  } catch {
+    /* not a URL — leave as is */
+  }
+  return url;
 }

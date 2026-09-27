@@ -14,6 +14,8 @@ describe('MVUM road info', () => {
       PASSENGERVEHICLE: 'Null',
       SURFACETYPE: '',
       SOME_OTHER_FIELD: 'x',
+      ADMINORG: '090305',
+      ATV_DATESOPEN: '01/01-12/31',
     });
     expect(rows).toEqual([
       ['Name', 'NORWAY POINT RD'],
@@ -21,6 +23,7 @@ describe('MVUM road info', () => {
       ['Seasonal', 'yearlong'],
       ['High-clearance vehicles', 'open'],
       ['Some other field', 'x'],
+      ['Atv (dates open)', 'All year'],
     ]);
   });
 });
