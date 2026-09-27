@@ -90,3 +90,27 @@ export const lakeSurveySchema = z.object({
   ),
 });
 export type LakeSurvey = z.infer<typeof lakeSurveySchema>;
+
+/** A South Dakota GFP lake survey summary, read from its official PDF by the app's server (`sd_lake_report:<slug>`). */
+export const sdLakeReportSchema = z.object({
+  water: z.string(),
+  reportId: z.string(),
+  url: z.string(),
+  listUrl: z.string(),
+  title: z.string(),
+  year: z.number().nullable(),
+  summary: z.array(z.string()),
+  catches: z.array(
+    z.object({
+      species: z.string(),
+      gear: z.string(),
+      cpue: z.number(),
+      /** Read from a summary sentence or a table row. */
+      from: z.enum(['summary', 'table']),
+    }),
+  ),
+  /** Other survey reports for the lake (newest first). */
+  surveys: z.array(z.object({ id: z.string(), text: z.string() })),
+  fetchedAt: z.string(),
+});
+export type SdLakeReport = z.infer<typeof sdLakeReportSchema>;

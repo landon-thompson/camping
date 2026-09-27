@@ -1,26 +1,30 @@
 import { useState } from 'react';
+import { Button, inputClass } from '../../components/ui';
 import { Card, PageTitle } from '../../components/ui';
+import { SdLakeFishing } from './SdLakeFishing';
+import { sdLakeKey, sdWaterFromKey } from './sdReport';
 import type { NearbyLake } from '../../model/schemas';
 import { LakeFishing } from './LakeFishing';
 import { LakePicker } from './LakePicker';
 import { ToolsSubNav } from '../gear/nav';
-import { SD_FISHERY_REPORTS } from './lakeList';
 
 const KEY = 'fishingLakes';
 
 function readSaved(): NearbyLake[] {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? '[]') as unknown;
-    return Array.isArray(v) ? v.filter((l): l is NearbyLake => !!l && typeof l === 'object' && /^\d{8}$/.test((l as NearbyLake).dow)) : [];
+    return Array.isArray(v) ? v.filter((l): l is NearbyLake => !!l && typeof l === 'object' && /^(\d{8}|sd:.+)$/.test((l as NearbyLake).dow)) : [];
   } catch {
     return [];
   }
 }
 
-/** Tools › Fishing: DNR fish surveys for any Minnesota lake, no trip needed. The list is kept on this phone. */
+/** Tools › Fishing: fish surveys for any Minnesota (DNR) or South Dakota (GFP) lake, no trip needed. The list is kept on this phone. */
 export function FishingPage() {
   const [lakes, setLakesState] = useState<NearbyLake[]>(readSaved);
   const [open, setOpen] = useState<string | null>(() => readSaved()[0]?.dow ?? null);
+  const [state, setState] = useState<'MN' | 'SD'>('MN');
+  const [sdName, setSdName] = useState('');
   const setLakes = (next: NearbyLake[]) => {
     setLakesState(next);
     try {
@@ -32,16 +36,52 @@ export function FishingPage() {
 
   return (
     <div className="space-y-4">
-      <PageTitle sub="DNR fish surveys for any Minnesota lake.">Fishing</PageTitle>
+      <PageTitle sub="Fish surveys for any Minnesota or South Dakota lake.">Fishing</PageTitle>
       <ToolsSubNav />
       <Card>
-        <LakePicker
-          selected={lakes.map((l) => l.dow)}
-          onPick={(lake) => {
-            if (!lakes.some((l) => l.dow === lake.dow)) setLakes([lake, ...lakes]);
-            setOpen(lake.dow);
-          }}
-        />
+        <div role="group" aria-label="State" className="mb-3 grid grid-cols-2 gap-2">
+          {(['MN', 'SD'] as const).map((st) => (
+            <button
+              key={st}
+              type="button"
+              aria-pressed={state === st}
+              onClick={() => setState(st)}
+              className={`min-h-11 rounded-full border text-sm font-semibold ${state === st ? 'border-brand bg-brand text-brand-ink' : 'border-line bg-surface-2 text-ink'}`}
+            >
+              {st === 'MN' ? 'Minnesota' : 'South Dakota'}
+            </button>
+          ))}
+        </div>
+        {state === 'MN' ? (
+          <LakePicker
+            selected={lakes.map((l) => l.dow)}
+            onPick={(lake) => {
+              if (!lakes.some((l) => l.dow === lake.dow)) setLakes([lake, ...lakes]);
+              setOpen(lake.dow);
+            }}
+          />
+        ) : (
+          <form
+            className="flex flex-wrap items-end gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const name = sdName.trim();
+              if (name.length < 2) return;
+              const key = sdLakeKey(name);
+              if (!lakes.some((l) => l.dow === key)) setLakes([{ dow: key, name, county: 'South Dakota' }, ...lakes]);
+              setOpen(key);
+              setSdName('');
+            }}
+          >
+            <label className="block min-w-0 flex-1 text-sm">
+              <span className="mb-1 block font-semibold text-ink-2">South Dakota lake</span>
+              <input className={inputClass} value={sdName} placeholder="e.g. Enemy Swim, Lake Poinsett" enterKeyHint="go" onChange={(e) => setSdName(e.target.value)} />
+            </label>
+            <Button type="submit" variant="secondary" disabled={sdName.trim().length < 2}>
+              Add
+            </Button>
+          </form>
+        )}
       </Card>
 
       {lakes.length > 0 && (
@@ -75,15 +115,13 @@ export function FishingPage() {
         </Card>
       )}
 
-      {open && <LakeFishing key={open} dow={open} name={lakes.find((l) => l.dow === open)?.name ?? `Lake ${open}`} />}
+      {open &&
+        (sdWaterFromKey(open) ? (
+          <SdLakeFishing key={open} water={sdWaterFromKey(open)!} />
+        ) : (
+          <LakeFishing key={open} dow={open} name={lakes.find((l) => l.dow === open)?.name ?? `Lake ${open}`} />
+        ))}
       {!lakes.length && <p className="text-ink-2">Search for a lake above. Lakes you add stay on this phone for next time.</p>}
-      <p className="text-sm text-ink-2">
-        South Dakota lake?{' '}
-        <a href={SD_FISHERY_REPORTS} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline">
-          GFP Fishery Reports ↗
-        </a>{' '}
-        has its lake surveys (search the lake name).
-      </p>
     </div>
   );
 }

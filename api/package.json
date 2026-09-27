@@ -14,7 +14,8 @@
   "dependencies": {
     "@azure/functions": "^4.16.5",
     "@azure/storage-blob": "^12.34.0",
-    "mssql": "^12.7.2"
+    "mssql": "^12.7.2",
+    "unpdf": "^1.8.1"
   },
   "devDependencies": {
     "@types/mssql": "^12.3.0",

@@ -11,7 +11,7 @@ import { shareLinkSchema, tripChecklistItemSchema, tripSchema } from './trips';
 import { bookingRuleSchema, campgroundSchema, permitSchema, reservationSchema } from './reservations';
 import { pinSchema, routeSchema } from './trails';
 import { debriefSchema, photoSchema } from './journal';
-import { lakeSurveySchema, tripNearbySchema } from './places';
+import { lakeSurveySchema, sdLakeReportSchema, tripNearbySchema } from './places';
 import type { z } from 'zod';
 
 export * from './core';
@@ -51,6 +51,7 @@ export const recordSchemas = {
   // Lakes & launches
   trip_nearby: tripNearbySchema,
   lake_survey: lakeSurveySchema,
+  sd_lake_report: sdLakeReportSchema,
 } as const;
 
 export type RecordType = keyof typeof recordSchemas;

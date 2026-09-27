@@ -17,7 +17,7 @@ This file is the hand-off note between work sessions. Update it at the end of ev
 
 Integration pass (coordinator): trip page saves only changed fields (fixed a bug where saving trip details could undo a campground chosen in the reservation section or an edit synced from the other phone); trip page section jump bar, sticky save bar, compact gear list; routes & pins linked from Tools and each trip; accessibility fixes (announced save status, reduced-motion, labelled links, theme toggle buttons); README setup steps for photos and RIDB.
 
-Tests: 236 app + 54 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
+Tests: 239 app + 57 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
 
 **Not testable from the build sandbox (network blocked): verify on first real deploy**
 - National Weather Service API (api.weather.gov): response parsing and browser CORS. Weather is built from the documented format.
@@ -103,6 +103,11 @@ Coordinator reviewed every screen at 390px, then five Sonnet agents (separate wo
 ## Campground finder (2026-09-27)
 - The trip Book tab's campground dropdown is now a full-screen finder: search (name or park/forest), filters (Minnesota / South Dakota, state park / national forest / state forest / other, electric, boat launch), nearest-first list from the trip location (or home base) with distance and a "No map pin" flag, and a Map view (pins P/F/SF, ★ = reference point; tap → card with Choose / Details).
 - TripMap: `labels` (hide name tags on dense maps), `trailTools` (off in the picker), `accent` pin; fixed pins not being framed after a remount and stale pin positions when the style hasn't loaded.
+
+## South Dakota lake surveys in the app (2026-09-27)
+- New API `GET /api/sdfish?water=<name>[&report=<id>]` (family only): finds the lake's newest "Survey Summary" on GFP Fishery Reports (`apps.sd.gov/GF56FisheriesReports/?Waterbody=…`, tries "X Lake" and "X"), reads the PDF with `unpdf` (MIT, ~2 MB, server-side only, no cost), and returns summary sentences + fish per net by species and net type (table rows; falls back to numbers quoted in the summary, e.g. "3.4 per gill net").
+- The Lake & fish tab shows this for South Dakota lakes (Fish info per water; the lake nearest the trip is chosen by default) instead of the Minnesota LakeFinder survey; cached as `sd_lake_report:<slug>` for offline. Tools › Fishing has a Minnesota / South Dakota switch.
+- **Verify on the phone:** GFP's report-list HTML and PDF table layouts weren't readable from the sandbox; parsing was built from search snippets and tested on generated PDFs. No "similar lakes" range exists in SD reports, so there's no fewer/typical/more rating.
 
 ## Open items / to verify
 

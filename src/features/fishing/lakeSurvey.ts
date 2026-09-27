@@ -69,6 +69,26 @@ export const SPECIES: Record<string, string> = {
 /** Species people usually fish for, drawn in the accent colour. */
 const GAME = new Set(['WAE', 'SAR', 'NOP', 'MUE', 'TME', 'YEP', 'BLC', 'WHC', 'BLG', 'PMK', 'LMB', 'SMB', 'RKB', 'LAT', 'RBT', 'BNT', 'BKT', 'SPT', 'LKW', 'TLC', 'CIS', 'CCF', 'FCF', 'HSF', 'WHB']);
 export const isGameFish = (code: string) => GAME.has(code.toUpperCase());
+
+const NAME_ALIASES: Record<string, string> = {
+  'tiger muskellunge': 'TME',
+  saugeye: 'HFC',
+  cisco: 'TLC',
+  tullibee: 'TLC',
+  eelpout: 'BUB',
+  dogfish: 'BOF',
+  carp: 'CAP',
+};
+/** DNR species code for a common name ("Yellow Perch" → YEP), for icons and game-fish styling; '' if unknown. */
+export function codeForName(name: string): string {
+  const n = name.trim().toLowerCase();
+  if (NAME_ALIASES[n]) return NAME_ALIASES[n];
+  for (const [code, label] of Object.entries(SPECIES)) {
+    const l = label.toLowerCase();
+    if (l === n || l.startsWith(`${n} (`)) return code;
+  }
+  return '';
+}
 export const speciesName = (code: string) => SPECIES[code.toUpperCase()] ?? code;
 
 // ---------------------------------------------------------------- parsing

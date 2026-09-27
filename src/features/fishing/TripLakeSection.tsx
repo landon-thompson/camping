@@ -11,6 +11,8 @@ import { LakePicker } from './LakePicker';
 import { defaultLakes, inSouthDakota, lakeRows, lakesFrom, SD_FISHERY_REPORTS, sdWaterRows, usableLaunch } from './lakeList';
 import { fetchOsmWaters, OSM_LABEL } from '../places/osm';
 import { LakeFishing } from './LakeFishing';
+import { SdLakeFishing } from './SdLakeFishing';
+import { sdLakeKey, sdWaterFromKey } from './sdReport';
 
 const miles = (km: number) => `${(km * 0.621371).toFixed(km < 16 ? 1 : 0)} mi`;
 const REFRESH_WHEN_MOVED_KM = 0.3;
@@ -84,7 +86,12 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
       fetchedAt: new Date().toISOString(),
       launches: launchRes.launches,
       lakes: [...lakes, ...(prev?.lakes.filter((l) => kept.includes(l.dow) && !lakes.some((x) => x.dow === l.dow)) ?? [])],
-      selectedLakes: kept.length ? kept : defaultLakes(lakes, launchRes.launches),
+      selectedLakes: kept.length
+        ? kept
+        : southDakota
+          ? // The lake the trip is on (or the nearest named one) gets its GFP report by default.
+            (osm?.waters ?? []).slice(0, 1).map((w) => sdLakeKey(w.name))
+          : defaultLakes(lakes, launchRes.launches),
       report: [...launchRes.report, lakeRes.line].filter(Boolean),
       waters: osm?.waters ?? [],
       radiusKm: LAKE_RADIUS_KM,
@@ -195,17 +202,11 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
         <Card title={`South Dakota waters near ${originName}`}>
           <div className="space-y-3">
             <p className="text-sm text-ink-2">
-              The DNR fish survey view is Minnesota-only. South Dakota GFP publishes its lake survey reports (with catch per net and sizes) in its Fishery
-              Reports site — search the lake name there.
+              Tap <strong>Fish info</strong> to read a lake’s latest South Dakota GFP survey report here.{' '}
+              <a href={SD_FISHERY_REPORTS} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline">
+                GFP Fishery Reports ↗
+              </a>
             </p>
-            <a
-              href={SD_FISHERY_REPORTS}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-12 items-center rounded-xl bg-brand px-4 font-semibold text-brand-ink"
-            >
-              GFP Fishery Reports ↗
-            </a>
             {sdWaters.length > 0 ? (
               <ul className="divide-y divide-line">
                 {(showAllLakes ? sdWaters : sdWaters.slice(0, 12)).map((w) => (
@@ -217,11 +218,21 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
                         {w.launches.length ? `${w.launches.length} ramp${w.launches.length === 1 ? '' : 's'} · nearest: ${w.launches[0]!.name}` : 'no ramp mapped'}
                       </span>
                     </span>
+                    <span className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      aria-pressed={selected.includes(sdLakeKey(w.water))}
+                      onClick={() => toggleLake(sdLakeKey(w.water))}
+                      className={`min-h-11 rounded-full border px-3 text-sm font-semibold ${selected.includes(sdLakeKey(w.water)) ? 'border-brand bg-brand text-brand-ink' : 'border-line bg-surface-2 text-ink'}`}
+                    >
+                      {selected.includes(sdLakeKey(w.water)) ? 'Fish info ✓' : 'Fish info'}
+                    </button>
                     {w.launches[0] && !sameSpot(t.boatLaunch, w.launches[0]) && (
                       <Button type="button" variant="ghost" className="min-h-11 px-1" onClick={() => setLaunch(w.launches[0]!)}>
                         Use ramp
                       </Button>
                     )}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -338,9 +349,14 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
       {selected.length > 0 && (
         <Card title="Fishing">
           <div className="space-y-3">
-            {selected.map((dow) => (
-              <LakeFishing key={dow} dow={dow} name={data?.lakes.find((l) => l.dow === dow)?.name ?? `Lake ${dow}`} />
-            ))}
+            {selected.map((key) => {
+              const sd = sdWaterFromKey(key);
+              return sd ? (
+                <SdLakeFishing key={key} water={sd} />
+              ) : (
+                <LakeFishing key={key} dow={key} name={data?.lakes.find((l) => l.dow === key)?.name ?? `Lake ${key}`} />
+              );
+            })}
           </div>
         </Card>
       )}
