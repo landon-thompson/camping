@@ -44,6 +44,8 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
       distanceKm(data.anchor, anchor) > REFRESH_WHEN_MOVED_KM ||
       data.radiusKm !== LAKE_RADIUS_KM ||
       (southDakota && data.waters === undefined) ||
+      // An earlier open-map fetch that found ramps but no lakes (older query) — try again.
+      (southDakota && !data.waters?.length && data.launches.length > 0 && data.launches.every((l) => !l.water)) ||
       (!data.launches.length && !data.report.some((r) => CURRENT_LAUNCH_SOURCES.some((l) => r.startsWith(`${l}:`)))));
 
   async function refresh() {
@@ -356,7 +358,7 @@ function LaunchItem({ l, trip, onUse }: { l: BoatLaunchSite; trip: Trip; onUse: 
         <span className="font-semibold">{l.name}</span>
         <span className="text-sm tabular-nums text-ink-2">{miles(l.distanceKm)}</span>
       </div>
-      <p className="text-sm text-ink-2">{[l.water, l.ramp && `ramp: ${l.ramp}`, l.manager].filter(Boolean).join(' · ') || 'No details in the data'}</p>
+      <p className="text-sm text-ink-2">{[l.water, l.ramp && `ramp: ${l.ramp}`, l.manager].filter(Boolean).join(' · ') || 'Lake not named in the map data — check Directions'}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {sameSpot(trip.boatLaunch, l) ? (
           <span className="inline-flex min-h-11 items-center rounded-xl bg-ok/15 px-3 text-sm font-semibold text-ok">This trip’s launch ✓</span>

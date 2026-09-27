@@ -4,9 +4,9 @@ import { fetchOsmWaters, overpassQuery, parseOverpass } from './osm';
 const at = { lat: 44.53, lng: -97.08 };
 const data = {
   elements: [
-    { type: 'way', id: 1, tags: { natural: 'water', water: 'lake', name: 'Lake Poinsett' }, center: { lat: 44.55, lon: -97.08 }, bounds: { minlat: 44.5, minlon: -97.13, maxlat: 44.6, maxlon: -97.03 } },
+    { type: 'relation', id: 1, tags: { type: 'multipolygon', natural: 'water', water: 'lake', name: 'Lake Poinsett' }, bounds: { minlat: 44.5, minlon: -97.13, maxlat: 44.6, maxlon: -97.03 } }, // `out bb`: bounds only
     { type: 'way', id: 2, tags: { natural: 'water', water: 'river', name: 'Big Sioux River' }, center: { lat: 44.5, lon: -97.0 } },
-    { type: 'node', id: 3, lat: 44.598, lon: -97.08, tags: { leisure: 'slipway', surface: 'concrete' } },
+    { type: 'node', id: 3, lat: 44.604, lon: -97.08, tags: { leisure: 'slipway', surface: 'concrete' } }, // ~450 m off the mapped shore
     { type: 'way', id: 4, center: { lat: 44.52, lon: -97.09 }, tags: { leisure: 'slipway', name: 'Poinsett SRA ramp', operator: 'SD GFP' } },
     { type: 'node', id: 5, lat: 44.4, lon: -97.3, tags: { leisure: 'slipway' } },
   ],

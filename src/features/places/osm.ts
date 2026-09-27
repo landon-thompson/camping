@@ -28,7 +28,8 @@ export function overpassQuery(at: { lat: number; lng: number }, km: number): str
     `(node["leisure"="slipway"](${box});way["leisure"="slipway"](${box}););`,
     'out center tags;',
     `(way["natural"="water"]["name"](${box});relation["natural"="water"]["name"](${box}););`,
-    'out tags center bb;',
+    // One geometry mode per `out`: bb (bounds) for lakes; the center is taken from the bounds.
+    'out tags bb;',
   ].join('');
 }
 
@@ -50,9 +51,11 @@ export function parseOverpass(data: unknown, at: { lat: number; lng: number }, m
   for (const e of elements) {
     const t = e.tags ?? {};
     if (t.natural !== 'water' || !t.name || NOT_A_LAKE.test(t.water ?? '')) continue;
-    const c = e.center ?? (e.lat != null && e.lon != null ? { lat: e.lat, lon: e.lon } : null);
-    if (!c) continue;
     const bounds = e.bounds ? ([e.bounds.minlat, e.bounds.minlon, e.bounds.maxlat, e.bounds.maxlon] as [number, number, number, number]) : null;
+    const c =
+      e.center ??
+      (bounds ? { lat: (bounds[0] + bounds[2]) / 2, lon: (bounds[1] + bounds[3]) / 2 } : e.lat != null && e.lon != null ? { lat: e.lat, lon: e.lon } : null);
+    if (!c) continue;
     const key = `${t.name}|${c.lat.toFixed(2)}|${c.lon.toFixed(2)}`;
     if (seenWater.has(key)) continue;
     seenWater.add(key);
@@ -68,9 +71,10 @@ export function parseOverpass(data: unknown, at: { lat: number; lng: number }, m
     if (!p) continue;
     const d = distanceKm(at, p);
     if (d > maxKm) continue;
-    // The lake it launches into: the nearest named water within 400 m of the ramp.
+    // The lake it launches into: the nearest named water within 600 m of the ramp
+    // (ramps are often mapped at the end of the access road, a little off the shoreline).
     let water = '';
-    let best = 0.4;
+    let best = 0.6;
     for (const w of waters) {
       const dw = distanceToWater(p, w);
       if (dw <= best) {
