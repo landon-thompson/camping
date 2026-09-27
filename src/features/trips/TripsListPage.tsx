@@ -102,7 +102,7 @@ export function TripsListPage() {
       <PageTitle sub="The 2027 season, one trip per progression level">Trips</PageTitle>
 
       <Card title="Season map">
-        <TripMap center={center} zoom={6} markers={markers} tripId={null} className="h-64 w-full" />
+        <TripMap center={center} zoom={6} markers={markers} tripId={null} className="h-[55vh] min-h-72 w-full" />
       </Card>
 
       <div className="space-y-3">

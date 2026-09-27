@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Map as MapLibreMap, Marker, NavigationControl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MAP_STYLE_URL } from '../../lib/map';
+import { isRoadInfoMode } from '../trails/mapTools';
 import { attachTrailLayers } from '../trails/mapLayers';
 
 export interface TripMapMarker {
@@ -25,7 +26,7 @@ export function TripMap({
   markers = [],
   tripId,
   onPick,
-  className = 'h-56 w-full',
+  className = 'h-[50vh] min-h-72 w-full',
 }: {
   center: [number, number];
   zoom?: number;
@@ -65,7 +66,10 @@ export function TripMap({
       if (cancelled) return;
       cleanupTrails = attachTrailLayers(map, { tripId });
     });
-    map.on('click', (e) => onPickRef.current?.(e.lngLat.lat, e.lngLat.lng));
+    map.on('click', (e) => {
+      if (isRoadInfoMode(map)) return;
+      onPickRef.current?.(e.lngLat.lat, e.lngLat.lng);
+    });
 
     return () => {
       cancelled = true;

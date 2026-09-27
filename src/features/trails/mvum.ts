@@ -74,7 +74,7 @@ export function mvumRasterSource(): MvumRasterSourceSpec {
     tiles: [mvumTileUrlTemplate()],
     tileSize: 256,
     attribution: MVUM_ATTRIBUTION,
-    minzoom: 8,
+    minzoom: 6,
     maxzoom: 16,
   };
 }

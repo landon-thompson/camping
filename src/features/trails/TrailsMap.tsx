@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import maplibregl, { type Map as MapLibreMap, type MapMouseEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MAP_STYLE_URL, MN_CENTER } from '../../lib/map';
+import { isRoadInfoMode } from './mapTools';
 import { attachTrailLayers } from './mapLayers';
 
 export interface TrailsMapProps {
@@ -20,7 +21,7 @@ export interface TrailsMapProps {
  * library page). Always calls `attachTrailLayers` itself once loaded, so
  * routes/pins/MVUM show up here even before Phase 2's trip map exists.
  */
-export function TrailsMap({ tripId, center, zoom = 10, className = 'h-64 w-full overflow-hidden rounded-xl border border-line', onReady, onMapClick }: TrailsMapProps) {
+export function TrailsMap({ tripId, center, zoom = 10, className = 'h-[55vh] min-h-72 w-full overflow-hidden rounded-xl border border-line', onReady, onMapClick }: TrailsMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onReadyRef = useRef(onReady);
   const onMapClickRef = useRef(onMapClick);
@@ -45,7 +46,10 @@ export function TrailsMap({ tripId, center, zoom = 10, className = 'h-64 w-full 
       return;
     }
 
-    const handleClick = (e: MapMouseEvent) => onMapClickRef.current?.(e.lngLat);
+    const handleClick = (e: MapMouseEvent) => {
+      if (map && isRoadInfoMode(map)) return;
+      onMapClickRef.current?.(e.lngLat);
+    };
     map.on('click', handleClick);
     map.on('load', () => {
       if (!map) return;

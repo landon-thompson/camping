@@ -89,3 +89,25 @@ html {
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* Full-screen map (Expand button). iPhone Safari has no element fullscreen, so it's a fixed overlay. */
+.camp-map-expanded {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 60 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  border-radius: 0 !important;
+}
+.camp-map-expanded .maplibregl-ctrl-top-left,
+.camp-map-expanded .maplibregl-ctrl-top-right {
+  top: env(safe-area-inset-top);
+}
+.camp-map-expanded .maplibregl-ctrl-bottom-left,
+.camp-map-expanded .maplibregl-ctrl-bottom-right {
+  bottom: env(safe-area-inset-bottom);
+}
+html.camp-map-open,
+html.camp-map-open body {
+  overflow: hidden;
+}

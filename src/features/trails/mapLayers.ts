@@ -1,4 +1,5 @@
-import type { GeoJSONSource, IControl, Map as MapLibreMap } from 'maplibre-gl';
+import maplibregl, { type GeoJSONSource, type IControl, type Map as MapLibreMap } from 'maplibre-gl';
+import { ExpandControl, MvumInfoControl } from './mapTools';
 import { liveQuery } from 'dexie';
 import type { FeatureCollection } from 'geojson';
 import { db } from '../../db/local';
@@ -83,7 +84,7 @@ function writeMvumPreference(show: boolean): void {
   }
 }
 
-const MVUM_MIN_ZOOM = 8;
+const MVUM_MIN_ZOOM = 6;
 
 /** MVUM on/off button with a visible state and a hint when zoomed too far out to draw. */
 class MvumToggleControl implements IControl {
@@ -107,6 +108,14 @@ class MvumToggleControl implements IControl {
     const tooFar = this.pressed && (this.map?.getZoom() ?? MVUM_MIN_ZOOM) < MVUM_MIN_ZOOM;
     this.hint.textContent = tooFar ? 'Zoom in to see MVUM roads' : '';
     this.hint.hidden = !tooFar;
+  }
+
+  /** Turn MVUM on from elsewhere (e.g. when road info is switched on). */
+  turnOn() {
+    if (this.pressed) return;
+    this.pressed = true;
+    this.onToggle(true);
+    this.render();
   }
 
   onAdd(map: MapLibreMap): HTMLElement {
@@ -249,6 +258,17 @@ export function attachTrailLayers(map: MapLibreMap, ctx: MapContext): () => void
   } catch {
     // ignore
   }
+  const expand = new ExpandControl();
+  const info = new MvumInfoControl(
+    () => new maplibregl.Popup({ maxWidth: '300px', closeButton: true }),
+    () => control.turnOn(),
+  );
+  try {
+    map.addControl(info, 'top-right');
+    map.addControl(expand, 'top-left');
+  } catch {
+    // ignore
+  }
 
   const routesSub = liveQuery(() => db.records.where('[type+deleted]').equals(['route', 0]).toArray()).subscribe({
     next: (rows) => {
@@ -286,6 +306,8 @@ export function attachTrailLayers(map: MapLibreMap, ctx: MapContext): () => void
     pinsSub.unsubscribe();
     try {
       map.removeControl(control);
+      map.removeControl(info);
+      map.removeControl(expand);
     } catch {
       // ignore
     }
