@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { saveRecord, useRecord } from '../db/records';
+import { makeBackup, parseBackup, restoreBackup } from '../db/backup';
 import { Button, Card, Field, inputClass, LinkButton, PageTitle, StatusChip } from '../components/ui';
 import { describeSync } from '../components/SyncBadge';
 import { useAuth } from '../auth/AuthContext';
@@ -22,6 +23,7 @@ export function Settings() {
       {settings.data && <HouseholdForm initial={settings.data} />}
       {vehicle.data && <VehicleForm initial={vehicle.data} />}
       {trailer.data && <TrailerForm initial={trailer.data} />}
+      <BackupCard />
       <StorageCard />
     </div>
   );
@@ -324,6 +326,73 @@ function TrailerForm({ initial }: { initial: Trailer }) {
         </div>
         <SaveRow dirty={dirty} saved={saved} error={error} />
       </form>
+    </Card>
+  );
+}
+
+function BackupCard() {
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function backup() {
+    setError(null);
+    const data = await makeBackup();
+    const name = `camp-planner-backup-${data.exportedAt.slice(0, 10)}.json`;
+    const file = new File([JSON.stringify(data)], name, { type: 'application/json' });
+    // On iPhone this opens the share sheet: Save to Files, AirDrop, Mail…
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'Camp Planner backup' });
+        setStatus(`Backup shared (${data.records.length} records).`);
+        return;
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
+      }
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    setStatus(`Backup saved (${data.records.length} records).`);
+  }
+
+  async function restore(fileList: FileList | null) {
+    const file = fileList?.[0];
+    if (!file) return;
+    setError(null);
+    try {
+      const result = await restoreBackup(parseBackup(await file.text()));
+      setStatus(`Restored: ${result.added} added, ${result.updated} updated, ${result.skipped} already up to date.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Couldn’t read that file.');
+    }
+  }
+
+  return (
+    <Card title="Backup">
+      <p className="text-ink-2">
+        Save a copy of everything on this phone, e.g. to Files or iCloud Drive. Restoring only adds newer items and never
+        undoes recent edits. Also a way to copy your plans to another phone while sync isn’t set up.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <Button type="button" onClick={() => void backup()}>
+          Back up now
+        </Button>
+        <label className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-xl border border-line bg-surface-2 px-4 font-semibold">
+          Restore from file
+          <input type="file" accept="application/json,.json" className="sr-only" onChange={(e) => void restore(e.target.files)} />
+        </label>
+      </div>
+      <p role="status" className="mt-2 text-sm text-ok">
+        {status ?? ''}
+      </p>
+      {error && (
+        <p role="alert" className="text-sm text-bad">
+          {error}
+        </p>
+      )}
     </Card>
   );
 }

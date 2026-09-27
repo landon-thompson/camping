@@ -9,7 +9,7 @@ const label: Record<SyncState, string> = {
   'signed-out': 'Sign in to sync',
   'not-invited': 'Not invited',
   waking: 'Waking database…',
-  'local-only': 'Local only',
+  'local-only': 'On this phone',
   error: 'Sync error',
 };
 
@@ -54,7 +54,7 @@ export function describeSync(state: SyncState, message?: string): string {
     case 'waking':
       return 'The free database pauses when idle and takes about a minute to wake. Retrying automatically.';
     case 'local-only':
-      return 'No sync server connected, so data stays in this browser only.';
+      return 'Sync isn’t set up, so everything is saved on this phone only. Use Settings → Backup to keep a copy.';
     case 'error':
       return message ?? 'Something went wrong while syncing. It will retry.';
     default:

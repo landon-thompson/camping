@@ -36,6 +36,8 @@ class HttpError extends Error {
   constructor(
     public status: number,
     message: string,
+    /** Machine-readable reason from the API, e.g. 'not-configured'. */
+    public code?: string,
   ) {
     super(message);
   }
@@ -125,6 +127,7 @@ export class SyncEngine {
       if (e.status === 401) return { state: 'signed-out' };
       if (e.status === 403) return { state: 'not-invited', message: e.message };
       if (e.status === 404) return { state: 'local-only' };
+      if (e.status === 503 && e.code === 'not-configured') return { state: 'local-only' };
       if (e.status === 503) return { state: 'waking', message: e.message };
       return { state: 'error', message: e.message };
     }
@@ -145,13 +148,15 @@ export class SyncEngine {
     if (res.ok && !type.includes('json')) throw new HttpError(404, 'No sync server');
     if (!res.ok) {
       let msg = res.statusText;
+      let code: string | undefined;
       try {
-        const body = (await res.json()) as { error?: string };
+        const body = (await res.json()) as { error?: string; code?: string };
         if (body.error) msg = body.error;
+        code = body.code;
       } catch {
         /* not JSON */
       }
-      throw new HttpError(res.status, msg);
+      throw new HttpError(res.status, msg, code);
     }
     return (await res.json()) as T;
   }

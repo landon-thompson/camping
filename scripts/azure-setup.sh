@@ -9,6 +9,7 @@
 # database (auto-pauses instead of billing), Static Web App (Free), app settings,
 # the GitHub deploy secret, starts a deploy, and sends family invitations.
 # Optional photo storage: add --photos (Blob Storage, ~2¢/GB/month).
+# No database (app keeps data on each phone, no sync): add --no-db.
 set -euo pipefail
 
 RG=camp-planner
@@ -19,16 +20,18 @@ DB_NAME=campdb
 SQL_ADMIN=campadmin
 
 PHOTOS=false
+NO_DB=false
 EMAILS=()
 for arg in "$@"; do
   case "$arg" in
     --photos) PHOTOS=true ;;
+    --no-db) NO_DB=true ;;
     *@*) EMAILS+=("$arg") ;;
     *) echo "Unknown argument: $arg" >&2; exit 1 ;;
   esac
 done
 if [ ${#EMAILS[@]} -eq 0 ]; then
-  echo "Usage: bash azure-setup.sh your@email [spouse@email] [--photos]" >&2
+  echo "Usage: bash azure-setup.sh your@email [spouse@email] [--photos] [--no-db]" >&2
   echo "Use the email of each person's Microsoft account." >&2
   exit 1
 fi
@@ -43,6 +46,7 @@ step "Resource group $RG ($LOCATION)"
 az group create -n "$RG" -l "$LOCATION" -o none
 
 # ---------------------------------------------------------------- database
+if [ "$NO_DB" = false ]; then
 SUFFIX=$(openssl rand -hex 3)
 SQL_SERVER=$(az sql server list -g "$RG" --query "[0].name" -o tsv 2>/dev/null || true)
 if [ -z "$SQL_SERVER" ]; then
@@ -76,6 +80,8 @@ fi
 SQL_CONN=$(az sql db show-connection-string -c ado.net -s "$SQL_SERVER" -n "$DB_NAME" -o tsv)
 SQL_CONN=${SQL_CONN//<username>/$SQL_ADMIN}
 SQL_CONN=${SQL_CONN//<password>/$SQL_PASSWORD}
+fi
+SUFFIX=${SUFFIX:-$(openssl rand -hex 3)}
 
 # ---------------------------------------------------------------- web app
 if ! az staticwebapp show -n "$SWA_NAME" -g "$RG" -o none 2>/dev/null; then
@@ -84,7 +90,8 @@ if ! az staticwebapp show -n "$SWA_NAME" -g "$RG" -o none 2>/dev/null; then
 fi
 HOST=$(az staticwebapp show -n "$SWA_NAME" -g "$RG" --query defaultHostname -o tsv)
 
-SETTINGS=("SQL_CONNECTION_STRING=$SQL_CONN" "HOUSEHOLD_ID=family")
+SETTINGS=("HOUSEHOLD_ID=family")
+if [ "$NO_DB" = false ]; then SETTINGS+=("SQL_CONNECTION_STRING=$SQL_CONN"); fi
 
 # ---------------------------------------------------------------- photos (optional)
 if [ "$PHOTOS" = true ]; then
@@ -134,7 +141,8 @@ done
 cat <<EOF
 
 ==> Done. Your app: https://$HOST
-    Check the API once the deploy finishes (~3 min): https://$HOST/api/health  → "store":"sql"
+    Check the API once the deploy finishes (~3 min): https://$HOST/api/health
+    ("store":"sql" with a database, "not-configured" with --no-db — both are fine)
 
 Two things to do in the portal (can't be scripted safely):
   1. Subscriptions → $SUB_NAME → Upgrade to pay-as-you-go (the free trial ends after 30 days).

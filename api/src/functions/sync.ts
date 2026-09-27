@@ -34,7 +34,11 @@ async function handle(
     }
     return await fn(auth.principal.userId);
   } catch (e) {
-    if (e instanceof StoreUnavailableError || e instanceof StoreNotConfiguredError) {
+    if (e instanceof StoreNotConfiguredError) {
+      // No database set up (yet): the app runs in on-this-phone mode.
+      return json(503, { error: e.message, code: 'not-configured' });
+    }
+    if (e instanceof StoreUnavailableError) {
       return json(503, { error: e.message });
     }
     ctx.error('sync failed', e);

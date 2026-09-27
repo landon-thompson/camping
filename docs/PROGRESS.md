@@ -53,6 +53,10 @@ Tests: 148 app + 50 API (plus the SQL Server integration tests, run in CI). Brow
 - Browser run through the SWA CLI emulator + real function handlers + SQL Server: sign-in gate, dashboard, edit → SQL, second family member sees the change, uninvited user blocked, offline reload from service worker.
 - Not verifiable from the dev sandbox: the actual Azure deployment (needs the owner's Azure setup).
 
+## Current deployment choice (2026-09-27)
+
+The Azure SQL free offer wouldn't create on the owner's free-trial subscription (portal showed no "Apply offer"; CLI returned InternalServerError twice). The owner chose **no database for now**: run `scripts/azure-setup.sh … --no-db`. The API returns `503 code:not-configured`, the app switches to "On this phone" mode (no retry loop), share links are hidden, and Settings → Backup/Restore protects data. The empty logical SQL server `camp-planner-sql-*` costs nothing and can stay. Revisit after upgrading to pay-as-you-go (free offer may then be available) or with the Basic tier (~$5/mo) if the owner approves.
+
 ## Open items / to verify
 
 Owner:

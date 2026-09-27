@@ -35,8 +35,10 @@ Services to avoid, because they would bill you: the Static Web Apps **Standard**
 ```bash
 gh auth login                                   # sign in to GitHub, follow the prompts
 gh repo clone landon-thompson/camping -- --branch dev && cd camping
-bash scripts/azure-setup.sh you@example.com wife@example.com          # add --photos for photo backup
+bash scripts/azure-setup.sh you@example.com wife@example.com          # add --photos for photo backup, --no-db to skip the database
 ```
+
+**No database (`--no-db`):** the app is hosted and sign-in still works, but each phone keeps its own data and there's no syncing or share links. Use **Settings → Backup** to keep a copy or to move plans to the other phone. You can add the database later by re-running without `--no-db`, and everything on your phones will sync up.
 
 It creates everything on the free tiers, stores the secrets in Azure and GitHub, starts the first deploy, and prints each person's invitation link. You still do step 1 in the portal: upgrade the trial and set the $5 budget alert. The script reminds you at the end.
 

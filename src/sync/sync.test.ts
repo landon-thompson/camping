@@ -123,6 +123,13 @@ describe('SyncEngine end-to-end (two phones, one server)', () => {
       await engine.sync();
       expect(engine.getStatus()).toMatchObject({ state, pending: 1 });
     }
+    const noDb = new SyncEngine(phone, (async () =>
+      new Response(JSON.stringify({ error: 'Database not configured', code: 'not-configured' }), {
+        status: 503,
+        headers: { 'content-type': 'application/json' },
+      })) as typeof fetch);
+    await noDb.sync();
+    expect(noDb.getStatus()).toMatchObject({ state: 'local-only', pending: 1 });
     const offline = new SyncEngine(phone, (async () => {
       throw new TypeError('Failed to fetch');
     }) as typeof fetch);

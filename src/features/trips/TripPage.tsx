@@ -13,6 +13,7 @@ import { TripReservationSection } from '../reservations/TripReservationSection';
 import { TripWeatherSection } from '../journal/TripWeatherSection';
 import { TripTrailsSection } from '../trails/TripTrailsSection';
 import { TripDebriefSection } from '../journal/TripDebriefSection';
+import { useSyncStatus } from '../../sync/useSync';
 
 const KIND_OPTIONS: { value: TripKind; label: string }[] = [
   { value: 'electric', label: 'Electric site' },
@@ -95,6 +96,7 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
   const loadProfiles = useRecords('load_profile');
   const powerProfiles = useRecords('power_profile');
   const shareLinks = useRecords('share_link');
+  const syncState = useSyncStatus().state;
 
   const homeBase = settings.rows[0]?.data.homeBase ?? null;
   const items = useMemo(() => checklist.rows.filter((r) => r.data.tripId === id), [checklist.rows, id]);
@@ -322,7 +324,13 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
         <TripDebriefSection tripId={id} />
       </section>
       <section id="t-share" className="scroll-mt-36">
-        <ShareCard tripId={id} activeShare={activeShare} />
+        {syncState === 'local-only' ? (
+          <Card title="Share">
+            <p className="text-ink-2">Read-only share links need the sync database, which isn’t set up yet.</p>
+          </Card>
+        ) : (
+          <ShareCard tripId={id} activeShare={activeShare} />
+        )}
       </section>
 
       {dirty && (
