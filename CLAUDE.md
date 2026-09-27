@@ -1,6 +1,6 @@
 # Camp Planner — notes for Claude
 
-Family camping/overland trip planner (2 adults + toddler, Minnesota, 2027 season, Lexus GX550). Built in review-gated phases; **read `docs/PROGRESS.md` first** for status, the owner's answers, and open items. The owner later asked for all remaining phases to be built in parallel (see `docs/CONTRACTS.md` for ownership and integration slots).
+Family camping/overland trip planner (2 adults + toddler, Minnesota + South Dakota, 2027 season, Lexus GX550). Built in review-gated phases; **read `docs/PROGRESS.md` first** for status, the owner's answers, and open items. The owner later asked for all remaining phases to be built in parallel (see `docs/CONTRACTS.md` for ownership and integration slots).
 
 ## Layout
 - `src/`: React PWA (Vite, Tailwind 4, Dexie). `model/*.ts` define every record type (registry in `model/schemas.ts`); `features/<gear|trips|reservations|trails|journal>/` hold each phase's screens, logic, seeds and tests; `calc/` the pure calculators; `sync/` the local-first sync engine.

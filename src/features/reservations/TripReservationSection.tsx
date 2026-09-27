@@ -8,7 +8,7 @@ import { useCampgroundLookup } from '../places/useCampgroundLookup';
 import { db } from '../../db/local';
 import { locationForCampground, parseConfirmation, tripUpdateFromReservation } from './confirmation';
 import { reservationForTrip, useBookingRules, useCampgrounds, useReservations } from './data';
-import { BookingStateBadge, bookingLink, ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, numOrNull, SaveRow, useDraft } from './shared';
+import { SYSTEM_LABEL, BookingStateBadge, bookingLink, ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, numOrNull, SaveRow, useDraft } from './shared';
 
 const PERMIT_ID = 'permit:mn-state-park-annual-2027';
 
@@ -198,7 +198,7 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
             )}
             {reservation?.data.status === 'waitlisted' && (
               <p className="mt-2 rounded-lg bg-warn-bg p-2 text-sm text-warn">
-                Waitlisted — set the official “notify me” cancellation alert on {rule.bookingSystem === 'reservemn' ? 'ReserveMN' : 'Recreation.gov'} so you hear
+                Waitlisted — set the official “notify me” cancellation alert on {SYSTEM_LABEL[rule.bookingSystem]} so you hear
                 about a cancellation the moment it opens up.
               </p>
             )}

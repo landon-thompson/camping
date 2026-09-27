@@ -3,11 +3,11 @@ import { isoDate, latLng, specNumber } from './core';
 
 /** Phase 3 — campground directory, booking rules, reservations. Owned by the reservations feature. */
 
-export const agency = z.enum(['mn-state-park', 'mn-state-forest', 'usfs', 'other']);
+export const agency = z.enum(['mn-state-park', 'mn-state-forest', 'sd-state-park', 'usfs', 'other']);
 export type Agency = z.infer<typeof agency>;
 
 /** How a site is booked. */
-export const bookingSystem = z.enum(['reservemn', 'recreation-gov', 'first-come', 'dispersed', 'other']);
+export const bookingSystem = z.enum(['reservemn', 'campsd', 'recreation-gov', 'first-come', 'dispersed', 'other']);
 export type BookingSystem = z.infer<typeof bookingSystem>;
 
 /**

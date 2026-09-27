@@ -208,3 +208,27 @@ describe('Book now link', () => {
     expect(bookingLink('https://www.recreation.gov/camping/campgrounds/233144')).toBe('https://www.recreation.gov/camping/campgrounds/233144');
   });
 });
+
+describe('South Dakota parks', () => {
+  it('keeps SD state parks and recreation areas, SD naming, Camp SD booking, Custer’s one-year window', () => {
+    const sq = (lng: number, lat: number) => ({ rings: [[[lng, lat], [lng + 0.05, lat], [lng + 0.05, lat + 0.05], [lng, lat + 0.05]]] });
+    const data = {
+      features: [
+        { attributes: { NAME: 'CUSTER STATE PARK', TYPE: 'State Park' }, geometry: sq(-103.45, 43.72) },
+        { attributes: { NAME: 'Angostura', TYPE: 'Recreation Area' }, geometry: sq(-103.43, 43.3) },
+        { attributes: { NAME: 'Lake Thompson Recreation Area', TYPE: 'Recreation Area' }, geometry: sq(-97.45, 44.3) },
+        { attributes: { NAME: 'Mina Lake Lakeside Use Area', TYPE: 'Lakeside Use Area' }, geometry: sq(-98.72, 45.44) },
+        { attributes: { NAME: 'Itasca', TYPE: 'State Park' }, geometry: sq(-95.2, 47.2) }, // Minnesota pin: dropped
+      ],
+    };
+    const parks = parseParksDetailed(data, true, 'sd').parks;
+    expect(parks.map((p) => p.name)).toEqual(['Angostura Recreation Area', 'Custer State Park', 'Lake Thompson Recreation Area']);
+    const plan = planImport(parks, [], 'sd-open-data', 'sd');
+    const custer = plan.add.find((a) => a.data.name === 'Custer State Park')!;
+    expect(custer.id).toBe('campground:sd-sp-custer');
+    expect(custer.data).toMatchObject({ agency: 'sd-state-park', bookingSystem: 'campsd', bookingUrl: 'https://www.campsd.com' });
+    expect(custer.data.windowMonthsOverride?.value).toBe(12);
+    expect(plan.add.find((a) => a.data.name === 'Angostura Recreation Area')?.data.windowMonthsOverride).toBeUndefined();
+    expect(isGenericBookingUrl('https://www.campsd.com/')).toBe(true);
+  });
+});

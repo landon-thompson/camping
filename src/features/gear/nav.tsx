@@ -41,6 +41,7 @@ export function ToolsSubNav() {
         { to: '/tools', label: 'Overview', end: true },
         { to: '/tools/load', label: 'Load & tow' },
         { to: '/tools/power', label: 'Power' },
+        { to: '/tools/fishing', label: 'Fishing' },
         { to: '/tools/checklists', label: 'Checklists' },
       ]}
     />

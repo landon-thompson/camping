@@ -45,3 +45,28 @@ export function lakeRows(lakes: NearbyLake[], launches: BoatLaunchSite[], origin
     .filter((r) => r.distanceKm === null || r.distanceKm <= maxKm)
     .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity) || a.lake.name.localeCompare(b.lake.name));
 }
+
+/** Rough South Dakota test (the MN border runs near 96.45° W). */
+export const inSouthDakota = (p: { lat: number; lng: number }) => p.lat >= 42.4 && p.lat <= 45.95 && p.lng >= -104.1 && p.lng <= -96.44;
+
+export const SD_FISHERY_REPORTS = 'https://apps.sd.gov/GF56FisheriesReports/';
+
+export interface WaterRow {
+  water: string;
+  distanceKm: number;
+  launches: BoatLaunchSite[];
+}
+
+/** Waters the launches go into (for states without LakeFinder lake numbers), nearest first. */
+export function watersFromLaunches(launches: BoatLaunchSite[], origin: { lat: number; lng: number }, maxKm: number): WaterRow[] {
+  const byWater = new Map<string, BoatLaunchSite[]>();
+  for (const l of launches) {
+    if (l.dow || !l.water) continue;
+    const key = l.water.trim();
+    byWater.set(key, [...(byWater.get(key) ?? []), { ...l, distanceKm: Math.round(distanceKm(origin, l) * 10) / 10 }]);
+  }
+  return [...byWater.entries()]
+    .map(([water, ls]) => ({ water, launches: ls.sort((a, b) => a.distanceKm - b.distanceKm), distanceKm: Math.min(...ls.map((l) => l.distanceKm)) }))
+    .filter((w) => w.distanceKm <= maxKm)
+    .sort((a, b) => a.distanceKm - b.distanceKm);
+}

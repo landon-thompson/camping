@@ -101,3 +101,37 @@ describe('boat launches', () => {
     expect(r.report).toEqual(['DNR public water accesses: HTTP 502 — nope', 'DNR public water accesses (map service): 2 within 25 mi']);
   });
 });
+
+describe('South Dakota boat ramps', () => {
+  it('finds GFP’s ramp layer by name and never invents Minnesota lake numbers', async () => {
+    const { findBoatLaunches } = await import('./waterAccess');
+    const urls: string[] = [];
+    const fake = (async (url: string) => {
+      urls.push(url);
+      if (url.endsWith('/Parks?f=json')) return Response.json({ services: [{ name: 'Parks/ParkBoundaries', type: 'MapServer' }, { name: 'Parks/PublicWaterAccess', type: 'FeatureServer' }] });
+      if (url.includes('/Fisheries?f=json') || url.includes('/Public_Lands?f=json')) return Response.json({ services: [] });
+      if (url.includes('PublicWaterAccess/FeatureServer/layers')) return Response.json({ layers: [{ id: 3, name: 'Boat Ramps', geometryType: 'esriGeometryPoint' }] });
+      if (url.includes('PublicWaterAccess/FeatureServer/3/query')) {
+        return Response.json({ features: [{ attributes: { SiteName: 'Angostura Marina Ramp', LakeName: 'Angostura Reservoir', LakeID: 123456 }, geometry: { x: -103.43, y: 43.33 } }] });
+      }
+      return new Response('{"error":"unexpected"}', { status: 404 });
+    }) as typeof fetch;
+    const r = await findBoatLaunches({ lat: 43.34, lng: -103.44 }, fake);
+    expect(r.launches).toHaveLength(1);
+    expect(r.launches[0]).toMatchObject({ name: 'Angostura Marina Ramp', water: 'Angostura Reservoir', dow: null });
+    expect(r.report[0]).toMatch(/^SD GFP boat ramps: 1 within 25 mi \(Parks\/PublicWaterAccess › Boat Ramps\)$/);
+    expect(urls.some((u) => u.includes('mn.gov'))).toBe(false); // far from Minnesota
+  });
+
+  it('asks both states near the border', async () => {
+    const { findBoatLaunches } = await import('./waterAccess');
+    const hosts = new Set<string>();
+    const fake = (async (url: string) => {
+      hosts.add(new URL(url).hostname);
+      return new Response('{"error":"x"}', { status: 502 });
+    }) as typeof fetch;
+    const r = await findBoatLaunches({ lat: 45.3, lng: -96.5 }, fake); // Big Stone Lake
+    expect([...hosts].sort()).toEqual(['enterprise.gisdata.mn.gov', 'gfpgis.sd.gov']);
+    expect(r.report.some((l) => l.startsWith('SD GFP boat ramps:'))).toBe(true);
+  });
+});

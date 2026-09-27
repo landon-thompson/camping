@@ -17,7 +17,7 @@ This file is the hand-off note between work sessions. Update it at the end of ev
 
 Integration pass (coordinator): trip page saves only changed fields (fixed a bug where saving trip details could undo a campground chosen in the reservation section or an edit synced from the other phone); trip page section jump bar, sticky save bar, compact gear list; routes & pins linked from Tools and each trip; accessibility fixes (announced save status, reduced-motion, labelled links, theme toggle buttons); README setup steps for photos and RIDB.
 
-Tests: 221 app + 53 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
+Tests: 226 app + 54 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
 
 **Not testable from the build sandbox (network blocked): verify on first real deploy**
 - National Weather Service API (api.weather.gov): response parsing and browser CORS. Weather is built from the documented format.
@@ -87,6 +87,16 @@ Coordinator reviewed every screen at 390px, then five Sonnet agents (separate wo
 - Gear: Buy next overflow fixed, running total vs remaining budget, unpriced items collapsed; categories collapsible; compact budget rows; Tools index lost its duplicate pill nav.
 - Trails: `/trails` and the trip Trails tab share `TrailsScope`; MVUM note once; import/offline explanations collapsed; one empty state.
 - Fishing: Numbers/Size switch with fixed fewer·typical·more gauges and an explainer; species icons; lakes within 5/10/25 mi of the trip's launch.
+
+## Any lake + South Dakota (2026-09-27)
+- Fishing: "Find any lake" (LakeFinder by-name search, or paste a link / lake number) on the trip Lake & fish tab and on a new Tools › Fishing page (no trip needed; list kept on the phone).
+- South Dakota, first pass:
+  - Agency `sd-state-park`, booking system `campsd` (campsd.com), booking rule seed: 90 days (Custer State Park 12 months via a campground override), opening time 7:00 CT — all **verify** (sources disagree on 7 vs 8 AM CT).
+  - State park import has a Minnesota / South Dakota choice; SD uses the state open-data "Parks And Recreation Areas" item (`cfcb6562b1cd4e1287e836b2df60426f`), keeps state parks + recreation areas, drops lakeside use / nature areas.
+  - Campground "Find location" works for SD state parks; the USFS search box now covers MN + SD (Black Hills NF, Buffalo Gap NG).
+  - Boat ramps: GFP's layer on `gfpgis.sd.gov` is found by name in the Parks / Fisheries / Public_Lands folders at run time (address not confirmable from the sandbox); trips near the border query both states.
+  - Fishing: LakeFinder is Minnesota-only. SD trips list the waters near the launch (from GFP ramps) and link to GFP Fishery Reports (PDF reports, no data API — linked, not parsed).
+  - Not done for SD yet: SD park entrance license tracking (the permit card is MN-only), SD campground seeds, SD-specific checklist items.
 
 ## Open items / to verify
 

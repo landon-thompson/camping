@@ -1,12 +1,12 @@
 import type { Campground, LatLng } from '../../model/schemas';
-import { fetchParksFromService, normalizeName, type ParkPoint } from '../reservations/stateParks';
+import { fetchParksFromService, normalizeName, REGION_NAME, type ParkPoint, type ParkRegion } from '../reservations/stateParks';
 import { errText, featurePoint, listLayers, pick, queryLayer, type EsriFeature } from './arcgis';
 
 /** USFS recreation sites (campgrounds, day-use areas…) with their locations. */
 export const USFS_RECREATION_SERVICE = 'https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_RecreationOpportunities_01/MapServer';
 
-/** Minnesota, [west, south, east, north]. */
-const MN_BBOX: [number, number, number, number] = [-97.3, 43.4, -89.4, 49.4];
+/** Minnesota and South Dakota, [west, south, east, north] (Superior/Chippewa, Black Hills, Buffalo Gap). */
+const SEARCH_BBOX: [number, number, number, number] = [-104.1, 42.4, -89.4, 49.4];
 
 export interface FoundLocation {
   location: LatLng;
@@ -63,28 +63,29 @@ export function matchPark(cg: Pick<Campground, 'name' | 'unit'>, parks: ParkPoin
   return null;
 }
 
-let parksCache: Promise<ParkPoint[]> | null = null;
+const parksCache: Partial<Record<ParkRegion, Promise<ParkPoint[]>>> = {};
 
-async function findStatePark(cg: Campground, fetchFn: typeof fetch): Promise<LookupResult> {
-  parksCache ??= fetchParksFromService(fetchFn).then((r) => r.parks);
+async function findStatePark(cg: Campground, fetchFn: typeof fetch, region: ParkRegion): Promise<LookupResult> {
+  const who = region === 'sd' ? 'South Dakota GFP' : 'DNR';
+  parksCache[region] ??= fetchParksFromService(fetchFn, region).then((r) => r.parks);
   let parks: ParkPoint[];
   try {
-    parks = await parksCache;
+    parks = await parksCache[region]!;
   } catch (e) {
-    parksCache = null;
-    return { ok: false, message: `Couldn’t load the DNR state park list (${errText(e)}).` };
+    delete parksCache[region];
+    return { ok: false, message: `Couldn’t load the ${who} state park list (${errText(e)}).` };
   }
   if (!parks.length) {
-    parksCache = null;
-    return { ok: false, message: 'The DNR state park list came back empty.' };
+    delete parksCache[region];
+    return { ok: false, message: `The ${who} state park list came back empty.` };
   }
   const park = matchPark(cg, parks);
-  if (!park) return { ok: false, message: `“${cg.unit || cg.name}” isn’t in the DNR state park list (${parks.length} parks).` };
+  if (!park) return { ok: false, message: `“${cg.unit || cg.name}” isn’t in the ${REGION_NAME[region]} state park list (${parks.length} parks).` };
   return {
     ok: true,
     found: {
       location: { lat: park.lat, lng: park.lng },
-      source: `MN DNR state park boundary for ${park.name}`,
+      source: `${region === 'sd' ? 'SD GFP park data' : 'MN DNR state park boundary'} for ${park.name}`,
       verify: 'Pin is the middle of the park, not the campground itself; drag it on the trip map if you want it exact.',
     },
   };
@@ -136,7 +137,7 @@ async function findUsfs(cg: Campground, fetchFn: typeof fetch): Promise<LookupRe
     try {
       features = await queryLayer(
         `${USFS_RECREATION_SERVICE}/${layer.id}`,
-        { bbox: MN_BBOX, where: `UPPER(${nameField}) LIKE '%${word.replace(/'/g, "''")}%'` },
+        { bbox: SEARCH_BBOX, where: `UPPER(${nameField}) LIKE '%${word.replace(/'/g, "''")}%'` },
         fetchFn,
       );
     } catch (e) {
@@ -159,7 +160,8 @@ async function findUsfs(cg: Campground, fetchFn: typeof fetch): Promise<LookupRe
 
 /** Look up a campground's location in the official data for its agency. */
 export async function findCampgroundLocation(cg: Campground, fetchFn: typeof fetch): Promise<LookupResult> {
-  if (cg.agency === 'mn-state-park') return findStatePark(cg, fetchFn);
+  if (cg.agency === 'mn-state-park') return findStatePark(cg, fetchFn, 'mn');
+  if (cg.agency === 'sd-state-park') return findStatePark(cg, fetchFn, 'sd');
   if (cg.agency === 'usfs') return findUsfs(cg, fetchFn);
   return {
     ok: false,

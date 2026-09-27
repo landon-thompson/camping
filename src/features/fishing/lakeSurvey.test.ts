@@ -129,3 +129,25 @@ describe('numbers and size against similar lakes', () => {
     expect(rateSize({ avgWeightLb: 1, normalWeightLow: null, normalWeightHigh: null })).toBeNull();
   });
 });
+
+describe('any lake by name', () => {
+  it('searches LakeFinder by name, exact matches first, falling back to http', async () => {
+    const { fetchLakesByName } = await import('./lakeSurvey');
+    const urls: string[] = [];
+    const fake = (async (url: string) => {
+      urls.push(url);
+      if (url.startsWith('https:')) return new Response('nope', { status: 502 });
+      return Response.json({
+        results: [
+          { name: 'Little Vermilion', id: '69060800', county: 'St. Louis' },
+          { name: 'Vermilion', id: '69037800', county: 'St. Louis' },
+          { name: 'Vermilion', id: '19008000', county: 'Dakota' },
+        ],
+      });
+    }) as typeof fetch;
+    const lakes = await fetchLakesByName('Vermilion', fake);
+    expect(lakes.map((l) => `${l.name}/${l.county}`)).toEqual(['Vermilion/Dakota', 'Vermilion/St. Louis', 'Little Vermilion/St. Louis']);
+    expect(urls[0]).toBe('https://services.dnr.state.mn.us/api/lakefinder/by_name/v1?name=Vermilion');
+    expect(urls[1]).toMatch(/^http:/);
+  });
+});

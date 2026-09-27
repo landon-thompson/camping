@@ -21,6 +21,11 @@ export function ToolsIndexPage() {
           <p className="text-ink-2">Imported onX/GPX routes and pins, plus the MVUM layer.</p>
         </Card>
       </Link>
+      <Link to="/tools/fishing" className="block">
+        <Card title="Fishing">
+          <p className="text-ink-2">DNR fish surveys for any Minnesota lake: numbers and size vs similar lakes.</p>
+        </Card>
+      </Link>
       <Link to="/tools/checklists" className="block">
         <Card title="Checklists">
           <p className="text-ink-2">Edit the packing checklist templates used on trips.</p>

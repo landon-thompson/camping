@@ -7,6 +7,7 @@ import type { BookingState } from './booking';
 
 export const SYSTEM_LABEL: Record<BookingSystem, string> = {
   reservemn: 'ReserveMN',
+  campsd: 'Camp SD',
   'recreation-gov': 'Recreation.gov',
   'first-come': 'First-come',
   dispersed: 'Dispersed',
@@ -184,7 +185,8 @@ export function isGenericBookingUrl(url: string): boolean {
     return (
       (/(^|\.)mndnr\.gov$/.test(u.hostname) && path === '/reservations') ||
       (/reservemn\.usedirect\.com$/.test(u.hostname) && path.split('/').filter(Boolean).length <= 1) ||
-      (/recreation\.gov$/.test(u.hostname) && path === '')
+      (/recreation\.gov$/.test(u.hostname) && path === '') ||
+      (/(^|\.)campsd\.com$/.test(u.hostname) && path === '')
     );
   } catch {
     return true;

@@ -1,5 +1,5 @@
 /**
- * Server-side fetch of official Minnesota / USFS map and lake data for the app.
+ * Server-side fetch of official Minnesota / South Dakota / USFS map and lake data for the app.
  * The DNR's servers don't send CORS headers, so a phone can't read them
  * directly; the API fetches on its behalf. Strict allowlist of read-only
  * requests: ArcGIS "layers"/"query" (JSON only) and DNR LakeFinder lookups.
@@ -14,6 +14,9 @@ const ARCGIS: RegExp[] = [
   /^https:\/\/(gis|arcgis)\.metc\.state\.mn\.us\/arcgis\/rest\/services\/[\w/]+\/(FeatureServer|MapServer)\/(layers|\d+\/query)$/,
   // USFS enterprise data warehouse (recreation sites: campground locations).
   /^https:\/\/apps\.fs\.usda\.gov\/arcx\/rest\/services\/EDW\/[\w]+\/MapServer\/(layers|\d+\/query)$/,
+  // South Dakota GFP (boat ramps): a few folder listings to find the layer, then layers/query.
+  /^https:\/\/gfpgis\.sd\.gov\/arcgis\/rest\/services\/(Parks|Fisheries|Public_Lands)$/,
+  /^https:\/\/gfpgis\.sd\.gov\/arcgis\/rest\/services\/[\w/]+\/(FeatureServer|MapServer)\/(layers|\d+\/query)$/,
 ];
 
 /** DNR LakeFinder: a lake's fish surveys by DOW number, and lakes near a point / by name. */

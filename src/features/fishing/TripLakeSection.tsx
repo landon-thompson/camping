@@ -5,9 +5,10 @@ import { Button, Card, inputClass } from '../../components/ui';
 import type { BoatLaunchSite, NearbyLake, Trip, TripNearby } from '../../model/schemas';
 import { viaAppServer } from '../reservations/stateParks';
 import { distanceKm, errText } from '../places/arcgis';
-import { findBoatLaunches, LAUNCH_SEARCH_KM, PRIMARY_LAUNCH_SOURCE } from '../places/waterAccess';
-import { fetchLakesNear, LAKE_RADIUS_KM, parseDowInput } from './lakeSurvey';
-import { defaultLakes, lakeRows, lakesFrom } from './lakeList';
+import { CURRENT_LAUNCH_SOURCES, findBoatLaunches, LAUNCH_SEARCH_KM } from '../places/waterAccess';
+import { fetchLakesNear, LAKE_RADIUS_KM } from './lakeSurvey';
+import { LakePicker } from './LakePicker';
+import { defaultLakes, inSouthDakota, lakeRows, lakesFrom, SD_FISHERY_REPORTS, watersFromLaunches } from './lakeList';
 import { LakeFishing } from './LakeFishing';
 
 const miles = (km: number) => `${(km * 0.621371).toFixed(km < 16 ? 1 : 0)} mi`;
@@ -26,8 +27,6 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
   const [radiusMi, setRadiusMi] = useState<(typeof RADII_MI)[number]>(25);
   const [lakeFilter, setLakeFilter] = useState('');
   const [showAllLakes, setShowAllLakes] = useState(false);
-  const [addText, setAddText] = useState('');
-  const [addError, setAddError] = useState<string | null>(null);
   const triedFor = useRef<string | null>(null);
 
   const t = trip.data;
@@ -41,7 +40,7 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
     (!data ||
       distanceKm(data.anchor, anchor) > REFRESH_WHEN_MOVED_KM ||
       data.radiusKm !== LAKE_RADIUS_KM ||
-      (!data.launches.length && !data.report.some((r) => r.startsWith(`${PRIMARY_LAUNCH_SOURCE}:`))));
+      (!data.launches.length && !data.report.some((r) => CURRENT_LAUNCH_SOURCES.some((l) => r.startsWith(`${l}:`)))));
 
   async function refresh() {
     if (!anchor) return;
@@ -112,6 +111,8 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
   const q = lakeFilter.trim().toLowerCase();
   const filtered = q ? rows.filter((r) => r.lake.name.toLowerCase().includes(q)) : rows;
   const shownLakes = showAllLakes || q ? filtered : filtered.slice(0, 10);
+  const southDakota = inSouthDakota(origin);
+  const sdWaters = southDakota ? watersFromLaunches(allLaunches, origin, radiusMi * MI) : [];
 
   async function saveSelection(next: string[], extraLake?: NearbyLake) {
     if (!data) return;
@@ -132,7 +133,7 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
       >
         <div className="space-y-3">
           <p className="text-sm text-ink-2">
-            Public water accesses within {miles(LAUNCH_SEARCH_KM)} of {t.location?.label || cg?.name || 'the trip'}, from the DNR’s official list.
+            Public water accesses within {miles(LAUNCH_SEARCH_KM)} of {t.location?.label || cg?.name || 'the trip'}, from {southDakota ? 'South Dakota GFP’s boat ramp data' : 'the DNR’s official list'}.
           </p>
           {busy && !data && <p role="status" className="text-sm text-ink-2">Looking for boat launches and lakes…</p>}
           {data && !closeLaunches.length && !busy && (
@@ -167,12 +168,66 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
                   <li key={r}>{r}</li>
                 ))}
               </ul>
-              <p className="mt-1">Check ramp conditions and any launch fees on site; the printed DNR water access maps are the reference.</p>
+              <p className="mt-1">Check ramp conditions and any launch fees on site; the state’s printed water access maps are the reference.</p>
             </details>
           )}
         </div>
       </Card>
 
+      {southDakota && (
+        <Card title={`South Dakota waters near ${originName}`}>
+          <div className="space-y-3">
+            <p className="text-sm text-ink-2">
+              The DNR fish survey view is Minnesota-only. South Dakota GFP publishes its lake survey reports (with catch per net and sizes) in its Fishery
+              Reports site — search the lake name there.
+            </p>
+            <a
+              href={SD_FISHERY_REPORTS}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-12 items-center rounded-xl bg-brand px-4 font-semibold text-brand-ink"
+            >
+              GFP Fishery Reports ↗
+            </a>
+            {sdWaters.length > 0 ? (
+              <ul className="divide-y divide-line">
+                {sdWaters.map((w) => (
+                  <li key={w.water} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                    <span className="min-w-0">
+                      <span className="block font-semibold">{w.water}</span>
+                      <span className="block text-sm text-ink-2">
+                        {miles(w.distanceKm)} · {w.launches.length} public ramp{w.launches.length === 1 ? '' : 's'} · nearest: {w.launches[0]!.name}
+                      </span>
+                    </span>
+                    {!sameSpot(t.boatLaunch, w.launches[0]!) && (
+                      <Button type="button" variant="ghost" className="min-h-11 px-1" onClick={() => setLaunch(w.launches[0]!)}>
+                        Use ramp
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              data && !busy && <p className="text-sm text-ink-2">No GFP boat ramps found within {radiusMi} miles — see “Data sources” above.</p>
+            )}
+            <div role="group" aria-label="Distance" className="flex gap-2">
+              {RADII_MI.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  aria-pressed={radiusMi === r}
+                  onClick={() => setRadiusMi(r)}
+                  className={`min-h-11 flex-1 rounded-full border text-sm font-semibold ${radiusMi === r ? 'border-brand bg-brand text-brand-ink' : 'border-line bg-surface-2 text-ink'}`}
+                >
+                  {r} mi
+                </button>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {(!southDakota || rows.length > 0) && (
       <Card title={`Lakes near ${originName}`}>
         <div className="space-y-3">
           <div role="group" aria-label="Distance" className="flex gap-2">
@@ -240,32 +295,18 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
             </Button>
           )}
 
-          <form
-            className="flex flex-wrap items-end gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const dow = parseDowInput(addText);
-              if (!dow) {
-                setAddError('Paste the lake’s LakeFinder link, or its 8-digit DNR lake number (e.g. 69-0254-00).');
-                return;
-              }
-              setAddError(null);
-              setAddText('');
+          <LakePicker
+            selected={selected}
+            onPick={(lake) => {
               if (!data) return;
-              void saveSelection(selected.includes(dow) ? selected : [...selected, dow], { dow, name: `Lake ${dow}`, county: '' });
+              void saveSelection(selected.includes(lake.dow) ? selected : [...selected, lake.dow], lake);
             }}
-          >
-            <label className="block min-w-0 flex-1 text-sm">
-              <span className="mb-1 block font-semibold text-ink-2">Add another lake</span>
-              <input className={inputClass} value={addText} placeholder="LakeFinder link or lake number" onChange={(e) => setAddText(e.target.value)} />
-            </label>
-            <Button type="submit" variant="secondary" disabled={!addText.trim() || !data}>
-              Add
-            </Button>
-          </form>
-          {addError && <p className="text-sm text-warn">{addError}</p>}
+          />
+          {!data && <p className="text-sm text-ink-2">Lakes can be added once this trip’s nearby data has loaded.</p>}
         </div>
       </Card>
+
+      )}
 
       {selected.length > 0 && (
         <Card title="Fishing">

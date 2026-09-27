@@ -86,6 +86,38 @@ const bookingRules: SeedRecord[] = [
     status: 'verify',
   }),
 
+  seed('booking_rule', 'booking_rule:sd-state-park', {
+    agency: 'sd-state-park',
+    label: 'South Dakota state park / recreation area',
+    bookingSystem: 'campsd',
+    reservationRequired: null,
+    windowDays: {
+      value: 90,
+      status: 'verify',
+      source: 'From research on gfp.sd.gov (camping FAQ and 90-day calendar) — not yet checked against the official page',
+      note: 'Custer State Park opens one year before arrival; its campgrounds carry their own 12-month override.',
+    },
+    windowMonths: null,
+    openTime: '07:00',
+    timeZone: 'America/Chicago',
+    rolling: true,
+    maxNights: {
+      value: null,
+      status: 'verify',
+      source: 'Not found yet — check the stay limit on campsd.com',
+    },
+    officialUrl: 'https://www.campsd.com',
+    phone: '800-710-2267',
+    notes: [
+      'Reservations open 90 days before arrival, except Custer State Park (one year before).',
+      'Sources differ on the opening time on the first day (7:00 or 8:00 AM Central; 6:00 AM Mountain was also quoted) — check campsd.com and be ready at 7.',
+      'Summer weekend sites usually book within a week of opening.',
+      'A South Dakota park entrance license is required in addition to the campsite (also for boat ramps inside parks).',
+      'Western South Dakota (Black Hills, Custer) is on Mountain time.',
+    ],
+    source: 'gfp.sd.gov/camp and gfp.sd.gov/UserDocs/docs/90-day-calendar.pdf — from research, not read directly; verify on campsd.com.',
+    status: 'verify',
+  }),
   seed('booking_rule', 'booking_rule:usfs', {
     agency: 'usfs',
     label: 'US Forest Service developed campground (Recreation.gov)',

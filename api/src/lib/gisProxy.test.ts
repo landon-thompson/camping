@@ -36,4 +36,11 @@ describe('GIS proxy allowlist', () => {
     expect(allowedGisUrl('https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_RecreationOpportunities_01/MapServer/0/query?where=1%3D1&f=json')).not.toBeNull();
     expect(allowedGisUrl('https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_RecreationOpportunities_01/MapServer/0/query?f=html')).toBeNull();
   });
+
+  it('allows South Dakota GFP folder listings and layer queries only', () => {
+    expect(allowedGisUrl('https://gfpgis.sd.gov/arcgis/rest/services/Parks?f=json')).not.toBeNull();
+    expect(allowedGisUrl('https://gfpgis.sd.gov/arcgis/rest/services/Parks/PublicWaterAccess/FeatureServer/3/query?where=1%3D1&f=json')).not.toBeNull();
+    expect(allowedGisUrl('https://gfpgis.sd.gov/arcgis/rest/services/Administration?f=json')).toBeNull();
+    expect(allowedGisUrl('https://gfpgis.sd.gov/arcgis/rest/services/Parks/X/FeatureServer/3/applyEdits?f=json')).toBeNull();
+  });
 });

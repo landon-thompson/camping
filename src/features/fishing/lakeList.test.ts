@@ -26,3 +26,18 @@ describe('lakes near the launch', () => {
     expect(rows[0]!.distanceKm).toBeCloseTo(1.1, 1);
   });
 });
+
+describe('South Dakota waters', () => {
+  it('groups non-Minnesota launches by water, nearest first', async () => {
+    const { watersFromLaunches, inSouthDakota } = await import('./lakeList');
+    const origin = { lat: 43.33, lng: -103.44 };
+    const rows = watersFromLaunches(
+      [launch({ water: 'Angostura Reservoir', lat: 43.33, lng: -103.43 }), launch({ water: 'Angostura Reservoir', lat: 43.3, lng: -103.45 }), launch({ water: 'Stockade Lake', lat: 43.77, lng: -103.52 })],
+      origin,
+      40.2,
+    );
+    expect(rows.map((r) => [r.water, r.launches.length])).toEqual([['Angostura Reservoir', 2]]); // Stockade is ~49 km away
+    expect(inSouthDakota(origin)).toBe(true);
+    expect(inSouthDakota({ lat: 47.8, lng: -92.1 })).toBe(false);
+  });
+});

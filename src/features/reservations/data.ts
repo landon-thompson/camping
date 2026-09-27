@@ -1,10 +1,11 @@
 import { useRecords, type Row } from '../../db/records';
 import type { Agency, BookingRule, Campground, Reservation } from '../../model/schemas';
 
-/** Every seeded booking rule uses one of these four fixed ids. */
+/** Every seeded booking rule uses one of these fixed ids. */
 export const RULE_ID_FOR_AGENCY: Record<Agency, string> = {
   'mn-state-park': 'booking_rule:mn-state-park',
   'mn-state-forest': 'booking_rule:mn-state-forest',
+  'sd-state-park': 'booking_rule:sd-state-park',
   usfs: 'booking_rule:usfs',
   other: 'booking_rule:dispersed',
 };
@@ -32,6 +33,7 @@ export function reservationForTrip(reservations: Row<Reservation>[], tripId: str
 export const AGENCY_LABEL: Record<Agency, string> = {
   'mn-state-park': 'MN state park',
   'mn-state-forest': 'MN state forest',
+  'sd-state-park': 'SD state park',
   usfs: 'US Forest Service',
   other: 'Other / dispersed',
 };

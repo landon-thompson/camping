@@ -163,7 +163,7 @@ export function formatOpensAt(instant: Date, timeZone: string): string {
  * authoritative signal for "does this specific site take reservations at all".
  */
 export function campgroundTakesReservations(bookingSystem: Campground['bookingSystem']): boolean {
-  return bookingSystem === 'reservemn' || bookingSystem === 'recreation-gov';
+  return bookingSystem === 'reservemn' || bookingSystem === 'campsd' || bookingSystem === 'recreation-gov';
 }
 
 export interface ResolvedBooking {

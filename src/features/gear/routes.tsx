@@ -8,6 +8,7 @@ import { LoadToolPage } from './LoadTool';
 import { PowerToolPage } from './PowerTool';
 import { ChecklistsPage } from './Checklists';
 import { ChecklistDetailPage } from './ChecklistDetail';
+import { FishingPage } from '../fishing/FishingPage';
 
 /** Phase 1 screens: /gear/* (items, budget, buy next) and /tools/* (calculators, checklist templates). */
 export const gearRoutes = (
@@ -21,6 +22,7 @@ export const gearRoutes = (
     <Route path="tools" element={<ToolsIndexPage />} />
     <Route path="tools/load" element={<LoadToolPage />} />
     <Route path="tools/power" element={<PowerToolPage />} />
+    <Route path="tools/fishing" element={<FishingPage />} />
     <Route path="tools/checklists" element={<ChecklistsPage />} />
     <Route path="tools/checklists/:id" element={<ChecklistDetailPage />} />
   </>

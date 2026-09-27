@@ -359,14 +359,28 @@ export const formatDow = (d: string) => d.replace(/^(\d{2})(\d{4})(\d{2})$/, '$1
 
 /** Lakes within `radiusM` of a point, from LakeFinder. */
 export async function fetchLakesNear(lat: number, lng: number, fetchFn: typeof fetch, radiusM = LAKE_RADIUS_KM * 1000): Promise<NearbyLake[]> {
-  const url = lakesNearUrl(lat, lng, radiusM);
+  return parseNearbyLakes(await fetchLakeFinderApi(lakesNearUrl(lat, lng, radiusM), fetchFn));
+}
+
+export const lakesByNameUrl = (name: string) => `https://services.dnr.state.mn.us/api/lakefinder/by_name/v1?name=${encodeURIComponent(name.trim())}`;
+
+/** Any Minnesota lake by name (LakeFinder), e.g. "Vermilion" → every lake with that name, with county. */
+export async function fetchLakesByName(name: string, fetchFn: typeof fetch): Promise<NearbyLake[]> {
+  const lakes = parseNearbyLakes(await fetchLakeFinderApi(lakesByNameUrl(name), fetchFn));
+  const q = name.trim().toLowerCase();
+  // Exact and starts-with matches first.
+  const rank = (l: NearbyLake) => (l.name.toLowerCase() === q ? 0 : l.name.toLowerCase().startsWith(q) ? 1 : 2);
+  return lakes.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name) || a.county.localeCompare(b.county));
+}
+
+async function fetchLakeFinderApi(url: string, fetchFn: typeof fetch): Promise<unknown> {
   let res: Response;
   try {
     res = await fetchFn(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   } catch {
-    res = await fetchFn(url.replace('https:', 'http:')); // the DNR documents this API on http
+    res = await fetchFn(url.replace('https:', 'http:')); // the DNR documents these APIs on http
   }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return parseNearbyLakes(parseJsonLoose(await res.text()));
+  return parseJsonLoose(await res.text());
 }

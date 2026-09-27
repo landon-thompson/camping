@@ -30,6 +30,21 @@ export function dnrParkPageUrl(unitId: string): string {
 }
 
 /** Official download page for the statewide boundary file (GeoJSON), for the file fallback. */
+/**
+ * South Dakota: "Parks And Recreation Areas" (State of South Dakota open data,
+ * SD GFP) — state parks, recreation areas and more, statewide.
+ */
+export const SD_PARKS_ITEMS = ['cfcb6562b1cd4e1287e836b2df60426f'];
+export const SD_PARKS_DATASET_URL = 'https://opendata2017-09-18t192802468z-sdbit.opendata.arcgis.com/datasets/cfcb6562b1cd4e1287e836b2df60426f_0/about';
+
+export type ParkRegion = 'mn' | 'sd';
+/** [south, north, west, east] sanity bounds for pins. */
+export const REGION_BOUNDS: Record<ParkRegion, [number, number, number, number]> = {
+  mn: [43, 49.5, -97.5, -89],
+  sd: [42.4, 46, -104.1, -96.4],
+};
+export const REGION_NAME: Record<ParkRegion, string> = { mn: 'Minnesota', sd: 'South Dakota' };
+
 export const MN_PARKS_DATASET_URL = 'https://gisdata.mn.gov/dataset?q=state+park+boundaries';
 
 export interface ParkPoint {
@@ -94,7 +109,7 @@ export function toLonLat(x: number, y: number): [number, number] {
 }
 
 /** Average of a polygon's outer-ring vertices: good enough for a map pin. */
-function centroid(geometry: Feature['geometry']): { lat: number; lng: number } | null {
+function centroid(geometry: Feature['geometry'], region: ParkRegion = 'mn'): { lat: number; lng: number } | null {
   if (!geometry) return null;
   let rings: Position[][] = [];
   if (geometry.type === 'Polygon') rings = [(geometry.coordinates as Position[][])[0] ?? []];
@@ -111,8 +126,9 @@ function centroid(geometry: Feature['geometry']): { lat: number; lng: number } |
     sy += p[1] ?? 0;
   }
   const [lng, lat] = toLonLat(sx / ring.length, sy / ring.length);
-  // Sanity: Minnesota only.
-  if (!(lat >= 43 && lat <= 49.5 && lng >= -97.5 && lng <= -89)) return null;
+  // Sanity: inside the state being imported.
+  const [s, n, w, e] = REGION_BOUNDS[region];
+  if (!(lat >= s && lat <= n && lng >= w && lng <= e)) return null;
   return { lat: Math.round(lat * 1e5) / 1e5, lng: Math.round(lng * 1e5) / 1e5 };
 }
 
@@ -151,7 +167,7 @@ function fromEsri(features: unknown[]): Feature[] {
   });
 }
 
-export function parseParksDetailed(data: unknown, parksLayer = false): ParseResult {
+export function parseParksDetailed(data: unknown, parksLayer = false, region: ParkRegion = 'mn'): ParseResult {
   let features = (data as { features?: Feature[] })?.features;
   if (Array.isArray(features) && features.length > 0 && 'attributes' in (features[0] as object)) {
     features = fromEsri(features);
@@ -168,17 +184,20 @@ export function parseParksDetailed(data: unknown, parksLayer = false): ParseResu
       .filter((v): v is string => typeof v === 'string')
       .join(' ');
     if (/wayside/i.test(raw) || (/wayside/i.test(allText) && !/state park/i.test(allText))) continue;
+    // SD GFP's layer also holds lakeside use areas, nature areas, trails and marinas.
+    if (/lakeside use|nature area|marina|trailhead/i.test(raw)) continue;
     const typed = /state park|recreation area|\bSP\b|\bSRA\b/i;
     const isPark = typed.test(raw) || typed.test(allText);
     // Statewide parks-and-trails layers also hold state trails, forests, water accesses…
     const notAPark = /\btrail\b|forest|water access|wildlife|fish|scientific|wayside|office|district|region|area \d/i;
     if (!isPark && (!parksLayer || notAPark.test(raw) || notAPark.test(allText))) continue;
-    let name = raw.replace(/\bSP\b/, 'State Park').replace(/\bSRA\b/, 'State Recreation Area');
-    if (!/state (park|recreation area)/i.test(name)) {
-      name += /recreation area|\bSRA\b/i.test(allText) ? ' State Recreation Area' : ' State Park';
+    let name = titleCase(raw).replace(/\bSP\b/, 'State Park').replace(/\bSRA\b/, region === 'sd' ? 'Recreation Area' : 'State Recreation Area');
+    // Minnesota says "State Recreation Area"; South Dakota just "Recreation Area".
+    if (!/state park|recreation area/i.test(name)) {
+      name += /recreation area|\bSRA\b/i.test(allText) ? (region === 'sd' ? ' Recreation Area' : ' State Recreation Area') : ' State Park';
     }
     name = name.replace(/\s+/g, ' ').trim();
-    const c = centroid(f.geometry);
+    const c = centroid(f.geometry, region);
     const unitId = Object.values(f.properties ?? {}).find((v): v is string => typeof v === 'string' && /^s(pk|ra)\d{5}$/i.test(v.trim()));
     if (c && !byName.has(normalizeName(name))) byName.set(normalizeName(name), { name, ...c, ...(unitId ? { unitId: unitId.trim().toLowerCase() } : {}) });
   }
@@ -189,8 +208,14 @@ export function parseParksDetailed(data: unknown, parksLayer = false): ParseResu
   };
 }
 
-export function parseParks(geojson: unknown, parksLayer = false): ParkPoint[] {
-  return parseParksDetailed(geojson, parksLayer).parks;
+/** "CUSTER STATE PARK" → "Custer State Park"; mixed-case names are left alone. */
+function titleCase(s: string): string {
+  if (s !== s.toUpperCase()) return s;
+  return s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase());
+}
+
+export function parseParks(geojson: unknown, parksLayer = false, region: ParkRegion = 'mn'): ParkPoint[] {
+  return parseParksDetailed(geojson, parksLayer, region).parks;
 }
 
 export function normalizeName(n: string): string {
@@ -201,18 +226,28 @@ export function normalizeName(n: string): string {
     .trim();
 }
 
-export function parkId(name: string): string {
-  return `campground:mn-sp-${normalizeName(name).replace(/ /g, '-')}`;
+export function parkId(name: string, region: ParkRegion = 'mn'): string {
+  return `campground:${region}-sp-${normalizeName(name).replace(/ /g, '-')}`;
 }
 
-export function parkCampground(p: ParkPoint, source: string): Campground {
+export function parkCampground(p: ParkPoint, source: string, region: ParkRegion = 'mn'): Campground {
+  const custer = region === 'sd' && /^custer state park$/i.test(p.name);
   return {
     name: p.name,
-    agency: 'mn-state-park',
-    bookingSystem: 'reservemn',
+    agency: region === 'sd' ? 'sd-state-park' : 'mn-state-park',
+    bookingSystem: region === 'sd' ? 'campsd' : 'reservemn',
     unit: p.name,
     location: { lat: p.lat, lng: p.lng },
-    bookingUrl: p.unitId ? dnrParkPageUrl(p.unitId) : 'https://www.mndnr.gov/reservations',
+    bookingUrl: region === 'sd' ? 'https://www.campsd.com' : p.unitId ? dnrParkPageUrl(p.unitId) : 'https://www.mndnr.gov/reservations',
+    ...(custer
+      ? {
+          windowMonthsOverride: {
+            value: 12,
+            status: 'verify' as const,
+            source: 'From research on gfp.sd.gov — Custer State Park reservations open one year before arrival; verify on campsd.com',
+          },
+        }
+      : {}),
     ridbFacilityId: null,
     windowDaysOverride: null,
     electric: null,
@@ -232,6 +267,7 @@ export function planImport(
   parks: ParkPoint[],
   existing: { id: string; data: Campground }[],
   source: string,
+  region: ParkRegion = 'mn',
 ): { add: { id: string; data: Campground }[]; fill: { id: string; data: Campground }[] } {
   const byName = new Map(existing.map((e) => [normalizeName(e.data.name), e]));
   const add: { id: string; data: Campground }[] = [];
@@ -252,7 +288,7 @@ export function planImport(
         });
       }
     } else {
-      add.push({ id: parkId(p.name), data: parkCampground(p, source) });
+      add.push({ id: parkId(p.name, region), data: parkCampground(p, source, region) });
     }
   }
   return { add, fill };
@@ -279,10 +315,10 @@ async function resolveItem(itemId: string, fetchFn: typeof fetch): Promise<strin
   return item.url.replace(/\/+$/, '');
 }
 
-async function fetchFromService(base: string, fetchFn: typeof fetch): Promise<ParseResult & { layerName: string }> {
+async function fetchFromService(base: string, fetchFn: typeof fetch, region: ParkRegion = 'mn'): Promise<ParseResult & { layerName: string }> {
   // A layer URL (…/FeatureServer/0) can be queried directly.
   const direct = base.match(/^(.*\/(?:FeatureServer|MapServer))\/(\d+)$/);
-  if (direct) return queryLayer(direct[1]!, Number(direct[2]), 'State parks', fetchFn);
+  if (direct) return queryLayer(direct[1]!, Number(direct[2]), 'State parks', fetchFn, region);
   const layersRes = await fetchFn(`${base}/layers?f=json`);
   if (!layersRes.ok) throw await httpError(layersRes);
   const meta = (await layersRes.json()) as { layers?: { id: number; name: string }[]; error?: { code?: number; message?: string } };
@@ -293,15 +329,15 @@ async function fetchFromService(base: string, fetchFn: typeof fetch): Promise<Pa
     layers.find((l) => /parks and trails area|park/i.test(l.name)) ??
     layers[0];
   if (!layer) throw new Error('no layers');
-  return queryLayer(base, layer.id, layer.name, fetchFn);
+  return queryLayer(base, layer.id, layer.name, fetchFn, region);
 }
 
-async function queryLayer(service: string, id: number, name: string, fetchFn: typeof fetch): Promise<ParseResult & { layerName: string }> {
+async function queryLayer(service: string, id: number, name: string, fetchFn: typeof fetch, region: ParkRegion = 'mn'): Promise<ParseResult & { layerName: string }> {
   // Esri JSON works on every ArcGIS Server version; GeoJSON output isn't always enabled.
   const q = `${service}/${id}/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&maxAllowableOffset=0.001&f=json`;
   const res = await fetchFn(q);
   if (!res.ok) throw await httpError(res);
-  return { ...parseParksDetailed(await res.json(), true), layerName: name };
+  return { ...parseParksDetailed(await res.json(), true, region), layerName: name };
 }
 
 export interface SourceReport {
@@ -309,6 +345,8 @@ export interface SourceReport {
   label: string;
   outcome: string;
 }
+
+const SD_SOURCES: [string, string][] = SD_PARKS_ITEMS.map((id): [string, string] => [`item:${id}`, 'SD open data: Parks and Recreation Areas (GFP)']);
 
 const SOURCES: [string, string][] = [
   ...MN_PARKS_ITEMS.map((id, i): [string, string] => [`item:${id}`, i === 0 ? 'MN Geospatial Commons (DNR)' : 'UMN copy of DNR data']),
@@ -347,13 +385,14 @@ export const viaAppServer: typeof fetch = async (input, init) => {
 /** Try each official source; keep the one with the most parks, and report what each returned. */
 export async function fetchParksFromService(
   fetchFn: typeof fetch = fetch,
+  region: ParkRegion = 'mn',
 ): Promise<ParseResult & { layerName: string; source: string; reports: SourceReport[] }> {
   let best: (ParseResult & { layerName: string; source: string }) | null = null;
   const reports: SourceReport[] = [];
-  for (const [base, label] of SOURCES) {
+  for (const [base, label] of region === 'sd' ? SD_SOURCES : SOURCES) {
     try {
       const service = base.startsWith('item:') ? await resolveItem(base.slice(5), fetchFn) : base;
-      const r = { ...(await fetchFromService(service, fetchFn)), source: service };
+      const r = { ...(await fetchFromService(service, fetchFn, region)), source: service };
       reports.push({ source: base, label, outcome: `${r.parks.length} parks from ${r.featureCount} areas (layer “${r.layerName}”)` });
       if (!best || r.parks.length > best.parks.length) best = r;
       if (r.parks.length > 40) break; // statewide list found — no need to try more
