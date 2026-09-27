@@ -1,4 +1,4 @@
-import type { Cost } from '../../calc/budget';
+import type { BuyNextRow, Cost } from '../../calc/budget';
 import type { GearLocation, GearStatus, TripKind } from '../../model/schemas';
 
 /** Pure display/formatting helpers for the gear feature, kept separate so they're easy to test. */
@@ -17,6 +17,18 @@ export function costLabel(cost: Cost): string {
 
 export function priorityLabel(priority: number | null): string {
   return priority === null ? '—' : `P${priority}`;
+}
+
+/**
+ * Split buy-next rows for display: priced items stay in buying order with a
+ * running total, unpriced ones go in a separate "no price yet" group so they
+ * don't interrupt the running total or the budget cut-off marker.
+ */
+export function splitBuyNext<T>(rows: BuyNextRow<T>[]): { priced: BuyNextRow<T>[]; unpriced: BuyNextRow<T>[] } {
+  return {
+    priced: rows.filter((r) => r.cost.known),
+    unpriced: rows.filter((r) => !r.cost.known),
+  };
 }
 
 export const statusLabel: Record<GearStatus, string> = {
