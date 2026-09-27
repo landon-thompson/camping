@@ -25,6 +25,7 @@ export function Settings() {
       {trailer.data && <TrailerForm initial={trailer.data} />}
       <BackupCard />
       <StorageCard />
+      <VersionCard />
     </div>
   );
 }
@@ -419,6 +420,36 @@ function StorageCard() {
           Ask to keep offline data
         </Button>
       )}
+    </Card>
+  );
+}
+
+/** Which build this phone runs, and a manual update check (the update bar appears if one is found). */
+function VersionCard() {
+  const [msg, setMsg] = useState<string | null>(null);
+  return (
+    <Card title="App version">
+      <p className="text-ink-2">{import.meta.env.VITE_APP_VERSION ?? 'unknown'}</p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={async () => {
+            setMsg('Checking…');
+            try {
+              const reg = await navigator.serviceWorker?.getRegistration();
+              if (!reg) return setMsg('Updates aren’t available in this browser view.');
+              await reg.update();
+              setMsg(reg.waiting || reg.installing ? 'A new version is downloading — tap “Update now” when it appears.' : 'You have the latest version.');
+            } catch {
+              setMsg('Couldn’t check (offline?).');
+            }
+          }}
+        >
+          Check for update
+        </Button>
+        {msg && <span role="status" className="text-sm text-ink-2">{msg}</span>}
+      </div>
     </Card>
   );
 }

@@ -7,8 +7,13 @@ export function UpdatePrompt() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(_url, reg) {
-      // Check for a new version hourly while the app is open.
-      if (reg) setInterval(() => void reg.update(), 60 * 60_000);
+      if (!reg) return;
+      // Check hourly while open, and whenever the app comes back to the screen
+      // (an iPhone home-screen app is usually resumed, not reloaded).
+      setInterval(() => void reg.update(), 60 * 60_000);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') void reg.update();
+      });
     },
   });
 

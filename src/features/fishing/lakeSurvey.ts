@@ -6,7 +6,8 @@ import type { FishCatch, LakeSurvey, NearbyLake } from '../../model/schemas';
  * through the app's server (no CORS on the DNR side). The JSON layout isn't
  * formally documented, so parsing matches field names loosely.
  */
-export const lakeSurveyUrl = (dow: string) => `https://maps.dnr.state.mn.us/cgi-bin/lakefinder/detail.cgi?type=lake_survey&id=${dow}`;
+// Same parameters LakeFinder's own page and the DNR Sentinel Lakes tools send.
+export const lakeSurveyUrl = (dow: string) => `https://maps.dnr.state.mn.us/cgi-bin/lakefinder/detail.cgi?type=lake_survey&callback=&id=${dow}&_=${Date.now()}`;
 export const lakesNearUrl = (lat: number, lng: number, radiusM: number) =>
   `https://services.dnr.state.mn.us/api/lakefinder/by_point/v1?lat=${lat.toFixed(5)}&lon=${lng.toFixed(5)}&radius=${Math.round(radiusM)}`;
 /** The lake's official LakeFinder page (maps, surveys, stocking, regulations). */
@@ -274,14 +275,24 @@ export async function fetchLakeSurvey(dow: string, fetchFn: typeof fetch): Promi
  * lake the survey is actually for.
  */
 export async function fetchLakeSurveyOrWholeLake(dow: string, fetchFn: typeof fetch): Promise<LakeSurvey> {
-  try {
-    const own = await fetchLakeSurvey(dow, fetchFn);
-    if (own.surveys.some((s) => s.catches.length) || dow.endsWith('00')) return own;
-  } catch (e) {
-    if (dow.endsWith('00')) throw e;
+  const ids = dow.endsWith('00') ? [dow] : [dow, `${dow.slice(0, 6)}00`];
+  const tried: string[] = [];
+  let noCatch: LakeSurvey | null = null;
+  for (const id of ids) {
+    try {
+      const s = await fetchLakeSurvey(id, fetchFn);
+      if (s.surveys.some((x) => x.catches.length)) return s;
+      noCatch ??= s;
+      tried.push(`${formatDow(id)}: no net results`);
+    } catch (e) {
+      tried.push(`${formatDow(id)}: ${(e instanceof Error ? e.message : String(e)).replace(/\.+$/, '')}`);
+    }
   }
-  return fetchLakeSurvey(`${dow.slice(0, 6)}00`, fetchFn);
+  if (noCatch) return noCatch;
+  throw new Error(tried.join('; '));
 }
+
+export const formatDow = (d: string) => d.replace(/^(\d{2})(\d{4})(\d{2})$/, '$1-$2-$3');
 
 /** Lakes within `radiusM` of a point, from LakeFinder. */
 export async function fetchLakesNear(lat: number, lng: number, fetchFn: typeof fetch, radiusM = 3000): Promise<NearbyLake[]> {

@@ -105,12 +105,13 @@ describe('sub-basins', () => {
     const urls: string[] = [];
     const fake = (async (url: string) => {
       urls.push(url);
-      if (url.endsWith('id=69037801')) return new Response(JSON.stringify({ status: 'ERROR', message: 'The requested lake survey data is not available.' }));
+      if (url.includes('id=69037801&')) return new Response(JSON.stringify({ status: 'ERROR', message: 'The requested lake survey data is not available.' }));
       return new Response(JSON.stringify(sample));
     }) as typeof fetch;
     const s = await fetchLakeSurveyOrWholeLake('69037801', fake);
     expect(s.dow).toBe('69037800');
-    expect(urls.map((u) => u.slice(-8))).toEqual(['69037801', '69037800']);
-    await expect(fetchLakeSurveyOrWholeLake('69037800', (async () => new Response('{"message":"none"}')) as typeof fetch)).rejects.toThrow(/none/);
+    expect(urls.map((u) => /id=(\d{8})/.exec(u)?.[1])).toEqual(['69037801', '69037800']);
+    expect(urls[0]).toContain('type=lake_survey&callback=&id=');
+    await expect(fetchLakeSurveyOrWholeLake('69037800', (async () => new Response('{"message":"none"}')) as typeof fetch)).rejects.toThrow('69-0378-00: none');
   });
 });

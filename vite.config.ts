@@ -24,6 +24,9 @@ const MAP_STYLE_HOST_PATTERN = new RegExp(`^https://${escapeRegExp(MAP_STYLE_HOS
 const MVUM_HOST_PATTERN = new RegExp(`^https://${escapeRegExp(MVUM_HOST)}/`);
 // ---
 
+// Shown in Settings so we can tell which build a phone is running.
+process.env.VITE_APP_VERSION ??= `${(process.env.GITHUB_SHA ?? 'local').slice(0, 7)} · built ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+
 export default defineConfig({
   plugins: [
     react(),

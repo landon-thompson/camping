@@ -17,7 +17,8 @@ export async function gisProxy(req: HttpRequest, ctx: InvocationContext): Promis
     return {
       status: res.ok ? 200 : 502,
       body: res.ok ? text : JSON.stringify({ error: `The map service answered ${res.status} ${res.statusText}`.trim() }),
-      headers: { 'content-type': 'application/json', 'cache-control': 'private, max-age=3600' },
+      // Never cache a failure on the phone; a retry should really retry.
+      headers: { 'content-type': 'application/json', 'cache-control': res.ok ? 'private, max-age=3600' : 'no-store' },
     };
   } catch (e) {
     ctx.warn('gis fetch failed', e);
