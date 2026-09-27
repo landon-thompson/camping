@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { saveRecord, useRecord } from '../db/records';
 import { makeBackup, parseBackup, restoreBackup } from '../db/backup';
 import { Button, Card, Field, inputClass, LinkButton, PageTitle, StatusChip } from '../components/ui';
@@ -7,7 +8,12 @@ import { useAuth } from '../auth/AuthContext';
 import { forgetUser, loginUrl, logoutUrl } from '../auth/identity';
 import { syncEngine, useSyncStatus } from '../sync/useSync';
 import { useTheme, type ThemePref } from '../lib/theme';
+import { formatUsd } from '../features/gear/format';
 import type { RecordData, RecordType, Settings as SettingsData, SpecNumber, SpecStatus, Trailer, Vehicle } from '../model/schemas';
+
+function SectionHeading({ children }: { children: ReactNode }) {
+  return <h2 className="pt-1 text-sm font-bold uppercase tracking-wide text-ink-2">{children}</h2>;
+}
 
 export function Settings() {
   const settings = useRecord('settings', 'settings');
@@ -17,12 +23,16 @@ export function Settings() {
   return (
     <div className="space-y-4">
       <PageTitle>Settings</PageTitle>
-      <AccountCard />
-      <SyncCard />
-      <ThemeCard />
+
+      <SectionHeading>Family & vehicle</SectionHeading>
       {settings.data && <HouseholdForm initial={settings.data} />}
       {vehicle.data && <VehicleForm initial={vehicle.data} />}
       {trailer.data && <TrailerForm initial={trailer.data} />}
+
+      <SectionHeading>App & data</SectionHeading>
+      <ThemeCard />
+      <AccountCard />
+      <SyncCard />
       <BackupCard />
       <StorageCard />
       <VersionCard />
@@ -210,18 +220,13 @@ function HouseholdForm({ initial }: { initial: SettingsData }) {
             />
           </Field>
         </div>
-        <Field label="Season gear budget (USD)" hint="Starting point: ~$3,000 of priced wishlist items. Change it any time.">
-          <input
-            className={inputClass}
-            inputMode="decimal"
-            type="number"
-            min={0}
-            step={50}
-            value={draft.seasonBudgetUsd}
-            onChange={(e) => setDraft({ ...draft, seasonBudgetUsd: num(e.target.value) })}
-          />
-        </Field>
         <SaveRow dirty={dirty} saved={saved} error={error} />
+        <p className="text-sm text-ink-2">
+          Season gear budget: <strong className="text-ink">{formatUsd(initial.seasonBudgetUsd)}</strong> —{' '}
+          <Link to="/gear/budget" className="font-semibold text-brand">
+            edit in Gear › Budget
+          </Link>
+        </p>
       </form>
     </Card>
   );
@@ -376,10 +381,7 @@ function BackupCard() {
 
   return (
     <Card title="Backup">
-      <p className="text-ink-2">
-        Save a copy of everything on this phone, e.g. to Files or iCloud Drive. Restoring only adds newer items and never
-        undoes recent edits. Also a way to copy your plans to another phone while sync isn’t set up.
-      </p>
+      <p className="text-ink-2">Save a copy to Files or iCloud Drive. Restoring only adds newer items — it never undoes recent edits.</p>
       <div className="mt-3 flex flex-wrap gap-3">
         <Button type="button" onClick={() => void backup()}>
           Back up now
