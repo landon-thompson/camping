@@ -57,6 +57,14 @@ Tests: 148 app + 50 API (plus the SQL Server integration tests, run in CI). Brow
 
 The Azure SQL free offer wouldn't create on the owner's free-trial subscription (portal showed no "Apply offer"; CLI returned InternalServerError twice). The owner chose **no database for now**: run `scripts/azure-setup.sh … --no-db`. The API returns `503 code:not-configured`, the app switches to "On this phone" mode (no retry loop), share links are hidden, and Settings → Backup/Restore protects data. The empty logical SQL server `camp-planner-sql-*` costs nothing and can stay. Revisit after upgrading to pay-as-you-go (free offer may then be available) or with the Basic tier (~$5/mo) if the owner approves.
 
+## Owner feedback round (2026-09-27)
+- Season map was empty: seeded campgrounds have no verified coordinates. Choosing a campground now gives the trip its location; map and weather fall back to the campground's location.
+- MVUM toggle looked dead: now shows On/Off and "Zoom in to see MVUM roads" (layer draws from zoom 8). Whether the USFS service loads is still unverified.
+- State parks: Book → Campground directory → "Import state parks" pulls official DNR boundary data on the phone (Met Council service, unverified from sandbox) or from a GeoJSON file from the MN Geospatial Commons. Fills missing locations on existing parks.
+- Booking links: generic ReserveMN/DNR links are flagged, with steps to paste the park's exact page once. Book now shows even before dates are set.
+- Trip page: tabs (Plan, Gear, Checklist, Book, Weather, Trails, Debrief, Share), with readiness in the title line.
+- Gear: product link, "Check price", and "Use this price" (records the date checked). No automatic price scraping (retailer terms, and blocked by browsers).
+
 ## Open items / to verify
 
 Owner:

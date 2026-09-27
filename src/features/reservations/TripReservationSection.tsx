@@ -4,7 +4,7 @@ import { Card, inputClass } from '../../components/ui';
 import type { Reservation, ReservationStatus } from '../../model/schemas';
 import { campgroundTakesReservations, cancelDeadlineInfo, checkMaxNights, daysBetween, daysUntil, formatOpensAt, resolveBooking } from './booking';
 import { reservationForTrip, useBookingRules, useCampgrounds, useReservations } from './data';
-import { BookingStateBadge, ExternalLinkButton, numOrNull, SaveRow, useDraft } from './shared';
+import { BookingStateBadge, ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, numOrNull, SaveRow, useDraft } from './shared';
 
 const PERMIT_ID = 'permit:mn-state-park-annual-2027';
 
@@ -35,7 +35,14 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
           <select
             className={inputClass}
             value={tripData.campgroundId ?? ''}
-            onChange={(e) => void saveRecord('trip', tripId, { ...tripData, campgroundId: e.target.value || null })}
+            onChange={(e) => {
+              const id = e.target.value || null;
+              const cg = campgrounds.find((c) => c.id === id)?.data;
+              // A trip without its own spot inherits the campground's location (map, weather).
+              const location =
+                !tripData.location && cg?.location ? { lat: cg.location.lat, lng: cg.location.lng, label: cg.name } : tripData.location;
+              void saveRecord('trip', tripId, { ...tripData, campgroundId: id, location });
+            }}
           >
             <option value="">Choose a campground…</option>
             {campgrounds
@@ -49,6 +56,18 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
           </select>
         </label>
 
+        {campground && !resolved && campgroundTakesReservations(campground.data.bookingSystem) && (
+          <div className="rounded-xl bg-surface-2 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm text-ink-2">Set trip dates to see when booking opens.</span>
+              <ExternalLinkButton href={campground.data.bookingUrl} variant="secondary">
+                Book now
+              </ExternalLinkButton>
+            </div>
+            {isGenericBookingUrl(campground.data.bookingUrl) && <GenericLinkHint name={campground.data.name} />}
+          </div>
+        )}
+
         {campground && rule && resolved && (
           <div className="rounded-xl bg-surface-2 p-3">
             <div className="flex items-center justify-between gap-3">
@@ -59,6 +78,9 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
                 </ExternalLinkButton>
               )}
             </div>
+            {campgroundTakesReservations(campground.data.bookingSystem) && isGenericBookingUrl(campground.data.bookingUrl) && (
+              <GenericLinkHint name={campground.data.name} />
+            )}
             {resolved.state === 'not-open' && resolved.opensAt && (
               <p className="mt-2 text-sm text-info">
                 Booking opens in {daysUntil(now, resolved.opensAt, rule.timeZone)} day{daysUntil(now, resolved.opensAt, rule.timeZone) === 1 ? '' : 's'} —{' '}

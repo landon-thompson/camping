@@ -14,7 +14,10 @@ function isOnline(): boolean {
 export function TripWeatherSection({ tripId }: { tripId: string }) {
   const trip = useRecord('trip', tripId);
   const metaKey = `weather:${tripId}`;
-  const location = trip.data?.location ?? null;
+  const campground = useRecord('campground', trip.data?.campgroundId ?? '');
+  const location =
+    trip.data?.location ??
+    (campground.data?.location ? { ...campground.data.location, label: campground.data.name } : null);
 
   const [cached, setCached] = useState<NwsForecast | null>(null);
   const [cacheLoaded, setCacheLoaded] = useState(false);

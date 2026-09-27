@@ -174,6 +174,8 @@ function GearEditor({
             </Field>
           </div>
 
+          <PriceLink draft={draft} onChange={setDraft} />
+
           <div className="grid grid-cols-3 gap-3">
             <Field label="Price low (research)">
               <input
@@ -388,5 +390,65 @@ function DeleteButton({ id, onDeleted }: { id: string; onDeleted: () => void }) 
     >
       {confirm ? 'Tap again to delete' : 'Delete this item'}
     </button>
+  );
+}
+
+/** Product link + "check price": opens the page, then records the price you saw and when. */
+function PriceLink({ draft, onChange }: { draft: Gear; onChange: (g: Gear) => void }) {
+  const [seen, setSeen] = useState('');
+  const url = draft.url ?? '';
+  const validUrl = /^https?:\/\//i.test(url);
+  const today = new Date().toISOString().slice(0, 10);
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <Field label="Product link" hint="Paste the store or maker page for this item (Safari → Share → Copy).">
+        <input
+          className={inputClass}
+          type="url"
+          inputMode="url"
+          placeholder="https://…"
+          value={url}
+          onChange={(e) => onChange({ ...draft, url: e.target.value.trim() })}
+        />
+      </Field>
+      {validUrl && (
+        <div className="flex flex-wrap items-end gap-2">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-12 items-center rounded-xl border border-line bg-surface-2 px-4 font-semibold text-ink"
+          >
+            Check price ↗
+          </a>
+          <label className="flex-1">
+            <span className="mb-1 block text-sm font-semibold text-ink-2">Price you saw</span>
+            <input
+              className={inputClass}
+              type="number"
+              inputMode="decimal"
+              min={0}
+              value={seen}
+              onChange={(e) => setSeen(e.target.value)}
+            />
+          </label>
+          <button
+            type="button"
+            disabled={seen === '' || !(Number(seen) >= 0)}
+            onClick={() => {
+              const p = Number(seen);
+              onChange({ ...draft, costLowUsd: p, costHighUsd: p, priceCheckedAt: today });
+              setSeen('');
+            }}
+            className="min-h-12 rounded-xl bg-brand px-4 font-semibold text-brand-ink disabled:opacity-50"
+          >
+            Use this price
+          </button>
+        </div>
+      )}
+      {draft.priceCheckedAt && (
+        <p className="text-sm text-ink-2">Price last checked {draft.priceCheckedAt}. Remember to save.</p>
+      )}
+    </div>
   );
 }

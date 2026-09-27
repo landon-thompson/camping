@@ -5,7 +5,7 @@ import { Card, inputClass, PageTitle, StatusChip } from '../../components/ui';
 import type { Agency, BookingSystem, Campground } from '../../model/schemas';
 import { AGENCY_LABEL, useBookingRules } from './data';
 import { campgroundTakesReservations } from './booking';
-import { ExternalLinkButton, NavButton, numOrNull, SaveRow, SpecEditor, useDraft } from './shared';
+import { ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, NavButton, numOrNull, SaveRow, SpecEditor, useDraft } from './shared';
 import { RidbImport } from './RidbImport';
 
 /** /book/campgrounds/:id — details for one campground, or (:id === "new") the add-campground flow. */
@@ -65,6 +65,7 @@ function BookingCard({ campground, bookingUrl }: { campground: Campground; booki
           Official page ↗
         </a>
       </div>
+      {reservable && isGenericBookingUrl(bookingUrl) && <GenericLinkHint name={campground.name} />}
     </Card>
   );
 }

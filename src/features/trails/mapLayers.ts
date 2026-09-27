@@ -83,36 +83,72 @@ function writeMvumPreference(show: boolean): void {
   }
 }
 
+const MVUM_MIN_ZOOM = 8;
+
+/** MVUM on/off button with a visible state and a hint when zoomed too far out to draw. */
 class MvumToggleControl implements IControl {
   private container: HTMLElement | null = null;
+  private map: MapLibreMap | null = null;
+  private button: HTMLButtonElement | null = null;
+  private hint: HTMLElement | null = null;
+  private onZoom = () => this.render();
 
   constructor(
     private pressed: boolean,
     private onToggle: (show: boolean) => void,
   ) {}
 
-  onAdd(): HTMLElement {
+  private render() {
+    if (!this.button || !this.hint) return;
+    this.button.setAttribute('aria-pressed', String(this.pressed));
+    this.button.textContent = this.pressed ? 'MVUM on' : 'MVUM off';
+    this.button.style.background = this.pressed ? 'var(--color-brand)' : 'var(--color-surface)';
+    this.button.style.color = this.pressed ? 'var(--color-brand-ink)' : 'var(--color-ink)';
+    const tooFar = this.pressed && (this.map?.getZoom() ?? MVUM_MIN_ZOOM) < MVUM_MIN_ZOOM;
+    this.hint.textContent = tooFar ? 'Zoom in to see MVUM roads' : '';
+    this.hint.hidden = !tooFar;
+  }
+
+  onAdd(map: MapLibreMap): HTMLElement {
+    this.map = map;
     const container = document.createElement('div');
-    container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+    container.className = 'maplibregl-ctrl';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.alignItems = 'flex-end';
+    container.style.gap = '4px';
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'min-h-11 min-w-11 rounded-md bg-surface px-2 text-xs font-bold text-ink';
-    button.setAttribute('aria-pressed', String(this.pressed));
-    button.title = 'Toggle USFS Motor Vehicle Use Map (MVUM) roads & trails — verify against the printed/official MVUM';
-    button.textContent = 'MVUM';
+    button.style.minHeight = '44px';
+    button.style.padding = '0 12px';
+    button.style.borderRadius = '10px';
+    button.style.fontWeight = '700';
+    button.style.fontSize = '13px';
+    button.style.border = '1px solid var(--color-line)';
+    button.title = 'USFS Motor Vehicle Use Map roads & trails. The printed/official MVUM is the legal reference.';
     button.addEventListener('click', () => {
       this.pressed = !this.pressed;
-      button.setAttribute('aria-pressed', String(this.pressed));
       this.onToggle(this.pressed);
+      this.render();
     });
-    container.appendChild(button);
+    const hint = document.createElement('div');
+    hint.setAttribute('role', 'status');
+    hint.style.cssText =
+      'background:var(--color-surface);color:var(--color-ink);border:1px solid var(--color-line);border-radius:8px;padding:4px 8px;font-size:12px;font-weight:600';
+    container.append(button, hint);
     this.container = container;
+    this.button = button;
+    this.hint = hint;
+    map.on('zoomend', this.onZoom);
+    this.render();
     return container;
   }
 
   onRemove(): void {
+    this.map?.off('zoomend', this.onZoom);
     this.container?.remove();
     this.container = null;
+    this.map = null;
   }
 }
 

@@ -5,6 +5,7 @@ import type { Agency, BookingSystem, Campground } from '../../model/schemas';
 import type { Row } from '../../db/records';
 import { AGENCY_LABEL, useCampgrounds } from './data';
 import { NavButton } from './shared';
+import { StateParkImport } from './StateParkImport';
 
 const SYSTEM_LABEL: Record<BookingSystem, string> = {
   reservemn: 'ReserveMN',
@@ -40,6 +41,8 @@ export function CampgroundsPage() {
         <PageTitle sub={`${rows.length} campground${rows.length === 1 ? '' : 's'} in the directory`}>Campgrounds</PageTitle>
         <NavButton to="/book/campgrounds/new">Add</NavButton>
       </div>
+
+      <StateParkImport />
 
       <Card>
         <div className="space-y-3">

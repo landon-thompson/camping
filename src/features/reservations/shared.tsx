@@ -155,3 +155,36 @@ export function ExternalLinkButton({ href, children, variant = 'primary' }: { hr
 export function money(v: number | null): string {
   return v === null ? '—' : `$${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
+
+/** True when a booking link is just an agency's front page rather than this campground's own page. */
+export function isGenericBookingUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const path = u.pathname.replace(/\/+$/, '');
+    return (
+      (/(^|\.)mndnr\.gov$/.test(u.hostname) && path === '/reservations') ||
+      (/reservemn\.usedirect\.com$/.test(u.hostname) && path.split('/').filter(Boolean).length <= 1) ||
+      (/recreation\.gov$/.test(u.hostname) && path === '')
+    );
+  } catch {
+    return true;
+  }
+}
+
+/** Shown next to "Book now" when the link is generic: how to make it go straight to this park. */
+export function GenericLinkHint({ name, editHref }: { name: string; editHref?: string }) {
+  return (
+    <p className="mt-2 text-sm text-ink-2">
+      This link opens the general reservation site. Find <strong>{name}</strong> there, then copy that page’s address from
+      Safari (Share → Copy) and paste it as this campground’s booking link. After that, “Book now” goes straight to it.
+      {editHref && (
+        <>
+          {' '}
+          <a href={editHref} className="font-semibold text-brand underline">
+            Edit booking link
+          </a>
+        </>
+      )}
+    </p>
+  );
+}

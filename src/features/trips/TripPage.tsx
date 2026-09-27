@@ -24,16 +24,24 @@ const KIND_OPTIONS: { value: TripKind; label: string }[] = [
 ];
 
 const SECTIONS: [string, string][] = [
-  ['t-details', 'Details'],
+  ['t-details', 'Plan'],
   ['t-gear', 'Gear'],
   ['t-checklist', 'Checklist'],
-  ['t-readiness', 'Readiness'],
-  ['t-reservation', 'Reservation'],
+  ['t-reservation', 'Book'],
   ['t-weather', 'Weather'],
   ['t-trails', 'Trails'],
   ['t-debrief', 'Debrief'],
   ['t-share', 'Share'],
 ];
+
+function readTab(): string {
+  try {
+    const t = sessionStorage.getItem('tripTab');
+    return t && SECTIONS.some(([k]) => k === t) ? t : 't-details';
+  } catch {
+    return 't-details';
+  }
+}
 
 const STATUS_OPTIONS: TripStatus[] = ['idea', 'planned', 'booked', 'done', 'cancelled'];
 
@@ -80,6 +88,16 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
   // an edit synced from the other phone is never overwritten.
   const [patch, setPatch] = useState<Partial<Trip>>({});
   const [saved, setSaved] = useState(false);
+  const [tab, setTabState] = useState(readTab);
+  const setTab = (t: string) => {
+    setTabState(t);
+    try {
+      sessionStorage.setItem('tripTab', t);
+    } catch {
+      /* ignore */
+    }
+    window.scrollTo({ top: 0 });
+  };
   const draft: Trip = { ...trip, ...patch };
   const dirty = (Object.keys(patch) as (keyof Trip)[]).some((k) => JSON.stringify(patch[k]) !== JSON.stringify(trip[k]));
 
@@ -146,7 +164,7 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
 
   return (
     <div className="space-y-4">
-      <PageTitle sub={`Level ${draft.level} · ${dirty ? 'unsaved changes' : 'up to date'}`}>
+      <PageTitle sub={`Level ${draft.level} · readiness ${readiness.score}%${dirty ? ' · unsaved changes' : ''}`}>
         <Link to="/trips" className="mr-2 text-ink-2">
           ←
         </Link>
@@ -155,16 +173,24 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
 
       <nav aria-label="Trip sections" className="sticky top-[calc(env(safe-area-inset-top)+3.75rem)] z-30 -mx-4 overflow-x-auto border-b border-line bg-bg/95 px-4 py-2 backdrop-blur">
         <ul className="flex gap-2 whitespace-nowrap">
-          {SECTIONS.map(([anchor, label]) => (
-            <li key={anchor}>
-              <a href={`#${anchor}`} className="inline-flex min-h-11 items-center rounded-full border border-line bg-surface px-3 text-sm font-semibold">
+          {SECTIONS.map(([key, label]) => (
+            <li key={key}>
+              <button
+                type="button"
+                aria-pressed={tab === key}
+                onClick={() => setTab(key)}
+                className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold ${
+                  tab === key ? 'border-brand bg-brand text-brand-ink' : 'border-line bg-surface text-ink'
+                }`}
+              >
                 {label}
-              </a>
+              </button>
             </li>
           ))}
         </ul>
       </nav>
 
+      {tab === 't-details' && (
       <Card>
         <TripMap
           center={mapCenter}
@@ -174,8 +200,10 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
           onPick={(lat, lng) => update({ location: { lat, lng, label: draft.location?.label ?? '' } })}
         />
       </Card>
+      )}
 
-      <section id="t-details" className="scroll-mt-36">
+      {tab === 't-details' && (
+      <section id="t-details">
       <Card title="Details">
         <div className="space-y-3">
           <Field label="Name">
@@ -242,9 +270,9 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
               {campground?.name ?? 'none chosen yet'}
             </span>{' '}
             — pick it in{' '}
-            <a href="#t-reservation" className="font-semibold text-brand">
-              Reservation
-            </a>
+            <button type="button" onClick={() => setTab('t-reservation')} className="font-semibold text-brand underline">
+              Book
+            </button>
             .
           </p>
 
@@ -287,12 +315,16 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
         </div>
       </Card>
       </section>
+      )}
 
-      <section id="t-gear" className="scroll-mt-36">
+      {tab === 't-gear' && (
+      <section id="t-gear">
         <GearCard trip={draft} gearRows={gear.rows} onChange={(gearIds) => update({ gearIds })} />
       </section>
+      )}
 
-      <section id="t-checklist" className="scroll-mt-36">
+      {tab === 't-checklist' && (
+      <section id="t-checklist">
       <ChecklistCard
         tripId={id}
         trip={draft}
@@ -303,27 +335,39 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
         debriefs={debriefs.rows}
       />
       </section>
+      )}
 
-      <section id="t-readiness" className="scroll-mt-36">
+      {tab === 't-details' && (
+      <section id="t-readiness">
         <ReadinessCard parts={readiness.parts} score={readiness.score} />
       </section>
+      )}
 
-      <section id="t-reservation" className="scroll-mt-36">
+      {tab === 't-reservation' && (
+      <section id="t-reservation">
         <TripReservationSection tripId={id} />
       </section>
-      <section id="t-weather" className="scroll-mt-36">
+      )}
+      {tab === 't-weather' && (
+      <section id="t-weather">
         <TripWeatherSection tripId={id} />
       </section>
-      <section id="t-trails" className="scroll-mt-36">
+      )}
+      {tab === 't-trails' && (
+      <section id="t-trails">
         <TripTrailsSection tripId={id} />
         <Link to="/trails" className="mt-2 inline-flex min-h-11 items-center font-semibold text-brand">
           All routes &amp; pins →
         </Link>
       </section>
-      <section id="t-debrief" className="scroll-mt-36">
+      )}
+      {tab === 't-debrief' && (
+      <section id="t-debrief">
         <TripDebriefSection tripId={id} />
       </section>
-      <section id="t-share" className="scroll-mt-36">
+      )}
+      {tab === 't-share' && (
+      <section id="t-share">
         {syncState === 'local-only' ? (
           <Card title="Share">
             <p className="text-ink-2">Read-only share links need the sync database, which isn’t set up yet.</p>
@@ -332,6 +376,7 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
           <ShareCard tripId={id} activeShare={activeShare} />
         )}
       </section>
+      )}
 
       {dirty && (
         <div role="status" className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-40 mx-auto flex max-w-2xl items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-3 shadow-lg">

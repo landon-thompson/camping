@@ -36,6 +36,10 @@ export const gearSchema = z.object({
   notes: z.string(),
   /** Anything to check before buying (fit, specs). Shown as a "verify" flag. */
   verify: z.string(),
+  /** Product page where you check the current price (retailer or maker). */
+  url: z.string().optional(),
+  /** When the price range was last checked on that page (YYYY-MM-DD). */
+  priceCheckedAt: z.string().nullable().optional(),
 });
 export type Gear = z.infer<typeof gearSchema>;
 

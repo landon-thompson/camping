@@ -55,16 +55,22 @@ export function TripsListPage() {
 
   const sorted = useMemo(() => [...trips.rows].sort((a, b) => compareTripOrder(a.data, b.data)), [trips.rows]);
 
+  const campgroundLocations = useMemo(
+    () => new Map(campgrounds.rows.flatMap((c) => (c.data.location ? [[c.id, c.data.location] as const] : []))),
+    [campgrounds.rows],
+  );
+
   const markers: TripMapMarker[] = useMemo(() => {
     const out: TripMapMarker[] = [];
     if (homeBase?.lat != null && homeBase.lng != null) {
       out.push({ id: 'home', lat: homeBase.lat, lng: homeBase.lng, label: '⌂', variant: 'home' });
     }
     for (const t of sorted) {
-      if (t.data.location) out.push({ id: t.id, lat: t.data.location.lat, lng: t.data.location.lng, label: String(t.data.level) });
+      const loc = t.data.location ?? campgroundLocations.get(t.data.campgroundId ?? '') ?? null;
+      if (loc) out.push({ id: t.id, lat: loc.lat, lng: loc.lng, label: String(t.data.level) });
     }
     return out;
-  }, [homeBase, sorted]);
+  }, [homeBase, sorted, campgroundLocations]);
 
   const center: [number, number] = homeBase?.lat != null && homeBase.lng != null ? [homeBase.lng, homeBase.lat] : MN_CENTER;
 
