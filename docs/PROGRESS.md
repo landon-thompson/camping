@@ -59,7 +59,7 @@ Owner:
 - [ ] Complete README Azure steps 1–8 (+ optional 9 photos, 10 RIDB key); report the app URL.
 - [ ] Door-jamb payload figure; owner's manual roof limit and towing section.
 - [ ] Boat scale ticket (CAT scale) when possible; real people weights in Tools → Load & tow.
-- [ ] Decide on offline map approach (see above).
+- [x] Offline maps: owner said keep the current approach (cache viewed tiles + capped "prepare offline" pass). Revisit if OpenFreeMap's terms turn out to forbid it.
 
 Facts marked **verify** in the app (all research was via search summaries; official sites were blocked from the sandbox):
 - [ ] MN state park booking rules (120 days / 8:00 AM CT / 14 nights / permit / fees) against dnr.state.mn.us / ReserveMN.
