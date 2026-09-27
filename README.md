@@ -30,6 +30,16 @@ Services to avoid, because they would bill you: the Static Web Apps **Standard**
 
 ## One-time Azure setup (about 30 minutes)
 
+**Shortcut: the setup script (about 10 minutes).** Instead of clicking through steps 2–7, run [`scripts/azure-setup.sh`](scripts/azure-setup.sh) in **Azure Cloud Shell**. In the portal, click the `>_` icon at the top and choose **Bash**. Then run:
+
+```bash
+gh auth login                                   # sign in to GitHub, follow the prompts
+gh repo clone landon-thompson/camping -- --branch dev && cd camping
+bash scripts/azure-setup.sh you@example.com wife@example.com          # add --photos for photo backup
+```
+
+It creates everything on the free tiers, stores the secrets in Azure and GitHub, starts the first deploy, and prints each person's invitation link. You still do step 1 in the portal: upgrade the trial and set the $5 budget alert. The script reminds you at the end.
+
 You'll do this in the [Azure portal](https://portal.azure.com) on a computer. Menu names can shift slightly over time; if something looks different, search the portal's top search bar for the service name.
 
 ### 1. Protect your wallet
