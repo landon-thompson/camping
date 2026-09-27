@@ -1,5 +1,6 @@
-import type { BoatLaunchSite, NearbyLake } from '../../model/schemas';
+import type { BoatLaunchSite, NamedWater, NearbyLake } from '../../model/schemas';
 import { distanceKm } from '../places/arcgis';
+import { distanceToWater } from '../places/osm';
 
 /** Lakes to offer: LakeFinder's nearby lakes plus the lakes the launches go into (placed at their nearest launch). */
 export function lakesFrom(nearby: NearbyLake[], launches: BoatLaunchSite[]): NearbyLake[] {
@@ -57,16 +58,39 @@ export interface WaterRow {
   launches: BoatLaunchSite[];
 }
 
-/** Waters the launches go into (for states without LakeFinder lake numbers), nearest first. */
-export function watersFromLaunches(launches: BoatLaunchSite[], origin: { lat: number; lng: number }, maxKm: number): WaterRow[] {
-  const byWater = new Map<string, BoatLaunchSite[]>();
+/**
+ * South Dakota lake list: named lakes from open map data plus any waters that
+ * launches name, each with the ramps on it, nearest first.
+ */
+export function sdWaterRows(
+  waters: NamedWater[],
+  launches: BoatLaunchSite[],
+  origin: { lat: number; lng: number },
+  maxKm: number,
+): WaterRow[] {
+  const rows = new Map<string, WaterRow>();
+  for (const w of waters) {
+    const d = Math.round(distanceToWater(origin, w) * 10) / 10;
+    const key = w.name.toLowerCase();
+    if (!rows.has(key) || rows.get(key)!.distanceKm > d) rows.set(key, { water: w.name, distanceKm: d, launches: [] });
+  }
   for (const l of launches) {
     if (l.dow || !l.water) continue;
-    const key = l.water.trim();
-    byWater.set(key, [...(byWater.get(key) ?? []), { ...l, distanceKm: Math.round(distanceKm(origin, l) * 10) / 10 }]);
+    const key = l.water.trim().toLowerCase();
+    const dl = Math.round(distanceKm(origin, l) * 10) / 10;
+    const row = rows.get(key) ?? { water: l.water.trim(), distanceKm: dl, launches: [] };
+    row.launches.push({ ...l, distanceKm: dl });
+    row.distanceKm = Math.min(row.distanceKm, dl);
+    rows.set(key, row);
   }
-  return [...byWater.entries()]
-    .map(([water, ls]) => ({ water, launches: ls.sort((a, b) => a.distanceKm - b.distanceKm), distanceKm: Math.min(...ls.map((l) => l.distanceKm)) }))
-    .filter((w) => w.distanceKm <= maxKm)
-    .sort((a, b) => a.distanceKm - b.distanceKm);
+  return [...rows.values()]
+    .map((r) => ({ ...r, launches: r.launches.sort((a, b) => a.distanceKm - b.distanceKm) }))
+    .filter((r) => r.distanceKm <= maxKm)
+    .sort((a, b) => a.distanceKm - b.distanceKm || b.launches.length - a.launches.length);
+}
+
+/** The trip's launch only counts if it's a real spot near the trip (not an empty 0,0 or one left over from another campground). */
+export function usableLaunch<T extends { lat: number; lng: number }>(launch: T | null | undefined, near: { lat: number; lng: number }, maxKm = 40): T | null {
+  if (!launch || (launch.lat === 0 && launch.lng === 0)) return null;
+  return distanceKm(launch, near) <= maxKm ? launch : null;
 }

@@ -28,16 +28,28 @@ describe('lakes near the launch', () => {
 });
 
 describe('South Dakota waters', () => {
-  it('groups non-Minnesota launches by water, nearest first', async () => {
-    const { watersFromLaunches, inSouthDakota } = await import('./lakeList');
-    const origin = { lat: 43.33, lng: -103.44 };
-    const rows = watersFromLaunches(
-      [launch({ water: 'Angostura Reservoir', lat: 43.33, lng: -103.43 }), launch({ water: 'Angostura Reservoir', lat: 43.3, lng: -103.45 }), launch({ water: 'Stockade Lake', lat: 43.77, lng: -103.52 })],
-      origin,
-      40.2,
-    );
-    expect(rows.map((r) => [r.water, r.launches.length])).toEqual([['Angostura Reservoir', 2]]); // Stockade is ~49 km away
+  it('lists named lakes with the ramps on them, nearest first', async () => {
+    const { sdWaterRows, inSouthDakota } = await import('./lakeList');
+    const origin = { lat: 44.53, lng: -97.08 }; // Lake Poinsett
+    const waters = [
+      { name: 'Lake Poinsett', lat: 44.55, lng: -97.08, bounds: [44.5, -97.13, 44.6, -97.03] as [number, number, number, number], distanceKm: 0 },
+      { name: 'Lake Albert', lat: 44.58, lng: -97.2, bounds: null, distanceKm: 0 },
+      { name: 'Far Lake', lat: 45.2, lng: -97.08, bounds: null, distanceKm: 0 },
+    ];
+    const rows = sdWaterRows(waters, [launch({ water: 'Lake Poinsett', name: 'North Ramp', lat: 44.59, lng: -97.08 }), launch({ water: 'Lake Poinsett', name: 'South Ramp', lat: 44.52, lng: -97.09 })], origin, 40.2);
+    expect(rows.map((r) => [r.water, r.distanceKm, r.launches.map((l) => l.name)])).toEqual([
+      ['Lake Poinsett', 0, ['South Ramp', 'North Ramp']],
+      ['Lake Albert', 11, []],
+    ]);
     expect(inSouthDakota(origin)).toBe(true);
     expect(inSouthDakota({ lat: 47.8, lng: -92.1 })).toBe(false);
+  });
+
+  it('ignores an empty or far-away trip launch', async () => {
+    const { usableLaunch } = await import('./lakeList');
+    const near = { lat: 44.53, lng: -97.08 };
+    expect(usableLaunch({ lat: 0, lng: 0, name: '' }, near)).toBeNull();
+    expect(usableLaunch({ lat: 47.8, lng: -92.1, name: 'Bear Head' }, near)).toBeNull();
+    expect(usableLaunch({ lat: 44.55, lng: -97.08, name: 'Ramp' }, near)?.name).toBe('Ramp');
   });
 });

@@ -8,7 +8,8 @@ import { distanceKm, errText } from '../places/arcgis';
 import { CURRENT_LAUNCH_SOURCES, findBoatLaunches, LAUNCH_SEARCH_KM } from '../places/waterAccess';
 import { fetchLakesNear, LAKE_RADIUS_KM } from './lakeSurvey';
 import { LakePicker } from './LakePicker';
-import { defaultLakes, inSouthDakota, lakeRows, lakesFrom, SD_FISHERY_REPORTS, watersFromLaunches } from './lakeList';
+import { defaultLakes, inSouthDakota, lakeRows, lakesFrom, SD_FISHERY_REPORTS, sdWaterRows, usableLaunch } from './lakeList';
+import { fetchOsmWaters, OSM_LABEL } from '../places/osm';
 import { LakeFishing } from './LakeFishing';
 
 const miles = (km: number) => `${(km * 0.621371).toFixed(km < 16 ? 1 : 0)} mi`;
@@ -34,12 +35,15 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
   const anchor = t?.location ?? cg?.location ?? null;
   const anchorKey = anchor ? `${anchor.lat.toFixed(4)},${anchor.lng.toFixed(4)}` : null;
   const data = nearby.data;
+  // South Dakota by position or by the campground's agency (LakeFinder is Minnesota-only).
+  const southDakota = !!anchor && (inSouthDakota(anchor) || cg?.agency === 'sd-state-park');
   // Refetch when the trip moved, when an earlier try used an older source, or before the 25-mile lake list existed.
   const stale =
     !!anchor &&
     (!data ||
       distanceKm(data.anchor, anchor) > REFRESH_WHEN_MOVED_KM ||
       data.radiusKm !== LAKE_RADIUS_KM ||
+      (southDakota && data.waters === undefined) ||
       (!data.launches.length && !data.report.some((r) => CURRENT_LAUNCH_SOURCES.some((l) => r.startsWith(`${l}:`)))));
 
   async function refresh() {
@@ -53,12 +57,21 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
   }
 
   async function load(at: { lat: number; lng: number }) {
-    const [launchRes, lakeRes] = await Promise.all([
+    const [official, lakeRes, osm] = await Promise.all([
       findBoatLaunches(at, viaAppServer).catch((e) => ({ launches: [] as BoatLaunchSite[], report: [`Boat launches: ${errText(e)}`] })),
-      fetchLakesNear(at.lat, at.lng, viaAppServer)
-        .then((lakes) => ({ lakes, line: `LakeFinder: ${lakes.length} lake${lakes.length === 1 ? '' : 's'} within 25 mi` }))
-        .catch((e) => ({ lakes: [] as NearbyLake[], line: `LakeFinder: ${errText(e)}` })),
+      southDakota
+        ? Promise.resolve({ lakes: [] as NearbyLake[], line: '' })
+        : fetchLakesNear(at.lat, at.lng, viaAppServer)
+            .then((lakes) => ({ lakes, line: `LakeFinder: ${lakes.length} lake${lakes.length === 1 ? '' : 's'} within 25 mi` }))
+            .catch((e) => ({ lakes: [] as NearbyLake[], line: `LakeFinder: ${errText(e)}` })),
+      southDakota ? fetchOsmWaters(at, LAKE_RADIUS_KM) : Promise.resolve(null),
     ]);
+    // Official launches first; open-map ramps fill in where there's no official one within 150 m.
+    const extra = (osm?.launches ?? []).filter((o) => !official.launches.some((l) => distanceKm(l, o) < 0.15));
+    const launchRes = {
+      launches: [...official.launches, ...extra].sort((a, b) => a.distanceKm - b.distanceKm),
+      report: [...official.report, ...(osm ? [osm.report] : [])],
+    };
     const lakes = lakesFrom(lakeRes.lakes, launchRes.launches);
     const prev = (await db.records.get(nearbyId))?.data as TripNearby | undefined;
     // Keep lakes the owner picked (including ones typed in), else pick sensible defaults.
@@ -70,14 +83,15 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
       launches: launchRes.launches,
       lakes: [...lakes, ...(prev?.lakes.filter((l) => kept.includes(l.dow) && !lakes.some((x) => x.dow === l.dow)) ?? [])],
       selectedLakes: kept.length ? kept : defaultLakes(lakes, launchRes.launches),
-      report: [...launchRes.report, lakeRes.line],
+      report: [...launchRes.report, lakeRes.line].filter(Boolean),
+      waters: osm?.waters ?? [],
       radiusKm: LAKE_RADIUS_KM,
     };
     await saveRecord('trip_nearby', nearbyId, record);
-    // Fill the trip's boat launch with the nearest one if it has none yet.
+    // Fill the trip's boat launch with the nearest one if it has none (or only an empty / far-away one).
     const latest = (await db.records.get(tripId))?.data as Trip | undefined;
     const first = launchRes.launches[0];
-    if (latest && !latest.boatLaunch && first && first.distanceKm <= LAUNCH_SEARCH_KM) {
+    if (latest && !usableLaunch(latest.boatLaunch, at) && first && first.distanceKm <= LAUNCH_SEARCH_KM) {
       await saveRecord('trip', tripId, { ...latest, boatLaunch: { lat: first.lat, lng: first.lng, name: first.name } });
     }
   }
@@ -105,14 +119,15 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
   const setLaunch = (l: BoatLaunchSite) => void saveRecord('trip', tripId, { ...t, boatLaunch: { lat: l.lat, lng: l.lng, name: l.name } });
 
   // Lakes are measured from the trip's launch when it has one.
-  const origin = t.boatLaunch ?? anchor;
-  const originName = t.boatLaunch?.name || t.location?.label || cg?.name || 'the trip';
+  // Measure from the trip's launch only if it's a real spot near the trip.
+  const launch = usableLaunch(t.boatLaunch, anchor);
+  const origin = launch ?? anchor;
+  const originName = launch?.name || t.location?.label || cg?.name || 'the trip';
   const rows = data ? lakeRows(data.lakes, allLaunches, origin, radiusMi * MI) : [];
   const q = lakeFilter.trim().toLowerCase();
   const filtered = q ? rows.filter((r) => r.lake.name.toLowerCase().includes(q)) : rows;
   const shownLakes = showAllLakes || q ? filtered : filtered.slice(0, 10);
-  const southDakota = inSouthDakota(origin);
-  const sdWaters = southDakota ? watersFromLaunches(allLaunches, origin, radiusMi * MI) : [];
+  const sdWaters = southDakota ? sdWaterRows(data?.waters ?? [], allLaunches, origin, radiusMi * MI) : [];
 
   async function saveSelection(next: string[], extraLake?: NearbyLake) {
     if (!data) return;
@@ -133,7 +148,7 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
       >
         <div className="space-y-3">
           <p className="text-sm text-ink-2">
-            Public water accesses within {miles(LAUNCH_SEARCH_KM)} of {t.location?.label || cg?.name || 'the trip'}, from {southDakota ? 'South Dakota GFP’s boat ramp data' : 'the DNR’s official list'}.
+            Public water accesses within {miles(LAUNCH_SEARCH_KM)} of {t.location?.label || cg?.name || 'the trip'}, from {southDakota ? 'official state data where public, else OpenStreetMap' : 'the DNR’s official list'}.
           </p>
           {busy && !data && <p role="status" className="text-sm text-ink-2">Looking for boat launches and lakes…</p>}
           {data && !closeLaunches.length && !busy && (
@@ -191,15 +206,16 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
             </a>
             {sdWaters.length > 0 ? (
               <ul className="divide-y divide-line">
-                {sdWaters.map((w) => (
+                {(showAllLakes ? sdWaters : sdWaters.slice(0, 12)).map((w) => (
                   <li key={w.water} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <span className="min-w-0">
                       <span className="block font-semibold">{w.water}</span>
                       <span className="block text-sm text-ink-2">
-                        {miles(w.distanceKm)} · {w.launches.length} public ramp{w.launches.length === 1 ? '' : 's'} · nearest: {w.launches[0]!.name}
+                        {w.distanceKm === 0 ? 'here' : miles(w.distanceKm)} ·{' '}
+                        {w.launches.length ? `${w.launches.length} ramp${w.launches.length === 1 ? '' : 's'} · nearest: ${w.launches[0]!.name}` : 'no ramp mapped'}
                       </span>
                     </span>
-                    {!sameSpot(t.boatLaunch, w.launches[0]!) && (
+                    {w.launches[0] && !sameSpot(t.boatLaunch, w.launches[0]) && (
                       <Button type="button" variant="ghost" className="min-h-11 px-1" onClick={() => setLaunch(w.launches[0]!)}>
                         Use ramp
                       </Button>
@@ -208,8 +224,17 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
                 ))}
               </ul>
             ) : (
-              data && !busy && <p className="text-sm text-ink-2">No GFP boat ramps found within {radiusMi} miles — see “Data sources” above.</p>
+              data && !busy && <p className="text-sm text-ink-2">No lakes or ramps found within {radiusMi} miles — see “Data sources” above.</p>
             )}
+            {sdWaters.length > 12 && (
+              <Button type="button" variant="ghost" onClick={() => setShowAllLakes(!showAllLakes)}>
+                {showAllLakes ? 'Show fewer' : `Show all ${sdWaters.length}`}
+              </Button>
+            )}
+            <p className="text-xs text-ink-2">
+              Lakes and ramps: {OSM_LABEL}, © OpenStreetMap contributors — community-edited, so check ramps on site. Official GFP ramps are used when GFP
+              publishes them.
+            </p>
             <div role="group" aria-label="Distance" className="flex gap-2">
               {RADII_MI.map((r) => (
                 <button

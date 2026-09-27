@@ -5,6 +5,7 @@ import { Button, Card, inputClass } from '../../components/ui';
 import type { Campground, Reservation, ReservationStatus, Trip } from '../../model/schemas';
 import { campgroundTakesReservations, cancelDeadlineInfo, checkMaxNights, daysBetween, daysUntil, formatOpensAt, resolveBooking } from './booking';
 import { useCampgroundLookup } from '../places/useCampgroundLookup';
+import { usableLaunch } from '../fishing/lakeList';
 import { db } from '../../db/local';
 import { locationForCampground, parseConfirmation, tripUpdateFromReservation } from './confirmation';
 import { reservationForTrip, useBookingRules, useCampgrounds, useReservations } from './data';
@@ -93,7 +94,9 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
               const next = campgrounds.find((c) => c.id === id)?.data;
               // The trip's map pin and weather follow the chosen campground.
               const location = locationForCampground(tripData.location, campground?.data, next);
-              void saveRecord('trip', tripId, { ...tripData, campgroundId: id, location });
+              // A boat launch left over from the old campground (or an empty 0,0 one) would mislead the Lake tab.
+              const boatLaunch = tripData.boatLaunch && location && !usableLaunch(tripData.boatLaunch, location) ? null : tripData.boatLaunch;
+              void saveRecord('trip', tripId, { ...tripData, campgroundId: id, location, boatLaunch });
               if (reservation && reservation.data.status !== 'booked') {
                 void saveRecord('reservation', reservation.id, { ...reservation.data, campgroundId: id });
               }

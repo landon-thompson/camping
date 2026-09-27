@@ -14,6 +14,15 @@ export const boatLaunchSiteSchema = latLng.extend({
 });
 export type BoatLaunchSite = z.infer<typeof boatLaunchSiteSchema>;
 
+/** A named lake/reservoir from open map data (states without lake ids), with its bounding box when known. */
+export const namedWaterSchema = latLng.extend({
+  name: z.string(),
+  /** [south, west, north, east] */
+  bounds: z.tuple([z.number(), z.number(), z.number(), z.number()]).nullable(),
+  distanceKm: z.number(),
+});
+export type NamedWater = z.infer<typeof namedWaterSchema>;
+
 export const nearbyLakeSchema = z.object({
   dow: z.string().regex(/^\d{8}$/),
   name: z.string(),
@@ -40,6 +49,8 @@ export const tripNearbySchema = z.object({
   selectedLakes: z.array(z.string()),
   /** What each source returned, for when something didn't load. */
   report: z.array(z.string()),
+  /** Named lakes from open map data, for states without LakeFinder (South Dakota). */
+  waters: z.array(namedWaterSchema).optional(),
   /** How far out lakes and launches were searched (older records lack it → refetch). */
   radiusKm: z.number().optional(),
 });
