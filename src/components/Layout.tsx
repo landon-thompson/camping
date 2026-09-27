@@ -1,5 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { SyncBadge } from './SyncBadge';
+import { useSyncStatus } from '../sync/useSync';
+import { loginUrl } from '../auth/identity';
 import { UpdatePrompt } from './UpdatePrompt';
 import { IS_PREVIEW } from '../lib/preview';
 
@@ -22,6 +24,7 @@ const tabs = [
 ];
 
 export function Layout() {
+  const sync = useSyncStatus();
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
       <header className="safe-top sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur">
@@ -37,6 +40,16 @@ export function Layout() {
           </div>
         </div>
       </header>
+      {sync.state === 'signed-out' && (
+        <div role="status" className="mx-4 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-warn-bg p-3 text-sm text-warn">
+          <span className="min-w-0 flex-1">
+            Your sign-in expired. Everything is still saved on this phone; sign in again for sync, lake reports and park lookups.
+          </span>
+          <a href={loginUrl()} className="inline-flex min-h-11 shrink-0 items-center rounded-xl bg-brand px-4 font-semibold text-brand-ink">
+            Sign in
+          </a>
+        </div>
+      )}
 
       {IS_PREVIEW && (
         <p role="note" className="border-b border-line bg-info-bg px-4 py-2 text-sm text-info">

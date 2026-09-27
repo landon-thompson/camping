@@ -31,6 +31,8 @@ describe('South Dakota lake reports', () => {
     await expect(fetchSdReport('X', undefined, notFound)).rejects.toThrow(/No lake survey report/);
     const oldServer = (async () => new Response('<html>', { status: 404, headers: { 'content-type': 'text/html' } })) as typeof fetch;
     await expect(fetchSdReport('X', undefined, oldServer)).rejects.toThrow(/doesn’t have the South Dakota report reader/);
+    const expired = (async () => new Response('', { status: 401 })) as typeof fetch;
+    await expect(fetchSdReport('X', undefined, expired)).rejects.toThrow(/sign-in expired/);
   });
 
   it('keys and species icons', () => {

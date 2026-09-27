@@ -15,6 +15,8 @@ export async function fetchSdReport(water: string, reportId?: string, fetchFn: t
   } catch {
     throw new Error('Couldn’t reach the app’s server (offline?)');
   }
+  if (res.status === 401) throw new Error('Your sign-in expired — tap “Sign in” at the top, then try again');
+  if (res.status === 403) throw new Error('This account isn’t invited to the app’s server');
   const type = res.headers.get('content-type') ?? '';
   if (!type.includes('json')) throw new Error(res.status === 404 ? 'The app’s server doesn’t have the South Dakota report reader yet' : `HTTP ${res.status}`);
   const body = (await res.json()) as Partial<SdLakeReport> & { error?: string };

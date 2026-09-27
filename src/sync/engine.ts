@@ -75,6 +75,11 @@ export class SyncEngine {
     this.set({ state: 'local-only' });
   }
 
+  /** The sign-in expired: nothing can sync until the person signs in again. */
+  setSignedOut(): void {
+    this.set({ state: 'signed-out' });
+  }
+
   async refreshPending(): Promise<void> {
     const [pending, last] = await Promise.all([
       this.db.records.where('dirty').equals(1).count(),

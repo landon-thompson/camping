@@ -438,8 +438,21 @@ const SOURCES: [string, string][] = [
  */
 export const viaAppServer: typeof fetch = async (input, init) => {
   const url = String(input instanceof Request ? input.url : input);
+  let r: Response | null = null;
   try {
-    const r = await fetch(`/api/gis?url=${encodeURIComponent(url)}`, { credentials: 'same-origin', ...init });
+    r = await fetch(`/api/gis?url=${encodeURIComponent(url)}`, { credentials: 'same-origin', ...init });
+  } catch {
+    /* no API reachable — try directly below */
+  }
+  if (r?.status === 401) {
+    // Sign-in expired: the phone may still reach hosts that allow browsers; otherwise say why.
+    try {
+      return await fetch(input, init);
+    } catch {
+      throw new Error('sign-in expired — sign in again to use the app’s server');
+    }
+  }
+  if (r) {
     const type = r.headers.get('content-type') ?? '';
     if (r.ok && type.includes('json')) return r;
     if (r.status !== 404 && type.includes('json')) {
@@ -452,8 +465,6 @@ export const viaAppServer: typeof fetch = async (input, init) => {
       }
       return r;
     }
-  } catch {
-    /* no API reachable — try directly */
   }
   return fetch(input, init);
 };

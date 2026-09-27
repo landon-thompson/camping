@@ -6,7 +6,7 @@ import { Layout } from './components/Layout';
 import { LinkButton } from './components/ui';
 import { Dashboard } from './pages/Dashboard';
 import { Settings } from './pages/Settings';
-import { startSync } from './sync/useSync';
+import { startSync, syncEngine } from './sync/useSync';
 import { gearRoutes } from './features/gear/routes';
 import { tripRoutes } from './features/trips/routes';
 import { reservationRoutes } from './features/reservations/routes';
@@ -45,9 +45,12 @@ function Gate() {
   const { auth } = useAuth();
   const canSync = auth?.kind === 'unavailable' || (auth?.kind === 'signed-in' && isFamily(auth.user));
 
+  const expired = auth?.kind === 'signed-out' && !!auth.previousUser;
   useEffect(() => {
     if (canSync) startSync();
-  }, [canSync]);
+    // Still usable on this phone, but the pill should say "Sign in", not "Starting…".
+    else if (expired) syncEngine.setSignedOut();
+  }, [canSync, expired]);
 
   if (!auth) return <Splash />;
   if (auth.kind === 'signed-out' && !auth.previousUser) return <SignIn />;
