@@ -238,6 +238,7 @@ function SpecEditor({ label, spec, onChange }: { label: string; spec: SpecNumber
           className={inputClass}
           inputMode="decimal"
           type="number"
+          step="any"
           min={0}
           placeholder="lb"
           value={spec.value ?? ''}
@@ -306,6 +307,7 @@ function TrailerForm({ initial }: { initial: Trailer }) {
               className={inputClass}
               inputMode="decimal"
               type="number"
+              step="any"
               min={0}
               max={100}
               value={draft.tonguePctMin}
@@ -317,6 +319,7 @@ function TrailerForm({ initial }: { initial: Trailer }) {
               className={inputClass}
               inputMode="decimal"
               type="number"
+              step="any"
               min={0}
               max={100}
               value={draft.tonguePctMax}

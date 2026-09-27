@@ -17,7 +17,7 @@ This file is the hand-off note between work sessions. Update it at the end of ev
 
 Integration pass (coordinator): trip page saves only changed fields (fixed a bug where saving trip details could undo a campground chosen in the reservation section or an edit synced from the other phone); trip page section jump bar, sticky save bar, compact gear list; routes & pins linked from Tools and each trip; accessibility fixes (announced save status, reduced-motion, labelled links, theme toggle buttons); README setup steps for photos and RIDB.
 
-Tests: 148 app + 50 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
+Tests: 176 app + 50 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
 
 **Not testable from the build sandbox (network blocked): verify on first real deploy**
 - National Weather Service API (api.weather.gov): response parsing and browser CORS. Weather is built from the documented format.
@@ -64,6 +64,11 @@ The Azure SQL free offer wouldn't create on the owner's free-trial subscription 
 - Booking links: generic ReserveMN/DNR links are flagged, with steps to paste the park's exact page once. Book now shows even before dates are set.
 - Trip page: tabs (Plan, Gear, Checklist, Book, Weather, Trails, Debrief, Share), with readiness in the title line.
 - Gear: product link, "Check price", and "Use this price" (records the date checked). No automatic price scraping (retailer terms, and blocked by browsers).
+
+## Owner feedback round 2 (2026-09-27)
+- Trip location now follows the campground picked in Book (replaces the old pin; a hand-set spot is kept only if the new campground has no pin). Plan tab has "Use <campground>'s location".
+- Booking hand-off (no scraping/auto-booking): tapping Book now and coming back to the app shows "Back from booking?"; **Paste confirmation** reads a pasted ReserveMN/Recreation.gov email (confirmation #, site, arrival, nights, cost, fees, cancel-by) into the form for checking. Saving a booked reservation sets the trip's dates and marks the trip booked; a cancelled one moves a booked trip back to planned. Email layouts aren't published, so the parser looks for common labels. **Verify** against a real confirmation email and adjust `src/features/reservations/confirmation.ts` if a field is missed.
+- Fixed: cost/fee and other decimal fields rejected cents on save (missing `step`); latitude/longitude fields used the iPhone decimal keypad, which has no minus key.
 
 ## Open items / to verify
 

@@ -183,8 +183,8 @@ function CampgroundFields({ draft, setDraft }: { draft: Campground; setDraft: (c
           <span className="mb-1 block font-semibold text-ink-2">Latitude</span>
           <input
             className={inputClass}
-            inputMode="decimal"
             type="number"
+            step="any"
             value={draft.location?.lat ?? ''}
             onChange={(e) => {
               const lat = numOrNull(e.target.value);
@@ -196,8 +196,8 @@ function CampgroundFields({ draft, setDraft }: { draft: Campground; setDraft: (c
           <span className="mb-1 block font-semibold text-ink-2">Longitude</span>
           <input
             className={inputClass}
-            inputMode="decimal"
             type="number"
+            step="any"
             value={draft.location?.lng ?? ''}
             onChange={(e) => {
               const lng = numOrNull(e.target.value);

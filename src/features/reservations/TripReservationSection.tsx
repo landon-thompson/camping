@@ -1,12 +1,33 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import { newId, saveRecord, useRecord } from '../../db/records';
-import { Card, inputClass } from '../../components/ui';
-import type { Reservation, ReservationStatus } from '../../model/schemas';
+import { Button, Card, inputClass } from '../../components/ui';
+import type { Reservation, ReservationStatus, Trip } from '../../model/schemas';
 import { campgroundTakesReservations, cancelDeadlineInfo, checkMaxNights, daysBetween, daysUntil, formatOpensAt, resolveBooking } from './booking';
+import { locationForCampground, parseConfirmation, tripUpdateFromReservation } from './confirmation';
 import { reservationForTrip, useBookingRules, useCampgrounds, useReservations } from './data';
 import { BookingStateBadge, bookingLink, ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, numOrNull, SaveRow, useDraft } from './shared';
 
 const PERMIT_ID = 'permit:mn-state-park-annual-2027';
+
+// Remembers that Book now was tapped, so coming back to the app can ask "did you book?".
+const bookingKey = (tripId: string) => `camp.bookingStarted.${tripId}`;
+function readBookingFlag(tripId: string): boolean {
+  try {
+    const t = Number(sessionStorage.getItem(bookingKey(tripId)));
+    return t > 0 && Date.now() - t < 12 * 3600_000;
+  } catch {
+    return false;
+  }
+}
+function setBookingFlag(tripId: string, on: boolean) {
+  try {
+    if (on) sessionStorage.setItem(bookingKey(tripId), String(Date.now()));
+    else sessionStorage.removeItem(bookingKey(tripId));
+  } catch {
+    /* private mode: no prompt, nothing else lost */
+  }
+}
 
 /** Shown on each trip page (Phase 2 places it): campground choice, booking window, Book-now link, reservation details. */
 export function TripReservationSection({ tripId }: { tripId: string }) {
@@ -15,6 +36,17 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
   const { byAgency } = useBookingRules();
   const { rows: reservations } = useReservations();
   const permit = useRecord('permit', PERMIT_ID);
+  const [backFromBooking, setBackFromBooking] = useState(() => readBookingFlag(tripId));
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') setBackFromBooking(readBookingFlag(tripId));
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [tripId]);
 
   if (trip.loading) return <p className="text-ink-2">Loading…</p>;
   if (!trip.data) return null;
@@ -26,6 +58,17 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
   const now = new Date();
   const resolved = campground && rule ? resolveBooking(now, tripData.startDate, rule, campground.data) : null;
   const nights = tripData.startDate && tripData.endDate ? daysBetween(tripData.startDate, tripData.endDate) : null;
+  const booked = reservation?.data.status === 'booked';
+  const startBooking = () => {
+    setBookingFlag(tripId, true);
+    setBackFromBooking(false); // shown when the app comes back into view
+  };
+  const openPaste = () => {
+    setPasteOpen(true);
+    setBackFromBooking(false);
+    setBookingFlag(tripId, false);
+    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
 
   return (
     <Card title="Reservation">
@@ -37,11 +80,13 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
             value={tripData.campgroundId ?? ''}
             onChange={(e) => {
               const id = e.target.value || null;
-              const cg = campgrounds.find((c) => c.id === id)?.data;
-              // A trip without its own spot inherits the campground's location (map, weather).
-              const location =
-                !tripData.location && cg?.location ? { lat: cg.location.lat, lng: cg.location.lng, label: cg.name } : tripData.location;
+              const next = campgrounds.find((c) => c.id === id)?.data;
+              // The trip's map pin and weather follow the chosen campground.
+              const location = locationForCampground(tripData.location, campground?.data, next);
               void saveRecord('trip', tripId, { ...tripData, campgroundId: id, location });
+              if (reservation && reservation.data.status !== 'booked') {
+                void saveRecord('reservation', reservation.id, { ...reservation.data, campgroundId: id });
+              }
             }}
           >
             <option value="">Choose a campground…</option>
@@ -54,13 +99,46 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
                 </option>
               ))}
           </select>
+          {campground && !campground.data.location && (
+            <span className="mt-1 block text-sm text-ink-2">
+              No map pin for this campground yet, so the trip keeps its own location. Add one in the{' '}
+              <Link to={`/book/campgrounds/${encodeURIComponent(campground.id)}`} className="font-semibold text-brand underline">
+                campground directory
+              </Link>{' '}
+              (or Import state parks there), or tap the map on the Plan tab.
+            </span>
+          )}
         </label>
+
+        {backFromBooking && !booked && (
+          <div role="status" className="rounded-xl border border-brand bg-surface-2 p-3">
+            <p className="font-semibold">Back from booking?</p>
+            <p className="mt-1 text-sm text-ink-2">
+              If you made the reservation, paste the confirmation email and the details fill in for you.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button type="button" onClick={openPaste}>
+                Paste confirmation
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setBookingFlag(tripId, false);
+                  setBackFromBooking(false);
+                }}
+              >
+                Not booked yet
+              </Button>
+            </div>
+          </div>
+        )}
 
         {campground && !resolved && campgroundTakesReservations(campground.data.bookingSystem) && (
           <div className="rounded-xl bg-surface-2 p-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm text-ink-2">Set trip dates to see when booking opens.</span>
-              <ExternalLinkButton href={bookingLink(campground.data.bookingUrl)} variant="secondary">
+              <ExternalLinkButton href={bookingLink(campground.data.bookingUrl)} variant="secondary" onClick={startBooking}>
                 Book now
               </ExternalLinkButton>
             </div>
@@ -73,7 +151,7 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
             <div className="flex items-center justify-between gap-3">
               <BookingStateBadge state={resolved.state} />
               {campgroundTakesReservations(campground.data.bookingSystem) && (
-                <ExternalLinkButton href={bookingLink(campground.data.bookingUrl)} variant="secondary">
+                <ExternalLinkButton href={bookingLink(campground.data.bookingUrl)} variant="secondary" onClick={startBooking}>
                   Book now
                 </ExternalLinkButton>
               )}
@@ -110,13 +188,22 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
           </p>
         )}
 
-        <ReservationForm
-          tripId={tripId}
-          existing={reservation}
-          defaultArrival={tripData.startDate}
-          defaultNights={nights}
-          campgroundId={tripData.campgroundId}
-        />
+        <div ref={formRef} className="scroll-mt-32">
+          <ReservationForm
+            tripId={tripId}
+            trip={tripData}
+            existing={reservation}
+            defaultArrival={tripData.startDate}
+            defaultNights={nights}
+            campgroundId={tripData.campgroundId}
+            pasteOpen={pasteOpen}
+            setPasteOpen={setPasteOpen}
+            onBooked={() => {
+              setBookingFlag(tripId, false);
+              setBackFromBooking(false);
+            }}
+          />
+        </div>
       </div>
     </Card>
   );
@@ -139,27 +226,58 @@ const BLANK_RESERVATION = (tripId: string, campgroundId: string | null, arrivalD
 
 function ReservationForm({
   tripId,
+  trip,
   existing,
   defaultArrival,
   defaultNights,
   campgroundId,
+  pasteOpen,
+  setPasteOpen,
+  onBooked,
 }: {
   tripId: string;
+  trip: Trip;
   existing: { id: string; data: Reservation } | undefined;
   defaultArrival: string | null;
   defaultNights: number | null;
   campgroundId: string | null;
+  pasteOpen: boolean;
+  setPasteOpen: (open: boolean) => void;
+  onBooked: () => void;
 }) {
   const [newId_] = useState(() => newId('reservation'));
   const id = existing?.id ?? newId_;
   const initial = existing?.data ?? BLANK_RESERVATION(tripId, campgroundId, defaultArrival, defaultNights);
-  const { draft, setDraft, dirty, saved, error, onSubmit } = useDraft('reservation', id, initial);
+  const [tripNote, setTripNote] = useState<string | null>(null);
+  const { draft, setDraft, dirty, saved, error, onSubmit } = useDraft('reservation', id, initial, async (r) => {
+    // A booked reservation is the source of truth for the trip's dates and status.
+    const update = tripUpdateFromReservation(trip, r);
+    if (update) await saveRecord('trip', tripId, update.trip);
+    setTripNote(update ? `Trip updated: ${update.changes.join(', ')}.` : null);
+    if (r.status === 'booked') onBooked();
+  });
   const today = new Date().toISOString().slice(0, 10);
   const cancel = cancelDeadlineInfo(today, draft.cancelDeadline);
 
   return (
     <form onSubmit={onSubmit} className="space-y-3 border-t border-line pt-4">
-      <p className="text-sm font-semibold text-ink-2">{existing ? 'Reservation details' : 'Add reservation details'}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-ink-2">{existing ? 'Reservation details' : 'Add reservation details'}</p>
+        {!pasteOpen && (
+          <Button type="button" variant="secondary" onClick={() => setPasteOpen(true)}>
+            Paste confirmation
+          </Button>
+        )}
+      </div>
+      {pasteOpen && (
+        <PasteConfirmation
+          onClose={() => setPasteOpen(false)}
+          onParsed={(fields) => {
+            setDraft({ ...draft, ...fields, campgroundId: draft.campgroundId ?? campgroundId });
+            setTripNote(null);
+          }}
+        />
+      )}
       <div className="grid grid-cols-2 gap-3">
         <label className="block text-sm">
           <span className="mb-1 block font-semibold text-ink-2">Status</span>
@@ -172,7 +290,16 @@ function ReservationForm({
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-semibold text-ink-2">Confirmation #</span>
-          <input className={inputClass} value={draft.confirmation} onChange={(e) => setDraft({ ...draft, confirmation: e.target.value })} />
+          <input
+            className={inputClass}
+            value={draft.confirmation}
+            onChange={(e) => {
+              const confirmation = e.target.value;
+              // Typing a confirmation number means it's booked.
+              const status = draft.status === 'planned' && confirmation.trim() ? 'booked' : draft.status;
+              setDraft({ ...draft, confirmation, status });
+            }}
+          />
         </label>
       </div>
 
@@ -206,11 +333,11 @@ function ReservationForm({
       <div className="grid grid-cols-2 gap-3">
         <label className="block text-sm">
           <span className="mb-1 block font-semibold text-ink-2">Cost (USD)</span>
-          <input className={inputClass} inputMode="decimal" type="number" min={0} value={draft.costUsd ?? ''} onChange={(e) => setDraft({ ...draft, costUsd: numOrNull(e.target.value) })} />
+          <input className={inputClass} inputMode="decimal" type="number" min={0} step="0.01" value={draft.costUsd ?? ''} onChange={(e) => setDraft({ ...draft, costUsd: numOrNull(e.target.value) })} />
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-semibold text-ink-2">Fees (USD)</span>
-          <input className={inputClass} inputMode="decimal" type="number" min={0} value={draft.feesUsd ?? ''} onChange={(e) => setDraft({ ...draft, feesUsd: numOrNull(e.target.value) })} />
+          <input className={inputClass} inputMode="decimal" type="number" min={0} step="0.01" value={draft.feesUsd ?? ''} onChange={(e) => setDraft({ ...draft, feesUsd: numOrNull(e.target.value) })} />
         </label>
       </div>
 
@@ -239,7 +366,75 @@ function ReservationForm({
         <textarea className={`${inputClass} min-h-20 py-2`} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} />
       </label>
 
+      {draft.status === 'booked' && dirty && (
+        <p className="text-sm text-ink-2">Saving also sets the trip’s dates from the arrival date and nights, and marks the trip booked.</p>
+      )}
       <SaveRow dirty={dirty} saved={saved} error={error} />
+      {tripNote && saved && !dirty && <p className="text-sm text-ok">{tripNote}</p>}
     </form>
+  );
+}
+
+const FOUND_LABEL = (found: string[]) => found.join(', ').replace(/, ([^,]*)$/, ' and $1');
+
+/** Paste a ReserveMN / Recreation.gov confirmation email; the details fill the form for checking. */
+function PasteConfirmation({ onParsed, onClose }: { onParsed: (fields: Partial<Reservation>) => void; onClose: () => void }) {
+  const [text, setText] = useState('');
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const canReadClipboard = typeof navigator !== 'undefined' && !!navigator.clipboard?.readText;
+
+  const run = (value: string) => {
+    const { fields, found } = parseConfirmation(value);
+    if (!found.length) {
+      setResult({ ok: false, message: 'Couldn’t find booking details in that text. Fill them in below by hand.' });
+      return;
+    }
+    onParsed(fields);
+    setResult({ ok: true, message: `Filled in ${FOUND_LABEL(found)}. Check them against the email, then Save.` });
+  };
+
+  return (
+    <div className="space-y-2 rounded-xl bg-surface-2 p-3">
+      <p className="text-sm text-ink-2">
+        Open the confirmation email from ReserveMN or Recreation.gov, select all the text and copy it, then paste it here. It stays on your phone.
+      </p>
+      <textarea
+        aria-label="Confirmation email text"
+        className={`${inputClass} min-h-28 py-2`}
+        placeholder="Paste the confirmation email here"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <div className="flex flex-wrap gap-2">
+        {canReadClipboard && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={async () => {
+              try {
+                const v = await navigator.clipboard.readText();
+                setText(v);
+                run(v);
+              } catch {
+                setResult({ ok: false, message: 'Couldn’t read the clipboard. Long-press in the box and choose Paste.' });
+              }
+            }}
+          >
+            Paste from clipboard
+          </Button>
+        )}
+        <Button type="button" disabled={!text.trim()} onClick={() => run(text)}>
+          Fill in details
+        </Button>
+        <Button type="button" variant="ghost" onClick={onClose}>
+          Close
+        </Button>
+      </div>
+      {result && (
+        <p role="status" className={`text-sm ${result.ok ? 'text-ok' : 'text-warn'}`}>
+          {result.message}
+        </p>
+      )}
+    </div>
   );
 }

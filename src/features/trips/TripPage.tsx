@@ -280,9 +280,22 @@ function TripEditor({ id, trip }: { id: string; trip: Trip }) {
             label="Location"
             value={draft.location}
             onChange={(v) => update({ location: v })}
-            hint="Tap the map above, or type coordinates."
+            hint="Set from the campground you pick in Book. To use another spot, tap the map above or type coordinates."
             withName={false}
           />
+          {campground?.location &&
+            (draft.location?.lat !== campground.location.lat || draft.location?.lng !== campground.location.lng) && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() =>
+                  campground.location &&
+                  update({ location: { lat: campground.location.lat, lng: campground.location.lng, label: campground.name } })
+                }
+              >
+                Use {campground.name}’s location
+              </Button>
+            )}
           <LocationFields
             label="Boat launch"
             value={draft.boatLaunch}
@@ -432,8 +445,8 @@ function LocationFields({
         <input
           aria-label={`${label} latitude`}
           className={inputClass}
-          inputMode="decimal"
           type="number"
+          step="any"
           placeholder="Latitude"
           value={value.lat || ''}
           onChange={(e) => onChange({ ...value, name: value.name ?? '', label: value.label ?? '', lat: num(e.target.value) ?? 0 })}
@@ -441,8 +454,8 @@ function LocationFields({
         <input
           aria-label={`${label} longitude`}
           className={inputClass}
-          inputMode="decimal"
           type="number"
+          step="any"
           placeholder="Longitude"
           value={value.lng || ''}
           onChange={(e) => onChange({ ...value, name: value.name ?? '', label: value.label ?? '', lng: num(e.target.value) ?? 0 })}

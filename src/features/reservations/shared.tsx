@@ -20,7 +20,7 @@ export function NavButton({ to, children, variant = 'primary' }: { to: string; c
  * src/pages/Settings.tsx: an in-progress edit is never clobbered by an
  * incoming sync, but a fresh sync is picked up once you've saved.
  */
-export function useDraft<T extends RecordType>(type: T, id: string, initial: RecordData<T>) {
+export function useDraft<T extends RecordType>(type: T, id: string, initial: RecordData<T>, onSaved?: (data: RecordData<T>) => void | Promise<void>) {
   const [draft, setDraft] = useState(initial);
   const [base, setBase] = useState(initial);
   const [saved, setSaved] = useState(false);
@@ -39,6 +39,7 @@ export function useDraft<T extends RecordType>(type: T, id: string, initial: Rec
       await saveRecord(type, id, draft);
       setError(null);
       setSaved(true);
+      await onSaved?.(draft);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -97,6 +98,7 @@ export function SpecEditor({
           className={inputClass}
           inputMode="decimal"
           type="number"
+          step="any"
           placeholder={unit ?? 'value'}
           value={spec.value ?? ''}
           onChange={(e) => onChange({ ...spec, value: numOrNull(e.target.value) })}
@@ -143,10 +145,20 @@ export function BookingStateBadge({ state }: { state: BookingState }) {
 }
 
 /** An external "Book now" style link — ui.tsx's LinkButton has no target/rel, and an official booking page always needs `target="_blank" rel="noopener"`. */
-export function ExternalLinkButton({ href, children, variant = 'primary' }: { href: string; children: ReactNode; variant?: 'primary' | 'secondary' }) {
+export function ExternalLinkButton({
+  href,
+  children,
+  variant = 'primary',
+  onClick,
+}: {
+  href: string;
+  children: ReactNode;
+  variant?: 'primary' | 'secondary';
+  onClick?: () => void;
+}) {
   const styles = variant === 'primary' ? 'bg-brand text-brand-ink' : 'border border-line bg-surface-2 text-ink';
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={`inline-flex min-h-12 items-center justify-center rounded-xl px-4 font-semibold ${styles}`}>
+    <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={`inline-flex min-h-12 items-center justify-center rounded-xl px-4 font-semibold ${styles}`}>
       {children}
     </a>
   );

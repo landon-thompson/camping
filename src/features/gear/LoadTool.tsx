@@ -230,6 +230,7 @@ function NumberField({ label, value, onChange }: { label: string; value: number;
       <input
         className={inputClass}
         type="number"
+        step="any"
         inputMode="decimal"
         min={0}
         value={value}

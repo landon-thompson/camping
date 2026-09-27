@@ -162,6 +162,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 value={profile.solar.panelW}
@@ -172,6 +173,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 max={24}
@@ -183,6 +185,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
               <input
                 className={inputClass}
                 type="number"
+                step="any"
                 inputMode="decimal"
                 min={0}
                 max={100}
@@ -200,6 +203,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
             <input
               className={inputClass}
               type="number"
+              step="any"
               inputMode="decimal"
               min={0}
               value={profile.driveCharge.watts}
@@ -210,6 +214,7 @@ function PowerToolView({ initial }: { initial: PowerProfile }) {
             <input
               className={inputClass}
               type="number"
+              step="any"
               inputMode="decimal"
               min={0}
               max={24}
@@ -300,6 +305,7 @@ function LoadRow({
           <input
             className={inputClass}
             type="number"
+            step="any"
             inputMode="decimal"
             min={0}
             value={load.whPerDay ?? 0}
@@ -312,6 +318,7 @@ function LoadRow({
             <input
               className={inputClass}
               type="number"
+              step="any"
               inputMode="decimal"
               min={0}
               value={load.watts ?? 0}
@@ -322,6 +329,7 @@ function LoadRow({
             <input
               className={inputClass}
               type="number"
+              step="any"
               inputMode="decimal"
               min={0}
               max={24}
