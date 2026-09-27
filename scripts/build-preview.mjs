@@ -19,7 +19,8 @@ if (jsFiles.length !== 1) throw new Error(`Expected one JS bundle, found: ${jsFi
 // Keep the bundle from closing its own <script> tag early.
 const js = readFileSync(join(assets, jsFiles[0]), 'utf8').replace(/<\/script/gi, '<\\/script');
 
-const html = `<title>Camp Planner</title>
+const html = `<meta charset="utf-8">
+<title>Camp Planner</title>
 <meta name="theme-color" content="#1f4d36">
 <script>
   try {
