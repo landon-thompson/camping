@@ -11,7 +11,7 @@ export interface TripMapMarker {
   lng: number;
   /** Short label drawn inside the pin (e.g. a trip level number). */
   label: string;
-  variant?: 'trip' | 'home' | 'plain';
+  variant?: 'trip' | 'home' | 'plain' | 'accent';
   /** Name shown beside the pin (and read by screen readers). */
   title?: string;
 }
@@ -30,6 +30,8 @@ export function TripMap({
   onPick,
   onMarkerClick,
   fitMarkers = false,
+  labels = true,
+  trailTools = true,
   className = 'h-[50vh] min-h-72 w-full',
 }: {
   center: [number, number];
@@ -43,6 +45,10 @@ export function TripMap({
   onMarkerClick?: (id: string) => void;
   /** Zoom to show every pin once they first appear. */
   fitMarkers?: boolean;
+  /** Show each clickable pin's name beside it (off for dense maps; the name stays in the tooltip). */
+  labels?: boolean;
+  /** MVUM / road info / expand tools (off where they'd only get in the way, e.g. the campground picker). */
+  trailTools?: boolean;
   className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,7 +82,7 @@ export function TripMap({
     });
     map.on('load', () => {
       if (cancelled) return;
-      cleanupTrails = attachTrailLayers(map, { tripId });
+      if (trailTools) cleanupTrails = attachTrailLayers(map, { tripId });
     });
     map.on('click', (e) => {
       if (isRoadInfoMode(map)) return;
@@ -90,6 +96,7 @@ export function TripMap({
       markersRef.current = [];
       map.remove();
       mapRef.current = null;
+      fittedRef.current = ''; // a new map (remount) must frame the pins again
     };
   }, []);
 
@@ -101,7 +108,7 @@ export function TripMap({
     markersRef.current = markers.map((m) => {
       const el = document.createElement(clickable ? 'button' : 'div');
       const colors =
-        m.variant === 'home'
+        m.variant === 'home' || m.variant === 'accent'
           ? 'border-accent bg-accent text-white'
           : m.variant === 'plain'
             ? 'border-line bg-surface text-ink'
@@ -113,7 +120,7 @@ export function TripMap({
       if (m.title) {
         el.setAttribute('aria-label', m.title);
         el.setAttribute('title', m.title);
-        if (clickable) {
+        if (clickable && labels) {
           const tag = document.createElement('span');
           tag.className = 'max-w-32 truncate rounded-md bg-surface/90 px-1.5 py-0.5 text-xs font-semibold text-ink shadow';
           tag.textContent = m.title;
@@ -121,15 +128,16 @@ export function TripMap({
         }
       }
       if (clickable) {
-        // 44px tap target around the pin; the name tag hangs to the right.
-        el.className = 'flex min-h-11 min-w-11 items-center gap-1 pl-2';
+        // 44px tap target around the pin; the name tag (if shown) hangs to the right.
+        el.className = labels ? 'flex min-h-11 min-w-11 items-center gap-1 pl-2' : 'grid min-h-11 min-w-11 place-items-center';
         (el as HTMLButtonElement).type = 'button';
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           onMarkerClickRef.current?.(m.id);
         });
       }
-      return new Marker({ element: el, anchor: clickable && m.title ? 'left' : 'center', offset: clickable && m.title ? [-22, 0] : [0, 0] })
+      const tagged = clickable && labels && !!m.title;
+      return new Marker({ element: el, anchor: tagged ? 'left' : 'center', offset: tagged ? [-22, 0] : [0, 0] })
         .setLngLat([m.lng, m.lat])
         .addTo(map);
     });
@@ -137,14 +145,24 @@ export function TripMap({
     const pinKey = markers.map((m) => `${m.id}@${m.lat},${m.lng}`).join('|');
     if (fitMarkers && markers.length && fittedRef.current !== pinKey) {
       fittedRef.current = pinKey;
-      if (markers.length === 1) map.jumpTo({ center: [markers[0]!.lng, markers[0]!.lat], zoom: 9 });
-      else {
-        const b = new LngLatBounds();
-        for (const m of markers) b.extend([m.lng, m.lat]);
-        map.fitBounds(b, { padding: 50, maxZoom: 10, animate: false });
-      }
+      const fit = () => {
+        // The map may have been created before its box got its final size (e.g. inside a
+        // flex layout that just appeared); measure again before framing the pins.
+        map.resize();
+        if (markers.length === 1) map.jumpTo({ center: [markers[0]!.lng, markers[0]!.lat], zoom: 9 });
+        else {
+          const b = new LngLatBounds();
+          for (const m of markers) b.extend([m.lng, m.lat]);
+          map.fitBounds(b, { padding: { top: 60, bottom: 70, left: 40, right: 60 }, maxZoom: 10, animate: false });
+        }
+        // Without a loaded style (offline) the map doesn't redraw, so move the pins ourselves.
+        for (const mk of markersRef.current) mk.setLngLat(mk.getLngLat());
+      };
+      fit();
+      requestAnimationFrame(fit);
+      if (!map.loaded()) map.once('load', fit);
     }
-  }, [markers, fitMarkers]);
+  }, [markers, fitMarkers, labels]);
 
   return (
     <div className={`${className} relative overflow-hidden rounded-xl border border-line bg-surface-2`}>

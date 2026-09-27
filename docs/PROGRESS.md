@@ -17,7 +17,7 @@ This file is the hand-off note between work sessions. Update it at the end of ev
 
 Integration pass (coordinator): trip page saves only changed fields (fixed a bug where saving trip details could undo a campground chosen in the reservation section or an edit synced from the other phone); trip page section jump bar, sticky save bar, compact gear list; routes & pins linked from Tools and each trip; accessibility fixes (announced save status, reduced-motion, labelled links, theme toggle buttons); README setup steps for photos and RIDB.
 
-Tests: 226 app + 54 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
+Tests: 236 app + 54 API (plus the SQL Server integration tests, run in CI). Browser smoke test of every screen: no errors.
 
 **Not testable from the build sandbox (network blocked): verify on first real deploy**
 - National Weather Service API (api.weather.gov): response parsing and browser CORS. Weather is built from the documented format.
@@ -99,6 +99,10 @@ Coordinator reviewed every screen at 390px, then five Sonnet agents (separate wo
   - Boat ramps: GFP's layer on `gfpgis.sd.gov` is found by name in the Parks / Fisheries / Public_Lands folders at run time (address not confirmable from the sandbox); trips near the border query both states.
   - Fishing: LakeFinder is Minnesota-only. SD trips list the waters near the launch (from GFP ramps) and link to GFP Fishery Reports (PDF reports, no data API — linked, not parsed).
   - Not done for SD yet: SD park entrance license tracking (the permit card is MN-only), SD campground seeds, SD-specific checklist items.
+
+## Campground finder (2026-09-27)
+- The trip Book tab's campground dropdown is now a full-screen finder: search (name or park/forest), filters (Minnesota / South Dakota, state park / national forest / state forest / other, electric, boat launch), nearest-first list from the trip location (or home base) with distance and a "No map pin" flag, and a Map view (pins P/F/SF, ★ = reference point; tap → card with Choose / Details).
+- TripMap: `labels` (hide name tags on dense maps), `trailTools` (off in the picker), `accent` pin; fixed pins not being framed after a remount and stale pin positions when the style hasn't loaded.
 
 ## Open items / to verify
 

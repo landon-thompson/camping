@@ -5,6 +5,7 @@ import { Button, Card, inputClass } from '../../components/ui';
 import type { Campground, Reservation, ReservationStatus, Trip } from '../../model/schemas';
 import { campgroundTakesReservations, cancelDeadlineInfo, checkMaxNights, daysBetween, daysUntil, formatOpensAt, resolveBooking } from './booking';
 import { useCampgroundLookup } from '../places/useCampgroundLookup';
+import { CampgroundPicker } from './CampgroundPicker';
 import { usableLaunch } from '../fishing/lakeList';
 import { db } from '../../db/local';
 import { locationForCampground, parseConfirmation, tripUpdateFromReservation } from './confirmation';
@@ -41,6 +42,8 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
   const permit = useRecord('permit', PERMIT_ID);
   const [backFromBooking, setBackFromBooking] = useState(() => readBookingFlag(tripId));
   const [pasteOpen, setPasteOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const homeBase = useRecord('settings', 'settings').data?.homeBase ?? null;
   const formRef = useRef<HTMLDivElement>(null);
   const { status: lookupStatus, lookup } = useCampgroundLookup();
 
@@ -63,6 +66,19 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
   const resolved = campground && rule ? resolveBooking(now, tripData.startDate, rule, campground.data) : null;
   const nights = tripData.startDate && tripData.endDate ? daysBetween(tripData.startDate, tripData.endDate) : null;
   const booked = reservation?.data.status === 'booked';
+  const chooseCampground = (id: string | null) => {
+    const next = campgrounds.find((c) => c.id === id)?.data;
+    // The trip's map pin and weather follow the chosen campground.
+    const location = locationForCampground(tripData.location, campground?.data, next);
+    // A boat launch left over from the old campground (or an empty 0,0 one) would mislead the Lake tab.
+    const boatLaunch = tripData.boatLaunch && location && !usableLaunch(tripData.boatLaunch, location) ? null : tripData.boatLaunch;
+    void saveRecord('trip', tripId, { ...tripData, campgroundId: id, location, boatLaunch });
+    if (reservation && reservation.data.status !== 'booked') {
+      void saveRecord('reservation', reservation.id, { ...reservation.data, campgroundId: id });
+    }
+    // No pin yet: look it up in official data, then move the trip there.
+    if (id && next && !next.location) void findLocation(id, next);
+  };
   const findLocation = (cgId: string, cg: Campground) =>
     lookup(cgId, cg, async (found) => {
       // Only move the pin if the trip still uses this campground.
@@ -84,36 +100,32 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
   return (
     <Card title="Reservation">
       <div className="space-y-4">
-        <label className="block text-sm">
+        <div className="block text-sm">
           <span className="mb-1 block font-semibold text-ink-2">Campground</span>
-          <select
-            className={inputClass}
-            value={tripData.campgroundId ?? ''}
-            onChange={(e) => {
-              const id = e.target.value || null;
-              const next = campgrounds.find((c) => c.id === id)?.data;
-              // The trip's map pin and weather follow the chosen campground.
-              const location = locationForCampground(tripData.location, campground?.data, next);
-              // A boat launch left over from the old campground (or an empty 0,0 one) would mislead the Lake tab.
-              const boatLaunch = tripData.boatLaunch && location && !usableLaunch(tripData.boatLaunch, location) ? null : tripData.boatLaunch;
-              void saveRecord('trip', tripId, { ...tripData, campgroundId: id, location, boatLaunch });
-              if (reservation && reservation.data.status !== 'booked') {
-                void saveRecord('reservation', reservation.id, { ...reservation.data, campgroundId: id });
-              }
-              // No pin yet: look it up in official data, then move the trip there.
-              if (id && next && !next.location) void findLocation(id, next);
-            }}
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className={`${inputClass} flex items-center justify-between gap-2 text-left`}
+            aria-haspopup="dialog"
           >
-            <option value="">Choose a campground…</option>
-            {campgrounds
-              .slice()
-              .sort((a, b) => a.data.name.localeCompare(b.data.name))
-              .map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.data.name}
-                </option>
-              ))}
-          </select>
+            <span className={`min-w-0 truncate ${campground ? '' : 'text-ink-2'}`}>{campground?.data.name ?? 'Choose a campground…'}</span>
+            <span aria-hidden className="shrink-0 text-ink-2">
+              Search · Map ›
+            </span>
+          </button>
+          {pickerOpen && (
+            <CampgroundPicker
+              campgrounds={campgrounds}
+              selectedId={tripData.campgroundId}
+              near={tripData.location ?? (homeBase?.lat != null && homeBase.lng != null ? { lat: homeBase.lat, lng: homeBase.lng } : null)}
+              nearLabel={tripData.location ? 'this trip' : `home (${homeBase?.name || 'home base'})`}
+              onClose={() => setPickerOpen(false)}
+              onPick={(id) => {
+                setPickerOpen(false);
+                chooseCampground(id);
+              }}
+            />
+          )}
           {lookupStatus.state === 'busy' && (
             <span role="status" className="mt-1 block text-sm text-ink-2">
               Looking up the campground’s location in official data…
@@ -137,7 +149,7 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
               , or tap the map on the Plan tab.
             </span>
           )}
-        </label>
+        </div>
 
         {backFromBooking && !booked && (
           <div role="status" className="rounded-xl border border-brand bg-surface-2 p-3">
