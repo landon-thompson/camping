@@ -3,7 +3,7 @@ import { saveRecord, useRecord } from '../../db/records';
 import { Button } from '../../components/ui';
 import type { FishCatch } from '../../model/schemas';
 import { viaAppServer } from '../reservations/stateParks';
-import { catchShares, fetchLakeSurvey, groupByGear, isGameFish, lakeFinderPage, rate, speciesName, type Rating } from './lakeSurvey';
+import { catchShares, fetchLakeSurveyOrWholeLake, groupByGear, isGameFish, lakeFinderPage, rate, speciesName, type Rating } from './lakeSurvey';
 
 // Distinct hues that read on both the day and night themes.
 const PALETTE = ['#2f7d4f', '#d08a2e', '#3f6fb5', '#b84a3a', '#7a5bb0', '#2a9a9a', '#9a8f3a'];
@@ -30,7 +30,7 @@ export function LakeFishing({ dow, name }: { dow: string; name: string }) {
     setBusy(true);
     setError(null);
     try {
-      const s = await fetchLakeSurvey(dow, viaAppServer);
+      const s = await fetchLakeSurveyOrWholeLake(dow, viaAppServer);
       await saveRecord('lake_survey', id, s);
       setSurveyIdx(0);
     } catch (e) {
@@ -51,18 +51,21 @@ export function LakeFishing({ dow, name }: { dow: string; name: string }) {
   const withCatch = survey?.surveys.filter((s) => s.catches.length) ?? [];
   const current = withCatch[Math.min(surveyIdx, withCatch.length - 1)];
   const lakeName = survey?.lakeName ?? name;
+  const wholeLake = survey && survey.dow !== dow;
+  const fmtDow = (d: string) => d.replace(/^(\d{2})(\d{4})(\d{2})$/, '$1-$2-$3');
 
   return (
     <article className="space-y-3 rounded-xl border border-line p-3" aria-label={`Fishing on ${lakeName}`}>
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-lg font-bold">{lakeName}</h3>
+          <h3 className="text-lg font-bold">{wholeLake ? name : lakeName}</h3>
           <p className="text-sm text-ink-2">
-            DNR lake {dow.replace(/^(\d{2})(\d{4})(\d{2})$/, '$1-$2-$3')}
+            DNR lake {fmtDow(dow)}
+            {wholeLake && ` · no survey of its own, showing the whole lake: ${lakeName} (${fmtDow(survey.dow)})`}
             {current && ` · surveyed ${fmtDate(current.date)}${current.type ? ` (${current.type})` : ''}`}
           </p>
         </div>
-        <a href={lakeFinderPage(dow)} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-semibold text-brand underline">
+        <a href={lakeFinderPage(survey?.dow ?? dow)} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-semibold text-brand underline">
           LakeFinder ↗
         </a>
       </header>
@@ -70,7 +73,7 @@ export function LakeFishing({ dow, name }: { dow: string; name: string }) {
       {busy && <p role="status" className="text-sm text-ink-2">Loading the DNR fish survey…</p>}
       {error && (
         <p role="alert" className="rounded-lg bg-warn-bg p-2 text-sm text-warn">
-          Couldn’t load the survey: {error}. Open LakeFinder for this lake, or try again.
+          Couldn’t load the survey: {error.replace(/\.+$/, '')}. Open LakeFinder for this lake, or try again.
         </p>
       )}
       {!busy && survey && !current && <p className="text-sm text-ink-2">The DNR has no net survey results for this lake.</p>}

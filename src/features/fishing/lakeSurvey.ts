@@ -268,6 +268,21 @@ export async function fetchLakeSurvey(dow: string, fetchFn: typeof fetch): Promi
   return parseLakeSurvey(parseJsonLoose(text), dow);
 }
 
+/**
+ * A lake's surveys; for a sub-basin (e.g. East Vermilion, 69-0378-01) with no
+ * survey of its own, the whole lake's (69-0378-00). `dow` on the result is the
+ * lake the survey is actually for.
+ */
+export async function fetchLakeSurveyOrWholeLake(dow: string, fetchFn: typeof fetch): Promise<LakeSurvey> {
+  try {
+    const own = await fetchLakeSurvey(dow, fetchFn);
+    if (own.surveys.some((s) => s.catches.length) || dow.endsWith('00')) return own;
+  } catch (e) {
+    if (dow.endsWith('00')) throw e;
+  }
+  return fetchLakeSurvey(`${dow.slice(0, 6)}00`, fetchFn);
+}
+
 /** Lakes within `radiusM` of a point, from LakeFinder. */
 export async function fetchLakesNear(lat: number, lng: number, fetchFn: typeof fetch, radiusM = 3000): Promise<NearbyLake[]> {
   const url = lakesNearUrl(lat, lng, radiusM);

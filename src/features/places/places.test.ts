@@ -92,12 +92,12 @@ describe('boat launches', () => {
 
   it('reports each source it tried', async () => {
     const fake = (async (url: string) => {
-      if (url.includes('FeatureServer')) return new Response('{"error":"nope"}', { status: 502 });
+      if (url.includes('struc_water_access_sites/FeatureServer')) return new Response('{"error":"nope"}', { status: 502 });
       if (url.endsWith('/layers?f=json')) return Response.json({ layers: [{ id: 2, name: 'Water Access Sites', geometryType: 'esriGeometryPoint' }] });
       return Response.json({ features });
     }) as typeof fetch;
     const r = await findBoatLaunches(at, fake);
     expect(r.launches).toHaveLength(2);
-    expect(r.report).toEqual(['DNR water accesses (Commons): HTTP 502 — nope', 'DNR water accesses (Commons map): 2 within 10 km']);
+    expect(r.report).toEqual(['DNR public water accesses: HTTP 502 — nope', 'DNR public water accesses (map service): 2 within 10 km']);
   });
 });

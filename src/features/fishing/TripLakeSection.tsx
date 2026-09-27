@@ -5,7 +5,7 @@ import { Button, Card, inputClass } from '../../components/ui';
 import type { BoatLaunchSite, NearbyLake, Trip, TripNearby } from '../../model/schemas';
 import { viaAppServer } from '../reservations/stateParks';
 import { distanceKm, errText } from '../places/arcgis';
-import { findBoatLaunches, LAUNCH_SEARCH_KM } from '../places/waterAccess';
+import { findBoatLaunches, LAUNCH_SEARCH_KM, PRIMARY_LAUNCH_SOURCE } from '../places/waterAccess';
 import { fetchLakesNear, parseDowInput } from './lakeSurvey';
 import { LakeFishing } from './LakeFishing';
 
@@ -45,7 +45,12 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
   const anchor = t?.location ?? cg?.location ?? null;
   const anchorKey = anchor ? `${anchor.lat.toFixed(4)},${anchor.lng.toFixed(4)}` : null;
   const data = nearby.data;
-  const stale = !!anchor && (!data || distanceKm(data.anchor, anchor) > REFRESH_WHEN_MOVED_KM);
+  // Refetch when the trip moved, or when an earlier try came back empty from an older source.
+  const stale =
+    !!anchor &&
+    (!data ||
+      distanceKm(data.anchor, anchor) > REFRESH_WHEN_MOVED_KM ||
+      (!data.launches.length && !data.report.some((r) => r.startsWith(`${PRIMARY_LAUNCH_SOURCE}:`))));
 
   async function refresh() {
     if (!anchor) return;
@@ -128,7 +133,16 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
             Public water accesses within {miles(LAUNCH_SEARCH_KM)} of {t.location?.label || cg?.name || 'the trip'}, from the DNR’s official list.
           </p>
           {busy && !data && <p role="status" className="text-sm text-ink-2">Looking for boat launches and lakes…</p>}
-          {data && !launches.length && <p className="text-sm text-ink-2">No public launches found nearby.</p>}
+          {data && !launches.length && !busy && (
+            <div className="text-sm text-ink-2">
+              <p>No public launches found nearby. What each source said:</p>
+              <ul className="list-disc pl-5">
+                {data.report.map((r) => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <ul className="space-y-2">
             {shown.map((l) => {
               const isTrip = t.boatLaunch && Math.abs(t.boatLaunch.lat - l.lat) < 1e-5 && Math.abs(t.boatLaunch.lng - l.lng) < 1e-5;
@@ -165,7 +179,7 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
               {showAll ? 'Show fewer' : `Show all ${launches.length}`}
             </Button>
           )}
-          {data && (
+          {data && launches.length > 0 && (
             <details className="text-sm text-ink-2">
               <summary className="min-h-11 cursor-pointer content-center">Data sources · updated {new Date(data.fetchedAt).toLocaleDateString()}</summary>
               <ul className="list-disc pl-5">

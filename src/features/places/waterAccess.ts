@@ -3,14 +3,17 @@ import { bboxAround, distanceKm, errText, featurePoint, listLayers, pick, queryL
 
 /**
  * DNR "Public Water Access Sites in Minnesota" (MN Geospatial Commons dataset
- * loc-water-access-sites): DNR launches plus free public launches run by
- * others. The service address follows the Commons' naming; unverified from the
- * build sandbox, so both service types are tried and failures are reported.
+ * struc-water-access-sites): DNR launches plus free public launches run by
+ * others. Layer "Water Access Sites", points, display field access_name.
+ * The older loc_ name is kept as a fallback.
  */
 export const WATER_ACCESS_SERVICES: [string, string][] = [
-  ['https://enterprise.gisdata.mn.gov/aghost/rest/services/us_mn_state_dnr/loc_water_access_sites/FeatureServer', 'DNR water accesses (Commons)'],
-  ['https://enterprise.gisdata.mn.gov/aghost/rest/services/us_mn_state_dnr/loc_water_access_sites/MapServer', 'DNR water accesses (Commons map)'],
+  ['https://enterprise.gisdata.mn.gov/aghost/rest/services/us_mn_state_dnr/struc_water_access_sites/FeatureServer', 'DNR public water accesses'],
+  ['https://enterprise.gisdata.mn.gov/aghost/rest/services/us_mn_state_dnr/struc_water_access_sites/MapServer', 'DNR public water accesses (map service)'],
+  ['https://enterprise.gisdata.mn.gov/aghost/rest/services/us_mn_state_dnr/loc_water_access_sites/FeatureServer', 'DNR water accesses (older address)'],
 ];
+/** Report lines start with this when the current primary source was used. */
+export const PRIMARY_LAUNCH_SOURCE = WATER_ACCESS_SERVICES[0]![1];
 
 export const LAUNCH_SEARCH_KM = 10;
 

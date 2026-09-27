@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { catchShares, groupByGear, latestWithCatch, parseDowInput, parseJsonLoose, parseLakeSurvey, parseNearbyLakes, rate } from './lakeSurvey';
+import { catchShares, fetchLakeSurveyOrWholeLake, groupByGear, latestWithCatch, parseDowInput, parseJsonLoose, parseLakeSurvey, parseNearbyLakes, rate } from './lakeSurvey';
 
 const sample = {
   result: {
@@ -97,5 +97,20 @@ describe('trip lake choices', async () => {
     expect(lakes.map((l) => l.dow)).toEqual(['69028500', '69025400']);
     expect(defaultLakes(lakes, [launch({}), launch({ dow: '69025400' })])).toEqual(['69025400']);
     expect(defaultLakes(lakes, [])).toEqual(['69028500']);
+  });
+});
+
+describe('sub-basins', () => {
+  it('falls back to the whole lake when a bay has no survey of its own', async () => {
+    const urls: string[] = [];
+    const fake = (async (url: string) => {
+      urls.push(url);
+      if (url.endsWith('id=69037801')) return new Response(JSON.stringify({ status: 'ERROR', message: 'The requested lake survey data is not available.' }));
+      return new Response(JSON.stringify(sample));
+    }) as typeof fetch;
+    const s = await fetchLakeSurveyOrWholeLake('69037801', fake);
+    expect(s.dow).toBe('69037800');
+    expect(urls.map((u) => u.slice(-8))).toEqual(['69037801', '69037800']);
+    await expect(fetchLakeSurveyOrWholeLake('69037800', (async () => new Response('{"message":"none"}')) as typeof fetch)).rejects.toThrow(/none/);
   });
 });
