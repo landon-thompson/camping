@@ -14,6 +14,9 @@ describe('MVUM vehicle colors', () => {
     expect(classifyVehicles({ SEASONAL: 'yearlong' }).seasonal).toBe(false);
     expect(classifyVehicles({ SEASONAL: 'seasonal' }).seasonal).toBe(true);
     expect(classifyVehicles({ HIGHCLEARANCEVEHICLE_DATESOPEN: '05/15-11/30' }).seasonal).toBe(true);
+    // Year-round roads list 01/01-12/31: not seasonal. The SEASONAL field wins when present.
+    expect(classifyVehicles({ PASSENGERVEHICLE: 'open', PASSENGERVEHICLE_DATESOPEN: '01/01-12/31' }).seasonal).toBe(false);
+    expect(classifyVehicles({ SEASONAL: 'yearlong', ATV_DATESOPEN: '05/15-11/30' }).seasonal).toBe(false);
   });
 
   it('turns Esri polylines into GeoJSON and queries roads + trails for the box', async () => {

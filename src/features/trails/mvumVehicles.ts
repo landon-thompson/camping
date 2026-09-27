@@ -24,6 +24,11 @@ function isOpen(v: unknown): boolean {
   return true; // "open", "yes", or a date range such as "05/15-11/30"
 }
 
+/** "01/01-12/31" (and similar) means open all year. */
+export function isAllYear(v: string): boolean {
+  return /^\s*0?1\/0?1\s*-\s*12\/31\s*$/.test(v);
+}
+
 function anyOpen(props: Record<string, unknown>, pattern: RegExp): boolean {
   return Object.entries(props).some(([k, v]) => pattern.test(k) && isOpen(v));
 }
@@ -35,8 +40,10 @@ export function classifyVehicles(props: Record<string, unknown>): { cls: Vehicle
   else if (anyOpen(props, /\batv|motorcycle|ohv|offhighway|off_highway/i)) cls = 'ohv';
   const seasonalField = Object.entries(props).find(([k]) => /^seasonal$/i.test(k))?.[1];
   const seasonal =
-    (typeof seasonalField === 'string' && /seasonal/i.test(seasonalField)) ||
-    Object.entries(props).some(([k, v]) => /datesopen/i.test(k) && typeof v === 'string' && /\d/.test(v));
+    typeof seasonalField === 'string' && seasonalField.trim()
+      ? /seasonal/i.test(seasonalField)
+      : // No SEASONAL field: seasonal only if some open-dates range isn't the whole year.
+        Object.entries(props).some(([k, v]) => /datesopen/i.test(k) && typeof v === 'string' && /\d/.test(v) && !isAllYear(v));
   return { cls, seasonal };
 }
 

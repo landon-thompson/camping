@@ -331,7 +331,7 @@ export function attachTrailLayers(map: MapLibreMap, ctx: MapContext): () => void
   }
   const expand = new ExpandControl();
   const info = new MvumInfoControl(
-    () => new maplibregl.Popup({ maxWidth: '300px', closeButton: true }),
+    () => new maplibregl.Marker({ color: '#b4541a', scale: 0.8 }),
     () => control.turnOn(),
   );
   try {
