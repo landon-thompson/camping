@@ -4,16 +4,8 @@ import { Card, inputClass, PageTitle } from '../../components/ui';
 import type { Agency, BookingSystem, Campground } from '../../model/schemas';
 import type { Row } from '../../db/records';
 import { AGENCY_LABEL, useCampgrounds } from './data';
-import { NavButton } from './shared';
+import { NavButton, SYSTEM_LABEL } from './shared';
 import { StateParkImport } from './StateParkImport';
-
-const SYSTEM_LABEL: Record<BookingSystem, string> = {
-  reservemn: 'ReserveMN',
-  'recreation-gov': 'Recreation.gov',
-  'first-come': 'First-come',
-  dispersed: 'Dispersed',
-  other: 'Other',
-};
 
 /** /book/campgrounds — filterable directory, linking to each campground's detail page. */
 export function CampgroundsPage() {
@@ -23,6 +15,7 @@ export function CampgroundsPage() {
   const [system, setSystem] = useState<BookingSystem | ''>('');
   const [electricOnly, setElectricOnly] = useState(false);
   const [boatOnly, setBoatOnly] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -37,12 +30,7 @@ export function CampgroundsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <PageTitle sub={`${rows.length} campground${rows.length === 1 ? '' : 's'} in the directory`}>Campgrounds</PageTitle>
-        <NavButton to="/book/campgrounds/new">Add</NavButton>
-      </div>
-
-      <StateParkImport />
+      <PageTitle sub={`${rows.length} campground${rows.length === 1 ? '' : 's'} in the directory`}>Campgrounds</PageTitle>
 
       <Card>
         <div className="space-y-3">
@@ -91,6 +79,24 @@ export function CampgroundsPage() {
           <CampgroundRow key={r.id} row={r} />
         ))}
       </div>
+
+      <Card>
+        <button
+          type="button"
+          className="flex min-h-11 w-full items-center justify-between gap-3 text-left font-semibold"
+          aria-expanded={addOpen}
+          onClick={() => setAddOpen((v) => !v)}
+        >
+          <span>Add campgrounds</span>
+          <span className="text-sm font-normal text-ink-2">{addOpen ? 'Hide' : 'Show'}</span>
+        </button>
+        {addOpen && (
+          <div className="mt-3 space-y-3">
+            <NavButton to="/book/campgrounds/new">Add a campground</NavButton>
+            <StateParkImport />
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

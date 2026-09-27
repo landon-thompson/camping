@@ -1,22 +1,13 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, PageTitle } from '../../components/ui';
 import { useRecord, useRecords, type Row } from '../../db/records';
 import type { BookingRule, Campground, Permit, Reservation, Trip } from '../../model/schemas';
-import { daysUntil, formatOpensAt, resolveBooking, type ResolvedBooking } from './booking';
+import { bookingRowStatus, resolveBooking, type BookingRowStatus, type ResolvedBooking } from './booking';
 import { reservationForTrip, useBookingRules, useCampgrounds, useReservations } from './data';
-import { BookingStateBadge, NavButton } from './shared';
+import { NavButton } from './shared';
 
 const PERMIT_ID = 'permit:mn-state-park-annual-2027';
-
-/** Sort weight — lower sorts first. "Action needed" (book now, or a countdown ticking) floats to the top. */
-function urgency(resolved: ResolvedBooking | null, reservationStatus: string | undefined): number {
-  if (!resolved) return 0; // no campground chosen yet
-  if (resolved.state === 'open' || resolved.state === 'opens-today') return reservationStatus === 'booked' ? 4 : 1;
-  if (reservationStatus === 'waitlisted') return 1;
-  if (resolved.state === 'not-open') return 2;
-  if (resolved.state === 'no-booking-needed') return reservationStatus ? 4 : 3;
-  return 5; // past
-}
 
 interface TripRowData {
   trip: Row<Trip>;
@@ -24,9 +15,26 @@ interface TripRowData {
   rule: BookingRule | undefined;
   resolved: ResolvedBooking | null;
   reservation: Row<Reservation> | undefined;
+  status: BookingRowStatus;
 }
 
-/** /book — every trip's booking status, action-needed first. */
+const TONE_CLASS: Record<BookingRowStatus['tone'], string> = {
+  attention: 'text-warn',
+  ok: 'text-ok',
+  info: 'text-info',
+  neutral: 'text-ink-2',
+};
+
+/** Sets the trip page's remembered tab to Book before navigating there, so the row opens straight to it. */
+function goToBookTab() {
+  try {
+    sessionStorage.setItem('tripTab', 't-reservation');
+  } catch {
+    /* private mode: the trip page just opens on its usual first tab */
+  }
+}
+
+/** /book — every trip's booking status, sorted by what needs attention first. */
 export function BookPage() {
   const trips = useRecords('trip');
   const { rows: campgrounds } = useCampgrounds();
@@ -41,13 +49,14 @@ export function BookPage() {
       const rule = campground ? byAgency[campground.data.agency]?.data : undefined;
       const resolved = campground && rule ? resolveBooking(now, t.data.startDate, rule, campground.data) : null;
       const reservation = reservationForTrip(reservations, t.id);
-      return { trip: t, campground, rule, resolved, reservation };
+      const status = bookingRowStatus(now, !!campground, resolved, rule?.timeZone, reservation?.data);
+      return { trip: t, campground, rule, resolved, reservation, status };
     })
-    .sort((a, b) => urgency(a.resolved, a.reservation?.data.status) - urgency(b.resolved, b.reservation?.data.status));
+    .sort((a, b) => a.status.urgency - b.status.urgency);
 
   return (
     <div className="space-y-4">
-      <PageTitle sub="Booking windows, deep links and reservation tracking for every trip.">Book</PageTitle>
+      <PageTitle sub="Where each trip stands with booking, most urgent first.">Book</PageTitle>
 
       <PermitCard permit={permit.data} />
 
@@ -73,39 +82,33 @@ export function BookPage() {
 }
 
 function PermitCard({ permit }: { permit: Permit | undefined }) {
+  const [open, setOpen] = useState(false);
   if (!permit) return null;
   return (
-    <Card title="MN state park vehicle permit">
-      <p className={permit.have ? 'text-ok' : 'text-warn'}>
-        {permit.have ? `Have it${permit.expires ? ` — expires ${permit.expires}` : ''}.` : 'Not marked as purchased yet.'}
-      </p>
-      <p className="mt-1 text-sm text-ink-2">{permit.notes}</p>
+    <Card>
+      <button
+        type="button"
+        className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className={`font-semibold ${permit.have ? 'text-ok' : 'text-warn'}`}>
+          State park vehicle permit: {permit.have ? `have it${permit.expires ? ` — expires ${permit.expires}` : ''}` : 'not purchased yet'}
+        </span>
+        <span className="text-sm text-ink-2">{open ? 'Hide' : 'Details'}</span>
+      </button>
+      {open && <p className="mt-2 text-sm text-ink-2">{permit.notes}</p>}
     </Card>
   );
 }
 
-function TripRow({ trip, campground, rule, resolved, reservation }: TripRowData) {
-  const now = new Date();
+function TripRow({ trip, campground, status }: TripRowData) {
   return (
-    <Link to={`/trips/${encodeURIComponent(trip.id)}`} className="block">
+    <Link to={`/trips/${encodeURIComponent(trip.id)}`} onClick={goToBookTab} className="block">
       <Card>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-semibold">{trip.data.name}</p>
-            <p className="text-sm text-ink-2">
-              {campground ? campground.data.name : 'No campground chosen yet'}
-              {trip.data.startDate && ` · arriving ${trip.data.startDate}`}
-            </p>
-            {resolved?.state === 'not-open' && resolved.opensAt && rule && (
-              <p className="mt-1 text-sm font-semibold text-info">
-                Booking opens in {daysUntil(now, resolved.opensAt, rule.timeZone)} day{daysUntil(now, resolved.opensAt, rule.timeZone) === 1 ? '' : 's'} —{' '}
-                {formatOpensAt(resolved.opensAt, rule.timeZone)}
-              </p>
-            )}
-            {reservation && <p className="mt-1 text-sm text-ink-2">Reservation: {reservation.data.status}</p>}
-          </div>
-          {resolved && <BookingStateBadge state={resolved.state} />}
-        </div>
+        <p className="font-semibold">{trip.data.name}</p>
+        {campground && <p className="text-sm text-ink-2">{campground.data.name}</p>}
+        <p className={`mt-1 text-sm font-semibold ${TONE_CLASS[status.tone]}`}>{status.label}</p>
       </Card>
     </Link>
   );

@@ -1,4 +1,4 @@
-import type { BookingRule, Campground, SpecNumber } from '../../model/schemas';
+import type { BookingRule, Campground, Reservation, SpecNumber } from '../../model/schemas';
 
 /**
  * Pure booking-window logic (no I/O, no Date.now() calls) — see booking.test.ts.
@@ -219,4 +219,47 @@ export function cancelDeadlineInfo(today: string, cancelDeadline: string | null,
   if (!cancelDeadline) return { daysLeft: null, overdue: false, warn: false };
   const daysLeft = daysBetween(today, cancelDeadline);
   return { daysLeft, overdue: daysLeft < 0, warn: daysLeft >= 0 && daysLeft <= warnWithinDays };
+}
+
+// ---------------------------------------------------------------------------
+// Book-overview row (one line per trip, sorted by what needs attention)
+// ---------------------------------------------------------------------------
+
+export type BookingTone = 'attention' | 'ok' | 'info' | 'neutral';
+
+export interface BookingRowStatus {
+  /** e.g. "Booking open now", "Opens in 12 days (Tue Jan 5, 8:00 AM CST)", "Booked (ABC123, site 14)", "No campground yet". */
+  label: string;
+  /** Lower sorts first — the trip that most needs attention floats to the top. */
+  urgency: number;
+  tone: BookingTone;
+}
+
+/**
+ * The one-line status + sort priority for a trip's row on the Book overview.
+ * `resolved`/`rule` are undefined/null when there's no campground yet or its
+ * dates haven't resolved a booking window; `reservation` is the trip's one
+ * `reservation:*` record, if any.
+ */
+export function bookingRowStatus(
+  now: Date,
+  hasCampground: boolean,
+  resolved: ResolvedBooking | null,
+  timeZone: string | undefined,
+  reservation: Pick<Reservation, 'status' | 'confirmation' | 'site'> | undefined,
+): BookingRowStatus {
+  if (reservation?.status === 'booked') {
+    const parts = [reservation.confirmation, reservation.site ? `site ${reservation.site}` : ''].filter(Boolean);
+    return { label: parts.length ? `Booked (${parts.join(', ')})` : 'Booked', urgency: 4, tone: 'ok' };
+  }
+  if (!hasCampground) return { label: 'No campground yet', urgency: 0, tone: 'attention' };
+  if (reservation?.status === 'waitlisted') return { label: 'Waitlisted', urgency: 1, tone: 'attention' };
+  if (!resolved) return { label: 'Set trip dates to see the booking window', urgency: 2, tone: 'neutral' };
+  if (resolved.state === 'open' || resolved.state === 'opens-today') return { label: 'Booking open now', urgency: 1, tone: 'ok' };
+  if (resolved.state === 'not-open' && resolved.opensAt && timeZone) {
+    const days = daysUntil(now, resolved.opensAt, timeZone);
+    return { label: `Opens in ${days} day${days === 1 ? '' : 's'} (${formatOpensAt(resolved.opensAt, timeZone)})`, urgency: 2, tone: 'info' };
+  }
+  if (resolved.state === 'no-booking-needed') return { label: 'No booking needed', urgency: 3, tone: 'neutral' };
+  return { label: 'Arrival date has passed', urgency: 5, tone: 'neutral' };
 }

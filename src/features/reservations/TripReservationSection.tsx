@@ -214,22 +214,26 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
           </p>
         )}
 
-        <div ref={formRef} className="scroll-mt-32">
-          <ReservationForm
-            tripId={tripId}
-            trip={tripData}
-            existing={reservation}
-            defaultArrival={tripData.startDate}
-            defaultNights={nights}
-            campgroundId={tripData.campgroundId}
-            pasteOpen={pasteOpen}
-            setPasteOpen={setPasteOpen}
-            onBooked={() => {
-              setBookingFlag(tripId, false);
-              setBackFromBooking(false);
-            }}
-          />
-        </div>
+        {campground || reservation ? (
+          <div ref={formRef} className="scroll-mt-32">
+            <ReservationForm
+              tripId={tripId}
+              trip={tripData}
+              existing={reservation}
+              defaultArrival={tripData.startDate}
+              defaultNights={nights}
+              campgroundId={tripData.campgroundId}
+              pasteOpen={pasteOpen}
+              setPasteOpen={setPasteOpen}
+              onBooked={() => {
+                setBookingFlag(tripId, false);
+                setBackFromBooking(false);
+              }}
+            />
+          </div>
+        ) : (
+          <p className="border-t border-line pt-4 text-sm text-ink-2">Choose a campground above to add reservation details.</p>
+        )}
       </div>
     </Card>
   );

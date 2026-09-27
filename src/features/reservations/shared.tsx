@@ -2,8 +2,16 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { saveRecord } from '../../db/records';
 import { Button, inputClass, StatusChip } from '../../components/ui';
-import type { RecordData, RecordType, SpecNumber, SpecStatus } from '../../model/schemas';
+import type { BookingSystem, RecordData, RecordType, SpecNumber, SpecStatus } from '../../model/schemas';
 import type { BookingState } from './booking';
+
+export const SYSTEM_LABEL: Record<BookingSystem, string> = {
+  reservemn: 'ReserveMN',
+  'recreation-gov': 'Recreation.gov',
+  'first-come': 'First-come',
+  dispersed: 'Dispersed',
+  other: 'Other',
+};
 
 /** An internal-navigation counterpart to ui.tsx's `LinkButton` (which is for external/absolute hrefs). */
 export function NavButton({ to, children, variant = 'primary' }: { to: string; children: ReactNode; variant?: 'primary' | 'secondary' }) {

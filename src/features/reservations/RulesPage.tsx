@@ -1,17 +1,16 @@
-import { Card, inputClass, PageTitle, StatusChip } from '../../components/ui';
+import { useState } from 'react';
+import { Button, Card, inputClass, PageTitle, StatusChip } from '../../components/ui';
 import type { BookingRule } from '../../model/schemas';
 import type { Row } from '../../db/records';
 import { useBookingRules } from './data';
-import { SaveRow, SpecEditor, useDraft } from './shared';
+import { SaveRow, SpecEditor, SYSTEM_LABEL, useDraft } from './shared';
 
-/** /book/rules — edit the four agency-level booking rules (all values, sources, status). */
+/** /book/rules — the four agency-level booking rules: a compact summary each, "Edit" expands the full form. */
 export function RulesPage() {
   const { loading, rows } = useBookingRules();
   return (
     <div className="space-y-4">
-      <PageTitle sub="Agency-level facts, kept as editable data — never hard-coded — so they can be corrected the moment the official page changes.">
-        Booking rules
-      </PageTitle>
+      <PageTitle sub="Agency facts, kept as editable data so they can be corrected the moment the official page changes.">Booking rules</PageTitle>
       {loading && <p className="text-ink-2">Loading…</p>}
       {rows.map((r) => (
         <RuleCard key={r.id} row={r} />
@@ -21,7 +20,12 @@ export function RulesPage() {
 }
 
 function RuleCard({ row }: { row: Row<BookingRule> }) {
+  const [editing, setEditing] = useState(false);
   const { draft, setDraft, dirty, saved, error, onSubmit } = useDraft('booking_rule', row.id, row.data);
+  const months = draft.windowMonths?.value ?? null;
+  const windowSpec = months !== null ? draft.windowMonths! : draft.windowDays;
+  const windowText = months !== null ? `${months} months` : draft.windowDays.value !== null ? `${draft.windowDays.value} days` : 'None (same-day only)';
+
   return (
     <Card
       title={
@@ -30,7 +34,35 @@ function RuleCard({ row }: { row: Row<BookingRule> }) {
         </span>
       }
     >
-      <form onSubmit={onSubmit} className="space-y-3">
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+        <div>
+          <dt className="text-ink-2">Booking system</dt>
+          <dd className="font-semibold">{SYSTEM_LABEL[draft.bookingSystem]}</dd>
+        </div>
+        <div>
+          <dt className="text-ink-2">Advance window</dt>
+          <dd className="font-semibold">
+            {windowText} <StatusChip status={windowSpec.status} />
+          </dd>
+        </div>
+        <div>
+          <dt className="text-ink-2">Opens at</dt>
+          <dd className="font-semibold">{draft.openTime ? `${draft.openTime} ${draft.timeZone}` : 'Same-day / no fixed time'}</dd>
+        </div>
+        <div>
+          <dt className="text-ink-2">Max nights</dt>
+          <dd className="font-semibold">
+            {draft.maxNights.value ?? '—'} <StatusChip status={draft.maxNights.status} />
+          </dd>
+        </div>
+      </dl>
+
+      <Button type="button" variant="secondary" className="mt-3" aria-expanded={editing} onClick={() => setEditing((v) => !v)}>
+        {editing ? 'Close' : 'Edit'}
+      </Button>
+
+      {editing && (
+        <form onSubmit={onSubmit} className="mt-4 space-y-3 border-t border-line pt-4">
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-sm">
             <span className="mb-1 block font-semibold text-ink-2">Booking system</span>
@@ -123,7 +155,8 @@ function RuleCard({ row }: { row: Row<BookingRule> }) {
         </label>
 
         <SaveRow dirty={dirty} saved={saved} error={error} />
-      </form>
+        </form>
+      )}
     </Card>
   );
 }

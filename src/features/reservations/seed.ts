@@ -34,7 +34,7 @@ const bookingRules: SeedRecord[] = [
     windowDays: {
       value: 120,
       status: 'verify',
-      source: 'WebSearch of dnr.state.mn.us / mndnr.gov (site blocked from this sandbox; see notes)',
+      source: 'From research on dnr.state.mn.us / mndnr.gov — not yet checked against the official page (see notes)',
       note: 'DNR FAQ: reservations open the same day as arrival and up to 120 days before.',
     },
     windowMonths: null,
@@ -44,7 +44,7 @@ const bookingRules: SeedRecord[] = [
     maxNights: {
       value: 14,
       status: 'verify',
-      source: 'WebSearch of dnr.state.mn.us (site blocked from this sandbox)',
+      source: 'From research on dnr.state.mn.us — not yet checked against the official page',
     },
     officialUrl: MN_DNR_RESERVATIONS,
     phone: '866-857-2757',
@@ -55,7 +55,7 @@ const bookingRules: SeedRecord[] = [
       'The $8 online / $10 phone reservation fee is non-refundable; same-day reservations have no reservation fee.',
       'The DNR publishes an official "notify me" cancellation alert for sold-out dates — set it on the reservation page rather than refreshing manually.',
     ],
-    source: `${MN_DNR_RESERVATIONS} and dnr.state.mn.us/reserve-faq (WebSearch only — both domains are blocked from this sandbox's network egress; verify directly before relying on the exact window/fee figures)`,
+    source: `${MN_DNR_RESERVATIONS} and dnr.state.mn.us/reserve-faq — from research, not read directly; verify the exact window/fee figures there.`,
     status: 'verify',
   }),
 
@@ -82,7 +82,7 @@ const bookingRules: SeedRecord[] = [
       'Group campsites ARE reservable, up to 120 days in advance at mndnr.gov/reservations (unlike individual sites).',
     ],
     source:
-      'WebSearch of dnr.state.mn.us/state_forests/fees_reservations.html and the DNR’s Apr 13, 2026 news release on the "same-day pay then stay" model (site blocked from this sandbox — verify directly)',
+      'From research on dnr.state.mn.us/state_forests/fees_reservations.html and the DNR’s Apr 13, 2026 news release on the "same-day pay then stay" model — not yet checked against the official page; verify there.',
     status: 'verify',
   }),
 
@@ -95,7 +95,7 @@ const bookingRules: SeedRecord[] = [
     windowMonths: {
       value: 6,
       status: 'verify',
-      source: 'WebSearch of recreation.gov / fs.usda.gov (site blocked from this sandbox; see notes)',
+      source: 'From research on recreation.gov / fs.usda.gov — not yet checked against the official page (see notes)',
       note: 'Typical Recreation.gov rolling window is 6 months out. Individual Superior/Chippewa NF campgrounds can differ — override per campground.',
     },
     openTime: '10:00',
@@ -110,7 +110,7 @@ const bookingRules: SeedRecord[] = [
       'Rustic/no-fee USFS campgrounds (fewer than ~10 sites) are typically first-come, first-served with no Recreation.gov listing at all — see each campground record’s own bookingSystem.',
     ],
     source:
-      'WebSearch of recreation.gov and fs.usda.gov/r09/superior and fs.usda.gov/r09/chippewa pages (all blocked from this sandbox’s network egress — verify directly before relying on the exact window)',
+      'From research on recreation.gov and the fs.usda.gov Superior/Chippewa National Forest pages — not yet checked against the official pages; verify the exact window there.',
     status: 'verify',
   }),
 
@@ -127,7 +127,7 @@ const bookingRules: SeedRecord[] = [
     maxNights: {
       value: 14,
       status: 'verify',
-      source: 'WebSearch of fs.usda.gov (site blocked from this sandbox)',
+      source: 'From research on fs.usda.gov — not yet checked against the official page',
       note: 'Standard national-forest dispersed-camping stay limit (14 days in a 30-day period, then must move 5+ miles).',
     },
     officialUrl: 'https://www.fs.usda.gov/superior',
@@ -138,7 +138,7 @@ const bookingRules: SeedRecord[] = [
       'Dispersed camping is not allowed inside the BWCAW (permit-only entry point system there, out of scope for this trip).',
       '14-day stay limit per site/area in a 30-day period is the general Superior National Forest rule; confirm for the specific ranger district.',
     ],
-    source: 'WebSearch of fs.usda.gov/superior and general USFS dispersed-camping guidance (site blocked from this sandbox — verify directly)',
+    source: 'From research on fs.usda.gov/superior and general USFS dispersed-camping guidance — not yet checked against the official page; verify there.',
     status: 'verify',
   }),
 ];
@@ -165,9 +165,9 @@ const campgrounds: SeedRecord[] = [
     boatLaunch: true,
     rules: [],
     verify:
-      'Confirm current electric-site count/amperage, exact boat launch location and fees on the official DNR park page (blocked from this sandbox). Coordinates not set — read from the official page.',
+      'Confirm current electric-site count/amperage, exact boat launch location and fees on the official DNR park page. Coordinates not set — read from the official page.',
     source:
-      'WebSearch summaries of thedyrt.com, outdoorithm.com and stcroix360.com describing the Riverway campground (50-amp electric sites, RVs to 60 ft) and a boat ramp onto the St. Croix River; not independently confirmed on dnr.state.mn.us (blocked)',
+      'From research summaries (thedyrt.com, outdoorithm.com, stcroix360.com) describing the Riverway campground (50-amp electric sites, RVs to 60 ft) and a boat ramp onto the St. Croix River; not yet confirmed on dnr.state.mn.us — verify there.',
     notes: '~30 min from Roseville, MN. Marine on St. Croix. Good fit for the shakedown/electric-site trip.',
   }),
 
@@ -184,9 +184,9 @@ const campgrounds: SeedRecord[] = [
     electric: true,
     boatLaunch: true,
     rules: [],
-    verify: 'Confirm current electric-site count (search found 34 of 94 sites), boat launch details and fees on the official page (blocked). No coordinates set.',
+    verify: 'Confirm current electric-site count (research found 34 of 94 sites), boat launch details and fees on the official page. No coordinates set.',
     source:
-      'WebSearch summaries describing 94 drive-up sites (34 electric, 50-amp) and a boat launch at Sunrise Landing plus a southern St. Croix River ramp; not independently confirmed (dnr.state.mn.us blocked)',
+      'From research summaries describing 94 drive-up sites (34 electric, 50-amp) and a boat launch at Sunrise Landing plus a southern St. Croix River ramp; not yet confirmed on dnr.state.mn.us — verify there.',
     notes: 'Alternative to William O’Brien for trip 1 — Sunrise/Center City, MN, on the St. Croix.',
   }),
 
@@ -205,8 +205,8 @@ const campgrounds: SeedRecord[] = [
     boatLaunch: true,
     rules: [],
     verify:
-      'Search found both electric and non-electric loops (24 non-electric sites, sites 1–24); confirm which loop/site numbers are non-electric and the boat launch (canoe/kayak only or trailer) on the official page (blocked). No coordinates set.',
-    source: 'WebSearch summaries of thedyrt.com, campendium.com and the DNR virtual tour page; not independently confirmed (dnr.state.mn.us blocked)',
+      'Research found both electric and non-electric loops (24 non-electric sites, sites 1–24); confirm which loop/site numbers are non-electric and the boat launch (canoe/kayak only or trailer) on the official page. No coordinates set.',
+    source: 'From research summaries (thedyrt.com, campendium.com, the DNR virtual tour page); not yet confirmed on dnr.state.mn.us — verify there.',
     notes: 'Near Ely/Tower, MN. Good June, non-electric, on-a-lake candidate — swimming beach and a public boat launch on Bear Head Lake.',
   }),
 
@@ -223,8 +223,8 @@ const campgrounds: SeedRecord[] = [
     electric: false,
     boatLaunch: true,
     rules: [],
-    verify: 'Beatrice Lake loop is rustic/non-electric per search results; confirm on the official page (blocked). No coordinates set.',
-    source: 'WebSearch summaries of thedyrt.com/outdoorithm.com describing the rustic Beatrice Lake loop and its adjacent boat landing; not independently confirmed (dnr.state.mn.us blocked)',
+    verify: 'Beatrice Lake loop is rustic/non-electric per research results; confirm on the official page. No coordinates set.',
+    source: 'From research summaries (thedyrt.com, outdoorithm.com) describing the rustic Beatrice Lake loop and its adjacent boat landing; not yet confirmed on dnr.state.mn.us — verify there.',
     notes: 'Alternative to Bear Head Lake for trip 2 — Side Lake/Chisholm, MN, on the Sturgeon chain of lakes.',
   }),
 
@@ -242,9 +242,9 @@ const campgrounds: SeedRecord[] = [
     electric: false,
     boatLaunch: true,
     rules: [],
-    verify: 'Confirm the exact gravel forest-road route, season dates and site count on the official page (blocked). No coordinates set.',
+    verify: 'Confirm the exact gravel forest-road route, season dates and site count on the official page. No coordinates set.',
     source:
-      'WebSearch summary of the fs.usda.gov Wilson Lake Rustic Campground page: 4 sites, free, first-come first-served, drive-down boat ramp with a dock, ~30–45 min on graded gravel forest roads off Hwy 61, no reservations; open May 8–Oct 1 in the 2026 season (site itself blocked from this sandbox)',
+      'From a research summary of the fs.usda.gov Wilson Lake Rustic Campground page: 4 sites, free, first-come first-served, drive-down boat ramp with a dock, ~30–45 min on graded gravel forest roads off Hwy 61, no reservations; open May 8–Oct 1 in the 2026 season — not yet checked against the official page.',
     notes: 'Primary candidate for the rustic/lake/gravel-road trip. No fee, no reservation — arrive early on busy weekends.',
   }),
 
@@ -261,8 +261,8 @@ const campgrounds: SeedRecord[] = [
     electric: false,
     boatLaunch: true,
     rules: [],
-    verify: 'Confirm boat launch type (canoe vs. trailer) and gravel-road access, season dates and site count on the official page (blocked). No coordinates set.',
-    source: 'WebSearch summary noting Baker Lake Rustic Campground sits on Baker Lake with a solar-powered drinking-water faucet, an uncommon amenity for a rustic site (fs.usda.gov, blocked from this sandbox)',
+    verify: 'Confirm boat launch type (canoe vs. trailer) and gravel-road access, season dates and site count on the official page. No coordinates set.',
+    source: 'From a research summary noting Baker Lake Rustic Campground sits on Baker Lake with a solar-powered drinking-water faucet, an uncommon amenity for a rustic site (fs.usda.gov) — not yet checked against the official page.',
     notes: 'Alternate rustic/lake candidate for trip 3, off the Sawbill Trail area.',
   }),
 
@@ -280,8 +280,8 @@ const campgrounds: SeedRecord[] = [
     boatLaunch: true,
     rules: [],
     verify:
-      'Facility id read from a recreation.gov campground URL surfaced by WebSearch, not confirmed against the live RIDB API (recreation.gov and ridb.recreation.gov are both blocked from this sandbox) — re-check with the in-app RIDB search once a key is set up.',
-    source: 'WebSearch summary: 33 reservable sites on the west shore of Lake Winnibigoshish, boat ramp and harbor next to the campground (recreation.gov, blocked from this sandbox)',
+      'Facility id found through research, not yet confirmed against the live RIDB API — re-check with the in-app RIDB search once a key is set up.',
+    source: 'From a research summary: 33 reservable sites on the west shore of Lake Winnibigoshish, boat ramp and harbor next to the campground (recreation.gov) — not yet checked against the official page.',
     notes: 'Reservable federal alternative to the rustic Superior NF sites for trip 3 — books via Recreation.gov, 6-month rolling window.',
   }),
 
@@ -299,9 +299,9 @@ const campgrounds: SeedRecord[] = [
     boatLaunch: true,
     rules: [],
     verify:
-      'Facility id read from a recreation.gov campground URL surfaced by WebSearch, not confirmed against the live RIDB API (blocked from this sandbox) — re-check with the in-app RIDB search once a key is set up.',
+      'Facility id found through research, not yet confirmed against the live RIDB API — re-check with the in-app RIDB search once a key is set up.',
     source:
-      'WebSearch summary: Chippewa Loop is the only electric loop (30 of 46 sites, 50 amp) of Norway Beach’s four loops on Cass Lake; boat ramps, sandy beach, flush toilets/showers; loop is open ~May 13–Oct 25 (recreation.gov, blocked from this sandbox)',
+      'From a research summary: Chippewa Loop is the only electric loop (30 of 46 sites, 50 amp) of Norway Beach’s four loops on Cass Lake; boat ramps, sandy beach, flush toilets/showers; loop is open ~May 13–Oct 25 (recreation.gov) — not yet checked against the official page.',
     notes: 'A federal, electric, boat-launch alternative near Cass Lake, MN.',
   }),
 
@@ -320,9 +320,9 @@ const campgrounds: SeedRecord[] = [
     boatLaunch: true,
     rules: [],
     verify:
-      'The brief calls this a "USFS" site, but WebSearch results consistently place Hinsdale Island in the state-managed Kabetogama State Forest, administered from Soudan Underground Mine State Park (not Superior National Forest) — recorded here as mn-state-forest and flagged for the coordinator/owner to confirm the managing agency on an official page (dnr.state.mn.us is blocked from this sandbox). Also confirm exact site count/location.',
+      'The plan said this was a USFS site, but research consistently places Hinsdale Island in the state-managed Kabetogama State Forest, administered from Soudan Underground Mine State Park (not Superior National Forest) — recorded here as mn-state-forest; confirm the managing agency on an official page. Also confirm exact site count/location.',
     source:
-      'WebSearch summaries of hipcamp.com, exploreminnesota.com and a DNR-hosted Hinsdale Island PDF map: 11 primitive boat-in sites (cleared area, fire ring, bear box, primitive toilet, table), free, first-come first-served, 14-day stay limit; contact Soudan Underground Mine SP at 218-753-2245 (dnr.state.mn.us pages blocked from this sandbox)',
+      'From research summaries (hipcamp.com, exploreminnesota.com and a DNR-hosted Hinsdale Island PDF map): 11 primitive boat-in sites (cleared area, fire ring, bear box, primitive toilet, table), free, first-come first-served, 14-day stay limit; contact Soudan Underground Mine SP at 218-753-2245 — not yet checked against the official dnr.state.mn.us pages.',
     notes: 'Boat-in only — no vehicle access. Free, no reservation. Good fit for the off-grid-adjacent Lake Vermilion trip.',
   }),
 
@@ -341,9 +341,9 @@ const campgrounds: SeedRecord[] = [
     boatLaunch: true,
     rules: [],
     verify:
-      'This is a dispersed/boat-in site next to a developed boat launch and picnic area, not a reservable campground — confirm current road access (must be on an MVUM-designated route) and that it is outside the BWCAW on the official page (fs.usda.gov, blocked from this sandbox). No coordinates set.',
+      'This is a dispersed/boat-in site next to a developed boat launch and picnic area, not a reservable campground — confirm current road access (must be on an MVUM-designated route) and that it is outside the BWCAW on the official fs.usda.gov page. No coordinates set.',
     source:
-      'WebSearch summary of the fs.usda.gov Norway Point recreation-site page: picnic area and boat launch on the St. Louis River, a dispersed campsite reachable on foot from the boat launch or by boat, plus a separate boat-in-only site east of the launch; no potable water; ranger station (218) 453-8650 (site itself blocked from this sandbox)',
+      'From a research summary of the fs.usda.gov Norway Point recreation-site page: picnic area and boat launch on the St. Louis River, a dispersed campsite reachable on foot from the boat launch or by boat, plus a separate boat-in-only site east of the launch; no potable water; ranger station (218) 453-8650 — not yet checked against the official page.',
     notes: 'No booking needed — dispersed, first-come. Pack out water and trash; verify the current MVUM before driving in.',
   }),
 ];
@@ -354,7 +354,7 @@ const permit: SeedRecord = seed('permit', 'permit:mn-state-park-annual-2027', {
   have: false,
   expires: null,
   notes:
-    'Required for every vehicle entering a Minnesota state park or recreation area, in addition to any campsite reservation — buy at mndnr.gov/reservations, by phone (866-857-2757), or at a park office. Price/expiration not fetched (mndnr.gov blocked from this sandbox) — verify before the season.',
+    'Required for every vehicle entering a Minnesota state park or recreation area, in addition to any campsite reservation — buy at mndnr.gov/reservations, by phone (866-857-2757), or at a park office. Price/expiration not yet checked against the official page — verify before the season.',
 });
 
 export const reservationSeeds: SeedRecord[] = [...bookingRules, ...campgrounds, permit];

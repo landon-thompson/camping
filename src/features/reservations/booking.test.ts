@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addDays,
   bookingOpensAt,
+  bookingRowStatus,
   bookingState,
   campgroundTakesReservations,
   cancelDeadlineInfo,
@@ -282,5 +283,70 @@ describe('cancelDeadlineInfo', () => {
     expect(cancelDeadlineInfo('2027-06-01', '2027-06-10')).toEqual({ daysLeft: 9, overdue: false, warn: false });
     expect(cancelDeadlineInfo('2027-06-08', '2027-06-10')).toEqual({ daysLeft: 2, overdue: false, warn: true });
     expect(cancelDeadlineInfo('2027-06-11', '2027-06-10')).toEqual({ daysLeft: -1, overdue: true, warn: false });
+  });
+});
+
+describe('bookingRowStatus (Book overview sort + label)', () => {
+  const now = new Date('2026-09-26T00:00:00Z');
+
+  it('puts a trip with no campground at the front, needing attention', () => {
+    const r = bookingRowStatus(now, false, null, undefined, undefined);
+    expect(r).toEqual({ label: 'No campground yet', urgency: 0, tone: 'attention' });
+  });
+
+  it('flags an open booking window as top priority once a campground is chosen', () => {
+    const r = bookingRowStatus(now, true, { opensAt: null, state: 'open' }, 'America/Chicago', undefined);
+    expect(r).toEqual({ label: 'Booking open now', urgency: 1, tone: 'ok' });
+  });
+
+  it('treats "opens today" the same as open', () => {
+    const r = bookingRowStatus(now, true, { opensAt: now, state: 'opens-today' }, 'America/Chicago', undefined);
+    expect(r.label).toBe('Booking open now');
+    expect(r.urgency).toBe(1);
+  });
+
+  it('surfaces a waitlisted reservation as needing attention even though the window is closed', () => {
+    const r = bookingRowStatus(now, true, { opensAt: new Date('2027-01-15T14:00:00Z'), state: 'not-open' }, 'America/Chicago', {
+      status: 'waitlisted',
+      confirmation: '',
+      site: '',
+    });
+    expect(r).toEqual({ label: 'Waitlisted', urgency: 1, tone: 'attention' });
+  });
+
+  it('counts down to a not-yet-open window with the date and time', () => {
+    const opensAt = new Date('2027-01-15T14:00:00Z'); // 8:00 AM Central
+    const r = bookingRowStatus(now, true, { opensAt, state: 'not-open' }, 'America/Chicago', undefined);
+    expect(r.urgency).toBe(2);
+    expect(r.tone).toBe('info');
+    expect(r.label).toBe(`Opens in ${daysUntil(now, opensAt, 'America/Chicago')} days (${formatOpensAt(opensAt, 'America/Chicago')})`);
+  });
+
+  it('shows a booked reservation with its confirmation # and site, low urgency', () => {
+    const r = bookingRowStatus(now, true, { opensAt: null, state: 'open' }, 'America/Chicago', {
+      status: 'booked',
+      confirmation: 'ABC123',
+      site: '14',
+    });
+    expect(r).toEqual({ label: 'Booked (ABC123, site 14)', urgency: 4, tone: 'ok' });
+  });
+
+  it('shows just "Booked" when the confirmation and site are still blank', () => {
+    const r = bookingRowStatus(now, true, { opensAt: null, state: 'open' }, 'America/Chicago', {
+      status: 'booked',
+      confirmation: '',
+      site: '',
+    });
+    expect(r.label).toBe('Booked');
+  });
+
+  it('is neutral, low urgency for a first-come/dispersed site with no reservation to make', () => {
+    const r = bookingRowStatus(now, true, { opensAt: null, state: 'no-booking-needed' }, 'America/Chicago', undefined);
+    expect(r).toEqual({ label: 'No booking needed', urgency: 3, tone: 'neutral' });
+  });
+
+  it('puts a past trip at the very back', () => {
+    const r = bookingRowStatus(now, true, { opensAt: null, state: 'past' }, 'America/Chicago', undefined);
+    expect(r).toEqual({ label: 'Arrival date has passed', urgency: 5, tone: 'neutral' });
   });
 });
