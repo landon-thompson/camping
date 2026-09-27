@@ -134,7 +134,7 @@ export function UpNextCard() {
               <ul className="mt-2 space-y-1 text-sm">
                 {buyNextItems.map((r) => (
                   <li key={r.item.id} className="flex justify-between gap-2">
-                    <span className="truncate">{r.item.name}</span>
+                    <span className="min-w-0 truncate">{r.item.name}</span>
                     <span className="shrink-0 text-ink-2">{costLabel(r.cost)}</span>
                   </li>
                 ))}
