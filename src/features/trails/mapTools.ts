@@ -1,5 +1,6 @@
 import type { IControl, Map as MapLibreMap } from 'maplibre-gl';
 import { MVUM_LAYER_IDS, MVUM_SERVICE_URL } from './mvum';
+import { MVUM_VECTOR_MIN_ZOOM, VEHICLE_CLASS_STYLE } from './mvumVehicles';
 
 /**
  * Shared map tools added to every app map by attachTrailLayers:
@@ -156,6 +157,21 @@ async function identify(map: MapLibreMap, lng: number, lat: number) {
   return data.results ?? [];
 }
 
+/** The app's own color key for vehicle-coded roads. */
+function colorKey(): string {
+  const rows = Object.values(VEHICLE_CLASS_STYLE)
+    .map(
+      (v) =>
+        `<div style="display:flex;align-items:center;gap:6px;margin:3px 0"><span style="display:inline-block;flex:0 0 26px;width:26px;height:5px;border-radius:3px;background:${v.color}"></span><span><strong>${v.label}</strong> — ${v.note}</span></div>`,
+    )
+    .join('');
+  return (
+    `<p style="margin:0 0 4px;font-weight:700">Road colors (zoom ${MVUM_VECTOR_MIN_ZOOM}+)</p>${rows}` +
+    '<div style="display:flex;align-items:center;gap:6px;margin:3px 0"><span style="display:inline-block;flex:0 0 26px;width:26px;border-top:4px dashed #555"></span><span>Dashed = seasonal (open part of the year)</span></div>' +
+    '<p style="margin:4px 0 0;font-size:11px">From Forest Service data. The printed/official MVUM is the legal reference.</p>'
+  );
+}
+
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 }
@@ -242,7 +258,7 @@ export class MvumInfoControl implements IControl {
       const wanted: number[] = [MVUM_LAYER_IDS.roads, MVUM_LAYER_IDS.trails];
       const layers = (data.layers ?? []).filter((l) => wanted.includes(l.layerId));
       if (layers.length === 0) throw new Error('empty');
-      el.innerHTML = layers
+      el.innerHTML = colorKey() + '<p style="margin:8px 0 4px;font-weight:700">Official MVUM symbols (zoomed out)</p>' + layers
         .map(
           (l) =>
             `<p style="margin:4px 0;font-weight:700">${escapeHtml(l.layerName)}</p>` +
@@ -256,7 +272,7 @@ export class MvumInfoControl implements IControl {
         .join('');
       el.dataset.loaded = '1';
     } catch {
-      el.textContent = 'Couldn’t load the legend from the Forest Service.';
+      el.innerHTML = colorKey() + '<p style="margin:8px 0 0">Couldn’t load the official symbols from the Forest Service.</p>';
     }
   }
 

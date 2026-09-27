@@ -1,5 +1,9 @@
 import maplibregl, { type GeoJSONSource, type IControl, type Map as MapLibreMap } from 'maplibre-gl';
 import { ExpandControl, MvumInfoControl } from './mapTools';
+import { fetchMvumLines, MVUM_VECTOR_MIN_ZOOM, VEHICLE_CLASS_STYLE } from './mvumVehicles';
+
+const MVUM_VEC_SOURCE = 'trails-mvum-vec';
+const MVUM_VEC_LAYER = 'trails-mvum-vec-line';
 import { liveQuery } from 'dexie';
 import type { FeatureCollection } from 'geojson';
 import { db } from '../../db/local';
@@ -240,6 +244,36 @@ export function attachTrailLayers(map: MapLibreMap, ctx: MapContext): () => void
         layout: { visibility: readMvumPreference() ? 'visible' : 'none' },
         paint: { 'raster-opacity': 0.85 },
       });
+      // Zoomed in, the app draws the roads itself, colored by allowed vehicles.
+      map.setLayerZoomRange(MVUM_LAYER, 6, MVUM_VECTOR_MIN_ZOOM);
+    }
+    if (!map.getSource(MVUM_VEC_SOURCE)) map.addSource(MVUM_VEC_SOURCE, { type: 'geojson', data: emptyFC() });
+    if (!map.getLayer(MVUM_VEC_LAYER)) {
+      map.addLayer(
+        {
+          id: MVUM_VEC_LAYER,
+          type: 'line',
+          source: MVUM_VEC_SOURCE,
+          minzoom: MVUM_VECTOR_MIN_ZOOM,
+          layout: { visibility: readMvumPreference() ? 'visible' : 'none', 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-width': ['interpolate', ['linear'], ['zoom'], 9, 2.5, 14, 5],
+            'line-color': [
+              'match',
+              ['get', 'cls'],
+              'all',
+              VEHICLE_CLASS_STYLE.all.color,
+              'high-clearance',
+              VEHICLE_CLASS_STYLE['high-clearance'].color,
+              'ohv',
+              VEHICLE_CLASS_STYLE.ohv.color,
+              VEHICLE_CLASS_STYLE.other.color,
+            ],
+            'line-dasharray': ['case', ['==', ['get', 'seasonal'], true], ['literal', [2, 1.2]], ['literal', [1, 0]]],
+          },
+        },
+        map.getLayer(ROUTES_LINE_LAYER) ? ROUTES_LINE_LAYER : undefined,
+      );
     }
   } catch {
     // Style not ready, offline, or layers already present from a prior attach — ignore.
@@ -249,10 +283,47 @@ export function attachTrailLayers(map: MapLibreMap, ctx: MapContext): () => void
     writeMvumPreference(show);
     try {
       map.setLayoutProperty(MVUM_LAYER, 'visibility', show ? 'visible' : 'none');
+      map.setLayoutProperty(MVUM_VEC_LAYER, 'visibility', show ? 'visible' : 'none');
     } catch {
       // ignore
     }
+    if (show) refreshMvumLines();
   });
+
+  // Fetch colored MVUM lines for the visible area (debounced; reuses the last box while inside it).
+  let lastBox: [number, number, number, number] | null = null;
+  let lastZoom = 0;
+  let pending: AbortController | null = null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  function refreshMvumLines() {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (!live || !readMvumPreference() || map.getZoom() < MVUM_VECTOR_MIN_ZOOM) return;
+      const b = map.getBounds();
+      const inside =
+        lastBox && b.getWest() >= lastBox[0] && b.getSouth() >= lastBox[1] && b.getEast() <= lastBox[2] && b.getNorth() <= lastBox[3];
+      if (inside && Math.abs(map.getZoom() - lastZoom) < 2) return;
+      // Fetch a bit beyond the screen so small pans don't refetch.
+      const padX = (b.getEast() - b.getWest()) * 0.25;
+      const padY = (b.getNorth() - b.getSouth()) * 0.25;
+      const box: [number, number, number, number] = [b.getWest() - padX, b.getSouth() - padY, b.getEast() + padX, b.getNorth() + padY];
+      pending?.abort();
+      pending = new AbortController();
+      const zoom = map.getZoom();
+      fetchMvumLines(box, zoom, pending.signal)
+        .then((fc) => {
+          if (!live) return;
+          lastBox = box;
+          lastZoom = zoom;
+          safeSetData(map, MVUM_VEC_SOURCE, fc as unknown as FeatureCollection);
+        })
+        .catch(() => {
+          /* offline or service unavailable: the official picture layer still shows at lower zooms */
+        });
+    }, 400);
+  }
+  map.on('moveend', refreshMvumLines);
+  refreshMvumLines();
   try {
     map.addControl(control, 'top-right');
   } catch {
@@ -302,6 +373,9 @@ export function attachTrailLayers(map: MapLibreMap, ctx: MapContext): () => void
 
   return () => {
     live = false;
+    clearTimeout(timer);
+    pending?.abort();
+    map.off('moveend', refreshMvumLines);
     routesSub.unsubscribe();
     pinsSub.unsubscribe();
     try {
@@ -311,14 +385,14 @@ export function attachTrailLayers(map: MapLibreMap, ctx: MapContext): () => void
     } catch {
       // ignore
     }
-    for (const id of [ROUTES_LINE_LAYER, PINS_CIRCLE_LAYER, PINS_LABEL_LAYER, MVUM_LAYER]) {
+    for (const id of [ROUTES_LINE_LAYER, PINS_CIRCLE_LAYER, PINS_LABEL_LAYER, MVUM_LAYER, MVUM_VEC_LAYER]) {
       try {
         if (map.getLayer(id)) map.removeLayer(id);
       } catch {
         // ignore
       }
     }
-    for (const id of [ROUTES_SOURCE, PINS_SOURCE, MVUM_SOURCE]) {
+    for (const id of [ROUTES_SOURCE, PINS_SOURCE, MVUM_SOURCE, MVUM_VEC_SOURCE]) {
       try {
         if (map.getSource(id)) map.removeSource(id);
       } catch {
