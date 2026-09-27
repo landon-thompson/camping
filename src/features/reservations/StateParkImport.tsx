@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Card } from '../../components/ui';
 import { saveRecord } from '../../db/records';
 import { useCampgrounds } from './data';
-import { fetchParksFromService, MN_PARKS_DATASET_URL, parseParksDetailed, planImport, type ParkPoint, type ParseResult, type SourceReport } from './stateParks';
+import { fetchParksFromService, viaAppServer, MN_PARKS_DATASET_URL, parseParksDetailed, planImport, type ParkPoint, type ParseResult, type SourceReport } from './stateParks';
 
 /** Load every Minnesota state park / recreation area (name + map pin) from official GIS data. */
 export function StateParkImport() {
@@ -34,7 +34,7 @@ export function StateParkImport() {
     setError(null);
     setStatus(null);
     try {
-      const r = await fetchParksFromService();
+      const r = await fetchParksFromService(viaAppServer);
       setReports(r.reports);
       if (r.parks.length === 0) {
         explainEmpty(r, `The state map service (layer “${r.layerName}”)`);

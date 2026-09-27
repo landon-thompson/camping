@@ -280,6 +280,23 @@ const SOURCES: [string, string][] = [
   [MN_PARKS_SERVICE, 'Met Council (metro only)'],
 ];
 
+/**
+ * Fetch through the app's own API (/api/gis), because the DNR servers don't
+ * allow browsers to read them directly (no CORS). Falls back to a direct
+ * request when there's no API (preview / local dev).
+ */
+export const viaAppServer: typeof fetch = async (input, init) => {
+  const url = String(input instanceof Request ? input.url : input);
+  try {
+    const r = await fetch(`/api/gis?url=${encodeURIComponent(url)}`, { credentials: 'same-origin', ...init });
+    const type = r.headers.get('content-type') ?? '';
+    if (r.status !== 404 && type.includes('json')) return r;
+  } catch {
+    /* no API reachable — try directly */
+  }
+  return fetch(input, init);
+};
+
 /** Try each official source; keep the one with the most parks, and report what each returned. */
 export async function fetchParksFromService(
   fetchFn: typeof fetch = fetch,
