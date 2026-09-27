@@ -5,6 +5,11 @@
  * "layers" and "query" requests to known state map services.
  */
 const ALLOWED: RegExp[] = [
+  // ArcGIS catalog item lookup (to find where an official dataset is served).
+  /^https:\/\/www\.arcgis\.com\/sharing\/rest\/content\/items\/[0-9a-f]{32}$/,
+  // ArcGIS-hosted services and the State of Minnesota's GIS hosting.
+  /^https:\/\/services\d*\.arcgis\.com\/[\w]+\/arcgis\/rest\/services\/[\w/]+\/(FeatureServer|MapServer)\/(layers|\d+\/query)$/,
+  /^https:\/\/enterprise\.gisdata\.mn\.gov\/aghost\/rest\/services\/[\w/]+\/(FeatureServer|MapServer)\/(layers|\d+\/query)$/,
   /^https?:\/\/arcgis\.dnr\.state\.mn\.us\/(host|mndnr)\/rest\/services\/[\w/]+\/(FeatureServer|MapServer)\/(layers|\d+\/query)$/,
   /^https:\/\/(gis|arcgis)\.metc\.state\.mn\.us\/arcgis\/rest\/services\/[\w/]+\/(FeatureServer|MapServer)\/(layers|\d+\/query)$/,
 ];

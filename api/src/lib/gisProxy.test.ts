@@ -8,6 +8,10 @@ describe('GIS proxy allowlist', () => {
     expect(allowedGisUrl(`${dnr}/0/query?where=1%3D1&outFields=*&f=json`)).not.toBeNull();
     expect(allowedGisUrl('http://arcgis.dnr.state.mn.us/mndnr/rest/services/slam/SLAM_App_Layers/MapServer/layers?f=json')).not.toBeNull();
     expect(allowedGisUrl('https://gis.metc.state.mn.us/arcgis/rest/services/LPH/Parks/MapServer/3/query?f=json')).not.toBeNull();
+    expect(allowedGisUrl('https://www.arcgis.com/sharing/rest/content/items/a42128766db2447cb77a247d4a074173?f=json')).not.toBeNull();
+    expect(allowedGisUrl('https://services1.arcgis.com/AbC123/arcgis/rest/services/State_Parks/FeatureServer/0/query?where=1%3D1&f=json')).not.toBeNull();
+    expect(allowedGisUrl('https://enterprise.gisdata.mn.gov/aghost/rest/services/us_mn_state_dnr/bdry_dnr_lrs_prk/FeatureServer/layers?f=json')).not.toBeNull();
+    expect(allowedGisUrl('https://www.arcgis.com/sharing/rest/content/users/x?f=json')).toBeNull();
   });
 
   it('refuses anything else', () => {

@@ -36,7 +36,7 @@ export function SyncBadge() {
     >
       <span className={`h-2.5 w-2.5 rounded-full ${dot[s.state]}`} aria-hidden />
       <span>{label[s.state]}</span>
-      {s.pending > 0 && <span className="rounded-full bg-surface-2 px-2 text-xs">{s.pending}</span>}
+      {s.pending > 0 && s.state !== 'local-only' && <span className="rounded-full bg-surface-2 px-2 text-xs">{s.pending}</span>}
     </button>
   );
 }

@@ -16,6 +16,14 @@ export const MN_DNR_PARKS_SERVICE =
 export const MN_DNR_SLAM_SERVICE = 'https://arcgis.dnr.state.mn.us/mndnr/rest/services/slam/SLAM_App_Layers/MapServer';
 export const MN_PARKS_SERVICE = 'https://gis.metc.state.mn.us/arcgis/rest/services/LPH/Parks/MapServer';
 
+/**
+ * ArcGIS catalog items for the DNR dataset "State Parks, Recreation Areas, and
+ * Waysides" (statutory boundaries, statewide), as listed on the Minnesota
+ * Geospatial Commons (gis.data.mn.gov) and the UMN hub. The item record says
+ * where the live data is served.
+ */
+export const MN_PARKS_ITEMS = ['a42128766db2447cb77a247d4a074173', '3a9ede9083f64fb1a773bf63df1a392a'];
+
 /** A park's own official DNR page, from its DNR unit id (e.g. spk00181 = Itasca). */
 export function dnrParkPageUrl(unitId: string): string {
   return `https://www.dnr.state.mn.us/state_parks/park.html?id=${unitId.toLowerCase()}`;
@@ -250,9 +258,33 @@ export function planImport(
   return { add, fill };
 }
 
+async function httpError(res: Response): Promise<Error> {
+  let detail = '';
+  try {
+    detail = ((await res.json()) as { error?: string | { message?: string } }).error as string;
+    if (detail && typeof detail === 'object') detail = (detail as { message?: string }).message ?? '';
+  } catch {
+    /* not JSON */
+  }
+  return new Error(`HTTP ${res.status}${detail ? ` — ${detail}` : ''}`);
+}
+
+/** Find where an ArcGIS catalog item's data is served (service or layer URL). */
+async function resolveItem(itemId: string, fetchFn: typeof fetch): Promise<string> {
+  const res = await fetchFn(`https://www.arcgis.com/sharing/rest/content/items/${itemId}?f=json`);
+  if (!res.ok) throw await httpError(res);
+  const item = (await res.json()) as { url?: string; error?: { message?: string } };
+  if (item.error) throw new Error(item.error.message ?? 'item lookup failed');
+  if (!item.url) throw new Error('item has no service address');
+  return item.url.replace(/\/+$/, '');
+}
+
 async function fetchFromService(base: string, fetchFn: typeof fetch): Promise<ParseResult & { layerName: string }> {
+  // A layer URL (…/FeatureServer/0) can be queried directly.
+  const direct = base.match(/^(.*\/(?:FeatureServer|MapServer))\/(\d+)$/);
+  if (direct) return queryLayer(direct[1]!, Number(direct[2]), 'State parks', fetchFn);
   const layersRes = await fetchFn(`${base}/layers?f=json`);
-  if (!layersRes.ok) throw new Error(`HTTP ${layersRes.status}`);
+  if (!layersRes.ok) throw await httpError(layersRes);
   const meta = (await layersRes.json()) as { layers?: { id: number; name: string }[]; error?: { code?: number; message?: string } };
   if (meta.error) throw new Error(`error ${meta.error.code ?? ''} ${meta.error.message ?? ''}`.trim());
   const layers = meta.layers ?? [];
@@ -261,11 +293,15 @@ async function fetchFromService(base: string, fetchFn: typeof fetch): Promise<Pa
     layers.find((l) => /parks and trails area|park/i.test(l.name)) ??
     layers[0];
   if (!layer) throw new Error('no layers');
+  return queryLayer(base, layer.id, layer.name, fetchFn);
+}
+
+async function queryLayer(service: string, id: number, name: string, fetchFn: typeof fetch): Promise<ParseResult & { layerName: string }> {
   // Esri JSON works on every ArcGIS Server version; GeoJSON output isn't always enabled.
-  const q = `${base}/${layer.id}/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&maxAllowableOffset=0.001&f=json`;
+  const q = `${service}/${id}/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&maxAllowableOffset=0.001&f=json`;
   const res = await fetchFn(q);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return { ...parseParksDetailed(await res.json(), true), layerName: layer.name };
+  if (!res.ok) throw await httpError(res);
+  return { ...parseParksDetailed(await res.json(), true), layerName: name };
 }
 
 export interface SourceReport {
@@ -275,6 +311,7 @@ export interface SourceReport {
 }
 
 const SOURCES: [string, string][] = [
+  ...MN_PARKS_ITEMS.map((id, i): [string, string] => [`item:${id}`, i === 0 ? 'MN Geospatial Commons (DNR)' : 'UMN copy of DNR data']),
   [MN_DNR_PARKS_SERVICE, 'DNR statewide (hosted)'],
   [MN_DNR_SLAM_SERVICE, 'DNR statewide (SLAM)'],
   [MN_PARKS_SERVICE, 'Met Council (metro only)'],
@@ -290,7 +327,17 @@ export const viaAppServer: typeof fetch = async (input, init) => {
   try {
     const r = await fetch(`/api/gis?url=${encodeURIComponent(url)}`, { credentials: 'same-origin', ...init });
     const type = r.headers.get('content-type') ?? '';
-    if (r.status !== 404 && type.includes('json')) return r;
+    if (r.ok && type.includes('json')) return r;
+    if (r.status !== 404 && type.includes('json')) {
+      // The server couldn't get it; the phone may still be allowed to (CORS-enabled hosts).
+      try {
+        const direct = await fetch(input, init);
+        if (direct.ok) return direct;
+      } catch {
+        /* keep the server's explanation */
+      }
+      return r;
+    }
   } catch {
     /* no API reachable — try directly */
   }
@@ -305,10 +352,11 @@ export async function fetchParksFromService(
   const reports: SourceReport[] = [];
   for (const [base, label] of SOURCES) {
     try {
-      const r = { ...(await fetchFromService(base, fetchFn)), source: base };
+      const service = base.startsWith('item:') ? await resolveItem(base.slice(5), fetchFn) : base;
+      const r = { ...(await fetchFromService(service, fetchFn)), source: service };
       reports.push({ source: base, label, outcome: `${r.parks.length} parks from ${r.featureCount} areas (layer “${r.layerName}”)` });
       if (!best || r.parks.length > best.parks.length) best = r;
-      if (r.parks.length > 40) break; // statewide list found
+      if (r.parks.length > 40) break; // statewide list found — no need to try more
     } catch (e) {
       reports.push({ source: base, label, outcome: e instanceof TypeError ? 'couldn’t connect' : e instanceof Error ? e.message : 'failed' });
     }
