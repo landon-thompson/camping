@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fetchParksFromService, parkId, parseParks, parseParksDetailed, planImport, toLonLat } from './stateParks';
 import type { Campground } from '../../model/schemas';
-import { isGenericBookingUrl } from './shared';
+import { bookingLink, isGenericBookingUrl } from './shared';
 
 const square = (lng: number, lat: number) => [
   [
@@ -156,8 +156,8 @@ describe('statewide DNR data', () => {
     ]);
     const plan = planImport(parks, [{ id: 'campground:itasca', data: cg('Itasca State Park', { lat: 47.2, lng: -95.2 }) }], 'dnr');
     // Existing Itasca had a generic link (''), so it gets its park page; Afton is new.
-    expect(plan.fill[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00181');
-    expect(plan.add[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100');
+    expect(plan.fill[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00181#reservations');
+    expect(plan.add[0]?.data.bookingUrl).toBe('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100#reservations');
   });
 });
 
@@ -194,5 +194,17 @@ describe('official dataset item', () => {
     expect(r.source).toContain('services1.arcgis.com');
     expect(urls).toHaveLength(2); // item lookup + one query; other sources not needed
     expect(urls[1]).toContain('/FeatureServer/0/query?');
+  });
+});
+
+describe('Book now link', () => {
+  it('jumps to the Reservations section of a DNR park page', () => {
+    expect(bookingLink('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100')).toBe(
+      'https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100#reservations',
+    );
+    expect(bookingLink('https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100#reservations')).toBe(
+      'https://www.dnr.state.mn.us/state_parks/park.html?id=spk00100#reservations',
+    );
+    expect(bookingLink('https://www.recreation.gov/camping/campgrounds/233144')).toBe('https://www.recreation.gov/camping/campgrounds/233144');
   });
 });

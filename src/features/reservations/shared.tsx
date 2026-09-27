@@ -188,3 +188,20 @@ export function GenericLinkHint({ name, editHref }: { name: string; editHref?: s
     </p>
   );
 }
+
+/**
+ * The link "Book now" should open. A DNR state park page goes straight to its
+ * Reservations section (e.g. park.html?id=spk00100#reservations).
+ */
+export function bookingLink(url: string): string {
+  try {
+    const u = new URL(url);
+    if (/(^|\.)dnr\.state\.mn\.us$/.test(u.hostname) && u.pathname === '/state_parks/park.html' && u.searchParams.get('id') && !u.hash) {
+      u.hash = 'reservations';
+      return u.toString();
+    }
+  } catch {
+    /* not a URL — leave as is */
+  }
+  return url;
+}

@@ -26,7 +26,7 @@ export const MN_PARKS_ITEMS = ['a42128766db2447cb77a247d4a074173', '3a9ede9083f6
 
 /** A park's own official DNR page, from its DNR unit id (e.g. spk00181 = Itasca). */
 export function dnrParkPageUrl(unitId: string): string {
-  return `https://www.dnr.state.mn.us/state_parks/park.html?id=${unitId.toLowerCase()}`;
+  return `https://www.dnr.state.mn.us/state_parks/park.html?id=${unitId.toLowerCase()}#reservations`;
 }
 
 /** Official download page for the statewide boundary file (GeoJSON), for the file fallback. */

@@ -4,7 +4,7 @@ import { Card, inputClass } from '../../components/ui';
 import type { Reservation, ReservationStatus } from '../../model/schemas';
 import { campgroundTakesReservations, cancelDeadlineInfo, checkMaxNights, daysBetween, daysUntil, formatOpensAt, resolveBooking } from './booking';
 import { reservationForTrip, useBookingRules, useCampgrounds, useReservations } from './data';
-import { BookingStateBadge, ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, numOrNull, SaveRow, useDraft } from './shared';
+import { BookingStateBadge, bookingLink, ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, numOrNull, SaveRow, useDraft } from './shared';
 
 const PERMIT_ID = 'permit:mn-state-park-annual-2027';
 
@@ -60,7 +60,7 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
           <div className="rounded-xl bg-surface-2 p-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm text-ink-2">Set trip dates to see when booking opens.</span>
-              <ExternalLinkButton href={campground.data.bookingUrl} variant="secondary">
+              <ExternalLinkButton href={bookingLink(campground.data.bookingUrl)} variant="secondary">
                 Book now
               </ExternalLinkButton>
             </div>
@@ -73,7 +73,7 @@ export function TripReservationSection({ tripId }: { tripId: string }) {
             <div className="flex items-center justify-between gap-3">
               <BookingStateBadge state={resolved.state} />
               {campgroundTakesReservations(campground.data.bookingSystem) && (
-                <ExternalLinkButton href={campground.data.bookingUrl} variant="secondary">
+                <ExternalLinkButton href={bookingLink(campground.data.bookingUrl)} variant="secondary">
                   Book now
                 </ExternalLinkButton>
               )}

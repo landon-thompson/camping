@@ -5,7 +5,7 @@ import { Card, inputClass, PageTitle, StatusChip } from '../../components/ui';
 import type { Agency, BookingSystem, Campground } from '../../model/schemas';
 import { AGENCY_LABEL, useBookingRules } from './data';
 import { campgroundTakesReservations } from './booking';
-import { ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, NavButton, numOrNull, SaveRow, SpecEditor, useDraft } from './shared';
+import { bookingLink, ExternalLinkButton, GenericLinkHint, isGenericBookingUrl, NavButton, numOrNull, SaveRow, SpecEditor, useDraft } from './shared';
 import { RidbImport } from './RidbImport';
 
 /** /book/campgrounds/:id — details for one campground, or (:id === "new") the add-campground flow. */
@@ -55,7 +55,7 @@ function BookingCard({ campground, bookingUrl }: { campground: Campground; booki
     <Card>
       <div className="flex flex-wrap items-center gap-3">
         {reservable ? (
-          <ExternalLinkButton href={bookingUrl}>Book now (official site)</ExternalLinkButton>
+          <ExternalLinkButton href={bookingLink(bookingUrl)}>Book now (official site)</ExternalLinkButton>
         ) : (
           <span className="rounded-xl bg-surface-2 px-4 py-3 font-semibold text-ink-2">
             No booking needed — {campground.bookingSystem === 'dispersed' ? 'dispersed camping' : 'first-come, first-served'}
