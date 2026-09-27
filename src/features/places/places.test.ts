@@ -97,7 +97,7 @@ describe('boat launches', () => {
       return Response.json({ features });
     }) as typeof fetch;
     const r = await findBoatLaunches(at, fake);
-    expect(r.launches).toHaveLength(2);
-    expect(r.report).toEqual(['DNR public water accesses: HTTP 502 — nope', 'DNR public water accesses (map service): 2 within 10 km']);
+    expect(r.launches).toHaveLength(2); // the far one is ~50 mi away
+    expect(r.report).toEqual(['DNR public water accesses: HTTP 502 — nope', 'DNR public water accesses (map service): 2 within 25 mi']);
   });
 });

@@ -13,6 +13,9 @@ export const lakesNearUrl = (lat: number, lng: number, radiusM: number) =>
 /** The lake's official LakeFinder page (maps, surveys, stocking, regulations). */
 export const lakeFinderPage = (dow: string) => `https://www.dnr.state.mn.us/lakefind/lake.html?id=${dow}`;
 
+/** Lakes and launches are listed within 25 miles. */
+export const LAKE_RADIUS_KM = 40.2;
+
 /** DNR fisheries species codes → common names. Unknown codes are shown as-is. */
 export const SPECIES: Record<string, string> = {
   WAE: 'Walleye',
@@ -102,6 +105,9 @@ export function parseJsonLoose(text: string): unknown {
   }
 }
 
+/** Bump when parsing gains fields, so cached surveys refresh. */
+export const SURVEY_VERSION = 2;
+
 export function parseLakeSurvey(data: unknown, dow: string, now = new Date()): LakeSurvey {
   if (!data || typeof data !== 'object') throw new Error('LakeFinder sent no data');
   const top = data as Obj;
@@ -118,6 +124,7 @@ export function parseLakeSurvey(data: unknown, dow: string, now = new Date()): L
         .filter((r): r is Obj => !!r && typeof r === 'object')
         .map((r) => {
           const [lo, hi] = parseRange(get(r, 'quartileCount', 'quartileRange'));
+          const [wLo, wHi] = parseRange(get(r, 'quartileWeight'));
           return {
             species: str(get(r, 'species', 'speciesCode')).toUpperCase(),
             gear: str(get(r, 'gear', 'gearType')),
@@ -127,6 +134,8 @@ export function parseLakeSurvey(data: unknown, dow: string, now = new Date()): L
             normalLow: lo,
             normalHigh: hi,
             avgWeightLb: num(get(r, 'averageWeight')),
+            normalWeightLow: wLo,
+            normalWeightHigh: wHi,
           };
         })
         .filter((c) => c.species);
@@ -141,8 +150,34 @@ export function parseLakeSurvey(data: unknown, dow: string, now = new Date()): L
     dow,
     lakeName: str(get(result, 'lakeName', 'name')) || `Lake ${dow}`,
     fetchedAt: now.toISOString(),
+    v: SURVEY_VERSION,
     surveys,
   };
+}
+
+const inMn = (lat: number, lng: number) => lat > 43 && lat < 49.5 && lng > -97.5 && lng < -89;
+
+/** A lon/lat point anywhere in a lake result: lat/lon fields, or a [lon, lat] pair (e.g. point["epsg:4326"]). */
+export function findPoint(o: unknown, depth = 0): { lat: number; lng: number } | null {
+  if (!o || typeof o !== 'object' || depth > 3) return null;
+  if (Array.isArray(o)) {
+    if (o.length === 2 && typeof o[0] === 'number' && typeof o[1] === 'number') {
+      if (inMn(o[1], o[0])) return { lat: o[1], lng: o[0] };
+      if (inMn(o[0], o[1])) return { lat: o[0], lng: o[1] };
+    }
+    return null;
+  }
+  const r = o as Obj;
+  const lat = num(get(r, 'lat', 'latitude', 'y'));
+  const lng = num(get(r, 'lon', 'lng', 'long', 'longitude', 'x'));
+  if (lat !== null && lng !== null && inMn(lat, lng)) return { lat, lng };
+  for (const [k, v] of Object.entries(r)) {
+    if (/point|geom|location|coord|epsg|center|centroid/i.test(k)) {
+      const p = findPoint(v, depth + 1);
+      if (p) return p;
+    }
+  }
+  return null;
 }
 
 /** Lakes in a LakeFinder "by point" answer: any object with an 8-digit id and a name. */
@@ -160,7 +195,8 @@ export function parseNearbyLakes(data: unknown): NearbyLake[] {
     const name = str(get(o, 'name', 'lakeName'));
     if (id.length === 8 && name && !seen.has(id)) {
       seen.add(id);
-      out.push({ dow: id, name, county: str(get(o, 'county', 'countyName')) });
+      const p = findPoint(o);
+      out.push({ dow: id, name, county: str(get(o, 'county', 'countyName')), lat: p?.lat ?? null, lng: p?.lng ?? null });
       return;
     }
     for (const x of Object.values(o)) walk(x, depth + 1);
@@ -186,6 +222,33 @@ export function rate(c: Pick<FishCatch, 'cpue' | 'normalLow' | 'normalHigh'>): R
   if (c.cpue < c.normalLow) return 'below';
   if (c.cpue > c.normalHigh) return 'above';
   return 'typical';
+}
+
+/** Size compared with DNR's typical average weight for similar lakes. */
+export function rateSize(c: Pick<FishCatch, 'avgWeightLb' | 'normalWeightLow' | 'normalWeightHigh'>): Rating {
+  return rate({ cpue: c.avgWeightLb, normalLow: c.normalWeightLow ?? null, normalHigh: c.normalWeightHigh ?? null });
+}
+
+/**
+ * Where a value sits on a three-zone gauge (0–100): below the typical range
+ * fills 0–33, the typical range 33–67, above it 67–100 (reaching the end at
+ * twice the top of the typical range). Fixed zones keep every species readable.
+ */
+export function gaugePosition(value: number, lo: number, hi: number): number {
+  if (hi <= lo) return value < lo ? 16 : value > hi ? 84 : 50;
+  if (value < lo) return lo > 0 ? Math.max(0, (value / lo) * 33) : 0;
+  if (value <= hi) return 33 + ((value - lo) / (hi - lo)) * 34;
+  return Math.min(100, 67 + ((value - hi) / Math.max(hi, 0.01)) * 33);
+}
+
+/** "2.1× the top of typical" / "half the bottom of typical" — how far outside the range. */
+export function howFarOutside(value: number, lo: number, hi: number): string | null {
+  if (value > hi && hi > 0) return `${(value / hi).toFixed(1)}× the top of typical`;
+  if (value < lo && lo > 0) {
+    const pct = Math.round((value / lo) * 100);
+    return `${pct}% of the bottom of typical`;
+  }
+  return null;
 }
 
 export function gearFamily(gear: string): string {
@@ -295,7 +358,7 @@ export async function fetchLakeSurveyOrWholeLake(dow: string, fetchFn: typeof fe
 export const formatDow = (d: string) => d.replace(/^(\d{2})(\d{4})(\d{2})$/, '$1-$2-$3');
 
 /** Lakes within `radiusM` of a point, from LakeFinder. */
-export async function fetchLakesNear(lat: number, lng: number, fetchFn: typeof fetch, radiusM = 3000): Promise<NearbyLake[]> {
+export async function fetchLakesNear(lat: number, lng: number, fetchFn: typeof fetch, radiusM = LAKE_RADIUS_KM * 1000): Promise<NearbyLake[]> {
   const url = lakesNearUrl(lat, lng, radiusM);
   let res: Response;
   try {

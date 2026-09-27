@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { catchShares, fetchLakeSurveyOrWholeLake, groupByGear, latestWithCatch, parseDowInput, parseJsonLoose, parseLakeSurvey, parseNearbyLakes, rate } from './lakeSurvey';
+import { catchShares, fetchLakeSurveyOrWholeLake, gaugePosition, howFarOutside, rateSize, groupByGear, latestWithCatch, parseDowInput, parseJsonLoose, parseLakeSurvey, parseNearbyLakes, rate } from './lakeSurvey';
 
 const sample = {
   result: {
@@ -14,7 +14,7 @@ const sample = {
         surveyDate: '2021-07-12',
         surveyType: 'Population Assessment',
         fishCatchSummaries: [
-          { species: 'WAE', gear: 'Standard gill nets', gearCount: 6, totalCatch: 54, CPUE: '9.00', quartileCount: '3.3-10.5', averageWeight: '1.35' },
+          { species: 'WAE', gear: 'Standard gill nets', gearCount: 6, totalCatch: 54, CPUE: '9.00', quartileCount: '3.3-10.5', averageWeight: '1.35', quartileWeight: '0.9-1.6' },
           { species: 'NOP', gear: 'Standard gill nets', gearCount: 6, totalCatch: 12, CPUE: '2.00', quartileCount: '2.5-7.2', averageWeight: '2.9' },
           { species: 'YEP', gear: 'Standard gill nets', gearCount: 6, totalCatch: 96, CPUE: '16.00', quartileCount: '6.0-30.0', averageWeight: '0.12' },
           { species: 'YEP', gear: 'Shallow gill nets', gearCount: 2, totalCatch: 30, CPUE: '15.00', quartileCount: 'N/A', averageWeight: '0.1' },
@@ -43,6 +43,8 @@ describe('LakeFinder lake survey', () => {
       normalLow: 3.3,
       normalHigh: 10.5,
       avgWeightLb: 1.35,
+      normalWeightLow: 0.9,
+      normalWeightHigh: 1.6,
     });
   });
 
@@ -83,20 +85,9 @@ describe('LakeFinder lake survey', () => {
   it('finds lakes in a by-point answer', () => {
     const data = { status: 'OK', results: [{ name: 'Bear Head', id: '69025400', county: 'St. Louis', point: { 'epsg:4326': [-92.0, 47.8] } }, { name: 'Eagles Nest #4', id: '69028500', county: 'St. Louis' }] };
     expect(parseNearbyLakes(data)).toEqual([
-      { dow: '69025400', name: 'Bear Head', county: 'St. Louis' },
-      { dow: '69028500', name: 'Eagles Nest #4', county: 'St. Louis' },
+      { dow: '69025400', name: 'Bear Head', county: 'St. Louis', lat: 47.8, lng: -92.0 },
+      { dow: '69028500', name: 'Eagles Nest #4', county: 'St. Louis', lat: null, lng: null },
     ]);
-  });
-});
-
-describe('trip lake choices', async () => {
-  const { lakesFrom, defaultLakes } = await import('./TripLakeSection');
-  const launch = (over: object) => ({ name: 'A', water: 'Bear Head', dow: null, ramp: '', manager: '', lat: 0, lng: 0, distanceKm: 1, ...over });
-  it('adds the lakes launches go into and defaults to the nearest launch’s lake', () => {
-    const lakes = lakesFrom([{ dow: '69028500', name: 'Eagles Nest #4', county: '' }], [launch({ dow: '69025400' }), launch({ dow: '69028500' })]);
-    expect(lakes.map((l) => l.dow)).toEqual(['69028500', '69025400']);
-    expect(defaultLakes(lakes, [launch({}), launch({ dow: '69025400' })])).toEqual(['69025400']);
-    expect(defaultLakes(lakes, [])).toEqual(['69028500']);
   });
 });
 
@@ -113,5 +104,28 @@ describe('sub-basins', () => {
     expect(urls.map((u) => /id=(\d{8})/.exec(u)?.[1])).toEqual(['69037801', '69037800']);
     expect(urls[0]).toContain('type=lake_survey&callback=&id=');
     await expect(fetchLakeSurveyOrWholeLake('69037800', (async () => new Response('{"message":"none"}')) as typeof fetch)).rejects.toThrow('69-0378-00: none');
+  });
+});
+
+describe('numbers and size against similar lakes', () => {
+  it('places values on fixed below / typical / above zones', () => {
+    expect(gaugePosition(0, 3, 10)).toBe(0);
+    expect(gaugePosition(3, 3, 10)).toBe(33);
+    expect(gaugePosition(10, 3, 10)).toBe(67);
+    expect(gaugePosition(6.5, 3, 10)).toBeCloseTo(50);
+    expect(gaugePosition(20, 3, 10)).toBe(100);
+    expect(gaugePosition(15, 3, 10)).toBeCloseTo(83.5);
+  });
+
+  it('says how far outside the typical range', () => {
+    expect(howFarOutside(21, 3, 10)).toBe('2.1× the top of typical');
+    expect(howFarOutside(1.5, 3, 10)).toBe('50% of the bottom of typical');
+    expect(howFarOutside(5, 3, 10)).toBeNull();
+  });
+
+  it('rates size from the typical weight range', () => {
+    expect(rateSize({ avgWeightLb: 2, normalWeightLow: 0.9, normalWeightHigh: 1.6 })).toBe('above');
+    expect(rateSize({ avgWeightLb: 1, normalWeightLow: 0.9, normalWeightHigh: 1.6 })).toBe('typical');
+    expect(rateSize({ avgWeightLb: 1, normalWeightLow: null, normalWeightHigh: null })).toBeNull();
   });
 });

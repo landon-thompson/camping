@@ -43,7 +43,7 @@ export function bboxAround(lat: number, lng: number, km: number): [number, numbe
 /** Query a layer, answers in lon/lat. */
 export async function queryLayer(
   layerUrl: string,
-  opts: { bbox?: [number, number, number, number]; where?: string },
+  opts: { bbox?: [number, number, number, number]; where?: string; max?: number },
   fetchFn: typeof fetch,
 ): Promise<EsriFeature[]> {
   const p = new URLSearchParams({
@@ -51,7 +51,7 @@ export async function queryLayer(
     outFields: '*',
     returnGeometry: 'true',
     outSR: '4326',
-    resultRecordCount: '200',
+    resultRecordCount: String(opts.max ?? 200),
     f: 'json',
   });
   if (opts.bbox) {

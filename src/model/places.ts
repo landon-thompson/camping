@@ -18,6 +18,9 @@ export const nearbyLakeSchema = z.object({
   dow: z.string().regex(/^\d{8}$/),
   name: z.string(),
   county: z.string(),
+  /** A point on/at the lake when known (LakeFinder, or a launch on it). */
+  lat: z.number().nullable().optional(),
+  lng: z.number().nullable().optional(),
 });
 export type NearbyLake = z.infer<typeof nearbyLakeSchema>;
 
@@ -37,6 +40,8 @@ export const tripNearbySchema = z.object({
   selectedLakes: z.array(z.string()),
   /** What each source returned, for when something didn't load. */
   report: z.array(z.string()),
+  /** How far out lakes and launches were searched (older records lack it → refetch). */
+  radiusKm: z.number().optional(),
 });
 export type TripNearby = z.infer<typeof tripNearbySchema>;
 
@@ -52,6 +57,9 @@ export const fishCatchSchema = z.object({
   normalLow: z.number().nullable(),
   normalHigh: z.number().nullable(),
   avgWeightLb: z.number().nullable(),
+  /** DNR's typical average-weight range for similar lakes (lb), if given. */
+  normalWeightLow: z.number().nullable().optional(),
+  normalWeightHigh: z.number().nullable().optional(),
 });
 export type FishCatch = z.infer<typeof fishCatchSchema>;
 
@@ -60,6 +68,8 @@ export const lakeSurveySchema = z.object({
   dow: z.string().regex(/^\d{8}$/),
   lakeName: z.string(),
   fetchedAt: z.string(),
+  /** Parser version; older cached surveys are refreshed in the background. */
+  v: z.number().optional(),
   surveys: z.array(
     z.object({
       date: z.string(),

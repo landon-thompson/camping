@@ -15,7 +15,9 @@ export const WATER_ACCESS_SERVICES: [string, string][] = [
 /** Report lines start with this when the current primary source was used. */
 export const PRIMARY_LAUNCH_SOURCE = WATER_ACCESS_SERVICES[0]![1];
 
+/** Launches listed as "nearby" (the rest feed the lakes list, out to 25 miles). */
 export const LAUNCH_SEARCH_KM = 10;
+export const LAUNCH_FETCH_KM = 40.2;
 
 const NAME = [/^(fac|facility|site|access|was)_?name$/i, /^name$/i, /^(?!.*(lake|water|county|admin|unit|owner|manag)).*name/i];
 const WATER = [/^(lake|water|waterbody|water_body|resource)_?name$/i, /^(?!.*(id|num|dow|type|class)).*(lake|water|resource)/i];
@@ -71,7 +73,7 @@ function pointLayer(layers: EsriLayer[]): EsriLayer | undefined {
 export async function findBoatLaunches(
   at: { lat: number; lng: number },
   fetchFn: typeof fetch,
-  km = LAUNCH_SEARCH_KM,
+  km = LAUNCH_FETCH_KM,
 ): Promise<{ launches: BoatLaunchSite[]; report: string[] }> {
   const report: string[] = [];
   for (const [service, label] of WATER_ACCESS_SERVICES) {
@@ -81,9 +83,9 @@ export async function findBoatLaunches(
         report.push(`${label}: no layers`);
         continue;
       }
-      const features = await queryLayer(`${service}/${layer.id}`, { bbox: bboxAround(at.lat, at.lng, km) }, fetchFn);
+      const features = await queryLayer(`${service}/${layer.id}`, { bbox: bboxAround(at.lat, at.lng, km), max: 1000 }, fetchFn);
       const launches = parseLaunches(features, at, km);
-      report.push(`${label}: ${launches.length} within ${km} km`);
+      report.push(`${label}: ${launches.length} within ${Math.round(km * 0.621371)} mi`);
       return { launches, report };
     } catch (e) {
       report.push(`${label}: ${errText(e)}`);
