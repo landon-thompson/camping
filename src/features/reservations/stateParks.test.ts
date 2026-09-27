@@ -91,6 +91,7 @@ describe('state park import', () => {
       'HTTP 500',
       'HTTP 500',
       expect.stringMatching(/^3 parks from 6 areas/),
+      expect.stringMatching(/^0 parks/), // PAD-US fallback (the fake answers with unrelated data)
     ]);
     expect(calls.some((c) => c.includes('/5/query?'))).toBe(true);
   });
@@ -259,6 +260,43 @@ describe('South Dakota parks from the GFP map server', () => {
     expect(r.parks.some((p) => p.name === 'Park 1 Recreation Area')).toBe(true);
     expect(r.source).toBe('https://gfpgis.sd.gov/arcgis/rest/services/Parks/ParkBoundaries/MapServer/2');
     expect(urls.some((u) => u.includes('BoatRamps'))).toBe(false);
-    expect(r.reports[0]?.outcome).toMatch(/^45 parks/);
+    expect(r.reports[0]?.label).toMatch(/PAD-US/); // tried first, failed in this fake
+    expect(r.reports[1]?.outcome).toMatch(/^45 parks/);
+  });
+});
+
+describe('PAD-US (national protected areas)', () => {
+  it('queries one state’s parks and recreation areas and maps the fields', async () => {
+    const { padusQueryUrl, fromPadus } = await import('./stateParks');
+    const url = new URL(padusQueryUrl('sd'));
+    expect(url.searchParams.get('where')).toBe("State_Nm = 'SD' AND Des_Tp IN ('SP','SREC')");
+    const parsed = parseParksDetailed(
+      fromPadus({
+        features: [
+          { attributes: { Unit_Nm: 'Custer State Park', Des_Tp: 'SP', Loc_Ds: 'State Park' }, geometry: { rings: [[[-103.45, 43.72], [-103.4, 43.72], [-103.4, 43.77]]] } },
+          { attributes: { Unit_Nm: 'Angostura', Des_Tp: 'SREC', Loc_Ds: '' }, geometry: { rings: [[[-103.43, 43.3], [-103.4, 43.3], [-103.4, 43.33]]] } },
+        ],
+      }),
+      true,
+      'sd',
+    );
+    expect(parsed.parks.map((p) => p.name)).toEqual(['Angostura Recreation Area', 'Custer State Park']);
+  });
+
+  it('is tried first for South Dakota', async () => {
+    const urls: string[] = [];
+    const fake = (async (url: string) => {
+      urls.push(url);
+      return Response.json({
+        features: Array.from({ length: 50 }, (_, i) => ({
+          attributes: { Unit_Nm: `Park ${i}`, Des_Tp: i % 2 ? 'SREC' : 'SP' },
+          geometry: { rings: [[[-100 + i * 0.05, 44], [-99.95 + i * 0.05, 44], [-99.95 + i * 0.05, 44.05]]] },
+        })),
+      });
+    }) as typeof fetch;
+    const r = await fetchParksFromService(fake, 'sd');
+    expect(r.parks).toHaveLength(50);
+    expect(urls).toHaveLength(1);
+    expect(urls[0]).toContain('USA_Protected_Areas_State/FeatureServer/0/query');
   });
 });

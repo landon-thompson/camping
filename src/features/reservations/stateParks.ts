@@ -349,7 +349,42 @@ export interface SourceReport {
 /** GFP's own map server; its Parks folder holds the park boundary layer (found by name — the address isn't documented). */
 export const SD_GFP_PARKS_FOLDER = 'https://gfpgis.sd.gov/arcgis/rest/services/Parks';
 
+/**
+ * USGS Protected Areas Database (PAD-US), state-managed lands layer, as served
+ * by Esri Living Atlas. Nationwide and public; filtered to one state's parks.
+ */
+export const PADUS_STATE_LAYER = 'https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Protected_Areas_State/FeatureServer/0';
+const PADUS_STATE: Record<ParkRegion, string> = { mn: 'MN', sd: 'SD' };
+
+/** PAD-US query for a state's state parks (SP) and state recreation areas (SREC). */
+export function padusQueryUrl(region: ParkRegion): string {
+  const p = new URLSearchParams({
+    where: `State_Nm = '${PADUS_STATE[region]}' AND Des_Tp IN ('SP','SREC')`,
+    outFields: 'Unit_Nm,Loc_Ds,Des_Tp,State_Nm',
+    returnGeometry: 'true',
+    outSR: '4326',
+    maxAllowableOffset: '0.001',
+    resultRecordCount: '2000',
+    f: 'json',
+  });
+  return `${PADUS_STATE_LAYER}/query?${p}`;
+}
+
+/** PAD-US attributes → the name/type fields the park parser reads. */
+export function fromPadus(data: unknown): unknown {
+  const d = data as { features?: { attributes?: Record<string, unknown>; geometry?: unknown }[]; error?: unknown };
+  if (!Array.isArray(d?.features)) return data;
+  return {
+    features: d.features.map((f) => {
+      const a = f.attributes ?? {};
+      const type = a.Des_Tp === 'SREC' ? 'Recreation Area' : 'State Park';
+      return { attributes: { NAME: String(a.Unit_Nm ?? '').trim(), TYPE: String(a.Loc_Ds || type) }, geometry: f.geometry };
+    }),
+  };
+}
+
 const SD_SOURCES: [string, string][] = [
+  ['padus:sd', 'USGS PAD-US (national protected areas)'],
   [`gfp:${SD_GFP_PARKS_FOLDER}`, 'SD GFP map server (Parks folder)'],
   ...SD_PARKS_ITEMS.map((id): [string, string] => [`item:${id}`, 'SD open data: Parks and Recreation Areas']),
 ];
@@ -392,6 +427,7 @@ const SOURCES: [string, string][] = [
   [MN_DNR_PARKS_SERVICE, 'DNR statewide (hosted)'],
   [MN_DNR_SLAM_SERVICE, 'DNR statewide (SLAM)'],
   [MN_PARKS_SERVICE, 'Met Council (metro only)'],
+  ['padus:mn', 'USGS PAD-US (national protected areas)'],
 ];
 
 /**
@@ -430,6 +466,15 @@ export async function fetchParksFromService(
   const reports: SourceReport[] = [];
   for (const [base, label] of region === 'sd' ? SD_SOURCES : SOURCES) {
     try {
+      if (base.startsWith('padus:')) {
+        const res = await fetchFn(padusQueryUrl(region));
+        if (!res.ok) throw await httpError(res);
+        const r = { ...parseParksDetailed(fromPadus(await res.json()), true, region), layerName: 'USA Protected Areas (state)', source: PADUS_STATE_LAYER };
+        reports.push({ source: base, label, outcome: `${r.parks.length} parks from ${r.featureCount} areas (layer “${r.layerName}”)` });
+        if (!best || r.parks.length > best.parks.length) best = r;
+        if (r.parks.length > 40) break;
+        continue;
+      }
       const service = base.startsWith('item:')
         ? await resolveItem(base.slice(5), fetchFn)
         : base.startsWith('gfp:')
