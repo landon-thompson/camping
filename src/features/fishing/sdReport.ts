@@ -5,32 +5,63 @@ export const sdReportId = (water: string) => `sd_lake_report:${water.toLowerCase
 export const sdLakeKey = (water: string) => `sd:${water}`;
 export const sdWaterFromKey = (key: string) => (key.startsWith('sd:') ? key.slice(3) : null);
 
-/** Ask the app's server for a lake's newest GFP survey summary (or a given report). */
-export async function fetchSdReport(water: string, reportId?: string, fetchFn: typeof fetch = fetch): Promise<SdLakeReport> {
-  const q = new URLSearchParams({ water });
-  if (reportId) q.set('report', reportId);
+async function call(url: string, fetchFn: typeof fetch): Promise<Response> {
   let res: Response;
   try {
-    res = await fetchFn(`/api/sdfish?${q}`, { credentials: 'same-origin' });
+    res = await fetchFn(url, { credentials: 'same-origin' });
   } catch {
-    throw new Error('Couldn’t reach the app’s server (offline?)');
+    throw new Error('Couldn’t reach the app’s server (offline, or your sign-in expired — reload the app)');
   }
   if (res.status === 401) throw new Error('Your sign-in expired — tap “Sign in” at the top, then try again');
   if (res.status === 403) throw new Error('This account isn’t invited to the app’s server');
+  return res;
+}
+
+async function errorOf(res: Response): Promise<Error> {
   const type = res.headers.get('content-type') ?? '';
-  if (!type.includes('json')) throw new Error(res.status === 404 ? 'The app’s server doesn’t have the South Dakota report reader yet' : `HTTP ${res.status}`);
-  const body = (await res.json()) as Partial<SdLakeReport> & { error?: string };
-  if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+  if (!type.includes('json')) return new Error(res.status === 404 ? 'The app’s server doesn’t have the South Dakota report reader yet' : `HTTP ${res.status}`);
+  const body = (await res.json().catch(() => ({}))) as { error?: string };
+  return new Error(body.error ?? `HTTP ${res.status}`);
+}
+
+interface FoundSurveys {
+  water?: string;
+  reportId: string;
+  url: string;
+  listUrl: string;
+  surveys: { id: string; text: string }[];
+}
+
+/**
+ * A lake's newest GFP survey summary (or a given report). The server finds the
+ * report and passes the official PDF along; the phone reads it.
+ */
+export async function fetchSdReport(water: string, reportId?: string, fetchFn: typeof fetch = fetch): Promise<SdLakeReport> {
+  const listRes = await call(`/api/sdfish/list?${new URLSearchParams({ water })}`, fetchFn);
+  if (!listRes.ok || !(listRes.headers.get('content-type') ?? '').includes('json')) throw await errorOf(listRes);
+  const found = (await listRes.json()) as FoundSurveys;
+  const id = reportId && /^\d{1,8}$/.test(reportId) ? reportId : found.reportId;
+
+  const pdfRes = await call(`/api/sdfish/pdf?id=${id}`, fetchFn);
+  if (!pdfRes.ok) throw await errorOf(pdfRes);
+  const bytes = new Uint8Array(await pdfRes.arrayBuffer());
+  const [{ pdfLines }, { parseSurvey }] = await Promise.all([import('./sdPdf'), import('./sdParse')]);
+  let survey;
+  try {
+    survey = parseSurvey(await pdfLines(bytes));
+  } catch {
+    throw new Error('Couldn’t read that report PDF — open it from the link instead');
+  }
   return {
-    water: body.water ?? water,
-    reportId: String(body.reportId ?? ''),
-    url: body.url ?? '',
-    listUrl: body.listUrl ?? '',
-    title: body.title ?? '',
-    year: body.year ?? null,
-    summary: body.summary ?? [],
-    catches: body.catches ?? [],
-    surveys: body.surveys ?? [],
+    water: found.water ?? water,
+    reportId: id,
+    url: `https://apps.sd.gov/GF56FisheriesReports/ExportPDF.ashx?ReportID=${id}`,
+    listUrl: found.listUrl ?? '',
+    title: survey.title,
+    year: survey.year,
+    summary: survey.summary,
+    catches: survey.catches,
+    surveys: found.surveys ?? [],
     fetchedAt: new Date().toISOString(),
   };
 }

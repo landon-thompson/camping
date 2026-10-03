@@ -55,9 +55,11 @@ export default defineConfig({
       workbox: {
         // App shell is precached; data lives in IndexedDB, so the app opens fully offline.
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        // The PDF reader (South Dakota lake reports) loads only when needed; reading a report is online anyway.
+        globIgnores: ['**/pdfjs-*.js'],
         navigateFallback: '/index.html',
         // Never let the service worker answer login or API requests.
-        navigateFallbackDenylist: [/^\/\.auth\//, /^\/api\//],
+        navigateFallbackDenylist: [/^\/\.auth\//, /^\/api\//, /^\/cdn-cgi\//],
         cleanupOutdatedCaches: true,
         // Phase 4 (trails): we deliberately do NOT bulk-prefetch map tiles — see
         // docs/phase-4.md for the tile-policy decision (OpenFreeMap's public terms

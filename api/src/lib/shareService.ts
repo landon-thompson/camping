@@ -1,8 +1,7 @@
-import { randomBytes } from 'node:crypto';
-
-/** A random 32-byte, base64url token. Long and random enough to be the whole secret. */
+/** A random 32-byte, base64url token. Long and random enough to be the whole secret. (Web Crypto: Node and Workers.) */
 export function generateShareToken(): string {
-  return randomBytes(32).toString('base64url');
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 const TRIP_ID_RE = /^trip:[A-Za-z0-9_-]{1,120}$/;

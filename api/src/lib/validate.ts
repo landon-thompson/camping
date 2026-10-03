@@ -6,6 +6,7 @@ export const MAX_RECORD_BYTES = 256 * 1024;
 export const MAX_CLOCK_SKEW_MS = 24 * 60 * 60 * 1000;
 
 const MAX_BIGINT = 9223372036854775807n;
+const utf8 = new TextEncoder(); // works in Node and Cloudflare Workers alike
 const ID_RE = /^[A-Za-z0-9:_\-.]{1,128}$/;
 const TYPE_RE = /^[a-z][a-z0-9_]{0,39}$/;
 
@@ -35,7 +36,7 @@ export function parsePushBody(body: unknown, now = Date.now()): Parsed<IncomingR
     }
     if (typeof r.deleted !== 'boolean') return { ok: false, error: `records[${i}].deleted must be true/false` };
     if (r.data === undefined) return { ok: false, error: `records[${i}].data is missing` };
-    if (Buffer.byteLength(JSON.stringify(r.data), 'utf8') > MAX_RECORD_BYTES) {
+    if (utf8.encode(JSON.stringify(r.data)).length > MAX_RECORD_BYTES) {
       return { ok: false, error: `records[${i}] is too large` };
     }
     out.push({ id: r.id, type: r.type, data: r.data, updatedAt: r.updatedAt, deleted: r.deleted });
