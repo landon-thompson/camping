@@ -4,12 +4,13 @@ Family camping/overland trip planner (2 adults + toddler, Minnesota + South Dako
 
 ## Layout
 - `src/`: React PWA (Vite, Tailwind 4, Dexie). `model/*.ts` define every record type (registry in `model/schemas.ts`); `features/<gear|trips|reservations|trails|journal>/` hold each phase's screens, logic, seeds and tests; `calc/` the pure calculators; `sync/` the local-first sync engine.
-- `api/`: Azure Functions (Node 22, TS, CommonJS). `lib/store.ts` (interface + MemoryStore), `lib/sqlStore.ts` (Azure SQL), `lib/migrations.ts`.
-- `public/staticwebapp.config.json`: SWA routes/roles (`/api/*` requires role `family`).
+- `server/` + `functions/api/[[path]].ts`: the Cloudflare Pages server (current hosting, `docs/CLOUDFLARE.md`): Access JWT check (`access.ts`), D1 store (`d1Store.ts`), routes (`router.ts`). Reuses the runtime-neutral libs in `api/src/lib` (keep those free of Node-only APIs).
+- `api/`: Azure Functions (Node 22, TS, CommonJS), the original hosting. `lib/store.ts` (interface + MemoryStore), `lib/sqlStore.ts` (Azure SQL), `lib/migrations.ts`.
+- `public/_headers` (Cloudflare) and `public/staticwebapp.config.json` (Azure SWA routes/roles).
 - `.github/workflows/ci-deploy.yml`: tests (incl. SQL Server service container), then deploys `dev` to Azure if `AZURE_STATIC_WEB_APPS_API_TOKEN` exists.
 
 ## Commands
-- App: `npm test`, `npm run build` (runs `tsc -b`), `npm run dev`
+- App + Cloudflare server: `npm test` (includes `server/` tests on node:sqlite), `npm run build` (runs `tsc -b`), `npm run dev`
 - API: `cd api && npm test && npm run build`. Set `TEST_SQL_CONNECTION_STRING` to run the SQL integration test (see README).
 
 ## Rules

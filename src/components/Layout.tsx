@@ -53,7 +53,7 @@ export function Layout() {
 
       {IS_PREVIEW && (
         <p role="note" className="border-b border-line bg-info-bg px-4 py-2 text-sm text-info">
-          <strong>Preview.</strong> Edits are saved in this browser only. Login, sync and offline install arrive once Azure is set up.
+          <strong>Preview.</strong> Edits are saved in this browser only. Login, sync and offline install arrive once the app is deployed.
         </p>
       )}
 

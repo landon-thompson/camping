@@ -1,3 +1,4 @@
+import { apiFetch } from '../../lib/apiFetch';
 import type { Campground } from '../../model/schemas';
 
 /**
@@ -440,7 +441,7 @@ export const viaAppServer: typeof fetch = async (input, init) => {
   const url = String(input instanceof Request ? input.url : input);
   let r: Response | null = null;
   try {
-    r = await fetch(`/api/gis?url=${encodeURIComponent(url)}`, { credentials: 'same-origin', ...init });
+    r = await apiFetch(`/api/gis?url=${encodeURIComponent(url)}`, init);
   } catch {
     /* no API reachable — try directly below */
   }

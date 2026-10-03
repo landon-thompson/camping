@@ -105,14 +105,23 @@ Coordinator reviewed every screen at 390px, then five Sonnet agents (separate wo
 - TripMap: `labels` (hide name tags on dense maps), `trailTools` (off in the picker), `accent` pin; fixed pins not being framed after a remount and stale pin positions when the style hasn't loaded.
 
 ## South Dakota lake surveys in the app (2026-09-27)
-- New API `GET /api/sdfish?water=<name>[&report=<id>]` (family only): finds the lake's newest "Survey Summary" on GFP Fishery Reports (`apps.sd.gov/GF56FisheriesReports/?Waterbody=…`, tries "X Lake" and "X"), reads the PDF with `unpdf` (MIT, ~2 MB, server-side only, no cost), and returns summary sentences + fish per net by species and net type (table rows; falls back to numbers quoted in the summary, e.g. "3.4 per gill net").
+- (Superseded 2026-10-03: the phone now reads the PDF; see below.) New API `GET /api/sdfish?water=<name>[&report=<id>]` (family only): finds the lake's newest "Survey Summary" on GFP Fishery Reports (`apps.sd.gov/GF56FisheriesReports/?Waterbody=…`, tries "X Lake" and "X"), reads the PDF with `unpdf` (MIT, ~2 MB, server-side only, no cost), and returns summary sentences + fish per net by species and net type (table rows; falls back to numbers quoted in the summary, e.g. "3.4 per gill net").
 - The Lake & fish tab shows this for South Dakota lakes (Fish info per water; the lake nearest the trip is chosen by default) instead of the Minnesota LakeFinder survey; cached as `sd_lake_report:<slug>` for offline. Tools › Fishing has a Minnesota / South Dakota switch.
 - **Verify on the phone:** GFP's report-list HTML and PDF table layouts weren't readable from the sandbox; parsing was built from search snippets and tested on generated PDFs. No "similar lakes" range exists in SD reports, so there's no fewer/typical/more rating.
+
+## Move to Cloudflare: email-code sign-in (2026-10-03)
+Owner: no Microsoft accounts; keep a login; don't maintain an allow-list, just capture emails; under 50 people → **Cloudflare Pages + Access (One-time PIN, policy "Everyone") + D1**, all free. Setup steps: `docs/CLOUDFLARE.md`.
+- Server: `functions/api/[[path]].ts` → `server/router.ts`. Verifies the Access JWT itself (signature, audience, issuer, expiry); D1 store with the same sync semantics as Azure SQL; `people` table (first/last seen, visits); `GET /api/me`, `GET /api/people` (owner only), `GET /api/login?next=` (return after sign-in). Share links are token-only lookups so they work across households.
+- Households: `OWNER_EMAIL` + `FAMILY_EMAILS` share `family`; anyone else who signs in gets their own empty `person:<email>` space.
+- SD lake report PDFs are now parsed on the phone (`src/features/fishing/sdPdf.ts`, `sdParse.ts`; PDF reader lazy-loaded, not precached); the server only finds the report (`/api/sdfish/list`) and passes the PDF along (`/api/sdfish/pdf`). Azure Functions got the same two routes.
+- App: sign-in detects Cloudflare vs Azure; an expired Access session (redirect) shows "Sign in" instead of "offline"; Settings → People who signed in (owner); Settings explains "own space" and that emails are recorded.
+- Photos: not on Cloudflare (would need R2: payment method required). Photos stay on the phone.
+- Verified locally on the real Cloudflare runtime (`wrangler pages dev` + local D1): health, me, sync push/pull, people. **Verify on first deploy:** Access accepts the `pages.dev` address, the Bypass app for `/s`, `/assets`, `/api/share`, and whether Zero Trust Free asks for a card.
 
 ## Open items / to verify
 
 Owner:
-- [ ] Complete README Azure steps 1–8 (+ optional 9 photos, 10 RIDB key); report the app URL.
+- [ ] Follow `docs/CLOUDFLARE.md` (steps 1–7), then move data from the Azure site with Backup → Restore and delete the Azure resources.
 - [ ] Door-jamb payload figure; owner's manual roof limit and towing section.
 - [ ] Boat scale ticket (CAT scale) when possible; real people weights in Tools → Load & tow.
 - [x] Offline maps: owner said keep the current approach (cache viewed tiles + capped "prepare offline" pass). Revisit if OpenFreeMap's terms turn out to forbid it.

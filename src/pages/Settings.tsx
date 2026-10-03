@@ -5,7 +5,8 @@ import { makeBackup, parseBackup, restoreBackup } from '../db/backup';
 import { Button, Card, Field, inputClass, LinkButton, PageTitle, StatusChip } from '../components/ui';
 import { describeSync } from '../components/SyncBadge';
 import { useAuth } from '../auth/AuthContext';
-import { forgetUser, loginUrl, logoutUrl } from '../auth/identity';
+import { forgetUser, loginUrl, logoutUrl, platform, signInLabel } from '../auth/identity';
+import { PeopleCard } from '../components/PeopleCard';
 import { syncEngine, useSyncStatus } from '../sync/useSync';
 import { useTheme, type ThemePref } from '../lib/theme';
 import { formatUsd } from '../features/gear/format';
@@ -32,6 +33,7 @@ export function Settings() {
       <SectionHeading>App & data</SectionHeading>
       <ThemeCard />
       <AccountCard />
+      <PeopleCard />
       <SyncCard />
       <BackupCard />
       <StorageCard />
@@ -50,6 +52,14 @@ function AccountCard() {
           Signed in as <strong>{auth.user.userDetails}</strong>
           {auth.offline && <span className="text-ink-2"> (offline)</span>}
         </p>
+        {auth.user.sharesFamilyTrips === false && (
+          <p className="mt-2 text-sm text-ink-2">
+            You have your own space: trips you add here aren’t shared with anyone. To share the family’s trips, ask the app owner to add your email.
+          </p>
+        )}
+        {platform() === 'cloudflare' && (
+          <p className="mt-2 text-sm text-ink-2">Your email is recorded when you sign in, so the app owner can see who uses the app.</p>
+        )}
         <div className="mt-3">
           <a href={logoutUrl()} onClick={() => forgetUser()} className="inline-flex min-h-12 items-center font-semibold text-brand">
             Sign out
@@ -60,12 +70,14 @@ function AccountCard() {
   } else if (auth?.kind === 'signed-out') {
     body = (
       <>
-        <p className="mb-3 text-ink-2">Sign in with your Microsoft account to sync with your family.</p>
-        <LinkButton href={loginUrl()}>Sign in with Microsoft</LinkButton>
+        <p className="mb-3 text-ink-2">
+          {platform() === 'cloudflare' ? 'Sign in with your email (a one-time code) to sync with your family.' : 'Sign in with your Microsoft account to sync with your family.'}
+        </p>
+        <LinkButton href={loginUrl()}>{signInLabel()}</LinkButton>
       </>
     );
   } else if (auth?.kind === 'unavailable') {
-    body = <p className="text-ink-2">Sign-in isn’t connected yet. It turns on once the app is deployed to Azure.</p>;
+    body = <p className="text-ink-2">Sign-in isn’t connected yet. It turns on once the app is deployed (see docs/CLOUDFLARE.md).</p>;
   }
   return <Card title="Account">{body}</Card>;
 }

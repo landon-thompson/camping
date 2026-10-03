@@ -80,7 +80,7 @@ export async function findSurveyReports(water: string, fetchFn: typeof fetch = f
 }
 
 /** Fetch a report PDF (official GFP file), size-capped. */
-export async function fetchReportPdf(id: string, fetchFn: typeof fetch = fetch): Promise<Uint8Array> {
+export async function fetchReportPdf(id: string, fetchFn: typeof fetch = fetch): Promise<Uint8Array<ArrayBuffer>> {
   const res = await fetchFn(reportPdfUrl(id), { signal: AbortSignal.timeout(25_000), headers: UA });
   if (!res.ok) throw new Error(`GFP answered ${res.status} for the report PDF`);
   const buf = new Uint8Array(await res.arrayBuffer());

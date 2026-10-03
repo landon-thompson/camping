@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { newId, saveRecord, useRecord, useRecords } from '../../db/records';
 import { getCachedUser } from '../../auth/identity';
+import { apiFetch } from '../../lib/apiFetch';
 import { Button, Card, Field, inputClass, PageTitle } from '../../components/ui';
 import { MN_CENTER } from '../../lib/map';
 import type { LatLng, Trip, TripChecklistItem, TripKind, TripStatus } from '../../model/schemas';
@@ -772,7 +773,7 @@ function ShareCard({
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch('/api/share', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ tripId }) });
+      const res = await apiFetch('/api/share', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ tripId }) });
       const body = (await res.json().catch(() => ({}))) as { token?: string; error?: string };
       if (!res.ok || !body.token) throw new Error(body.error ?? 'Could not create the link.');
       await saveRecord('share_link', newId('share_link'), { tripId, token: body.token, revoked: false });
@@ -788,7 +789,7 @@ function ShareCard({
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/share/${activeShare.data.token}`, { method: 'DELETE' });
+      const res = await apiFetch(`/api/share/${activeShare.data.token}`, { method: 'DELETE' });
       if (!res.ok && res.status !== 404) throw new Error('Could not revoke the link.');
       await saveRecord('share_link', activeShare.id, { ...activeShare.data, revoked: true });
     } catch (e) {

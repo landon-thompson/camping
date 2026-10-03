@@ -2,11 +2,13 @@
 
 A phone-first web app for planning our family's 2027 Minnesota camping season: gear and budget, trips on a map, campground bookings, forest-road routes, and checklists that work with **no cell signal**.
 
-Everything is saved on your phone first and syncs to a small Azure database when you have signal, so the app keeps working deep in the Superior National Forest.
+Everything is saved on your phone first and syncs to a small database when you have signal, so the app keeps working deep in the Superior National Forest.
+
+> **Hosting: use Cloudflare — see [docs/CLOUDFLARE.md](docs/CLOUDFLARE.md).** People sign in with their email and a one-time code (no Microsoft account, no list of allowed emails; everyone who signs in is recorded), and it costs $0. The Azure instructions below are kept for the original deployment until you move.
 
 ---
 
-## What it costs
+## What it costs (Azure)
 
 On Azure's free tiers the app should run for **$0–$1 a month**.
 

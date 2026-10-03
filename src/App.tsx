@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext';
-import { isFamily, loginUrl, logoutUrl, forgetUser } from './auth/identity';
+import { isFamily, loginUrl, logoutUrl, forgetUser, platform, signInLabel } from './auth/identity';
 import { Layout } from './components/Layout';
 import { LinkButton } from './components/ui';
 import { Dashboard } from './pages/Dashboard';
@@ -92,8 +92,11 @@ function Shell({ children }: { children: React.ReactNode }) {
 function SignIn() {
   return (
     <Shell>
-      <p className="text-lg text-ink-2">Family trip planning for the 2027 season. Sign in with your Microsoft account.</p>
-      <LinkButton href={loginUrl()}>Sign in with Microsoft</LinkButton>
+      <p className="text-lg text-ink-2">
+        Family trip planning for the 2027 season.{' '}
+        {platform() === 'cloudflare' ? 'Sign in with your email — you’ll get a one-time code.' : 'Sign in with your Microsoft account.'}
+      </p>
+      <LinkButton href={loginUrl()}>{signInLabel()}</LinkButton>
     </Shell>
   );
 }

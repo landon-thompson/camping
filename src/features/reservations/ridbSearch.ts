@@ -1,3 +1,5 @@
+import { apiFetch } from '../../lib/apiFetch';
+
 /** Client for our own `/api/ridb/facilities` proxy — never calls Recreation.gov/RIDB directly from the browser. */
 
 export interface RidbSearchResult {
@@ -14,7 +16,8 @@ export type RidbSearchOutcome = { ok: true; results: RidbSearchResult[] } | { ok
 export async function searchRidbFacilities(query: string, state = 'MN'): Promise<RidbSearchOutcome> {
   const url = `/api/ridb/facilities?query=${encodeURIComponent(query)}&state=${encodeURIComponent(state)}&limit=20`;
   try {
-    const res = await fetch(url);
+    const res = await apiFetch(url);
+    if (res.status === 401) return { ok: false, error: 'Your sign-in expired — tap “Sign in” at the top, then try again.' };
     const body: unknown = await res.json().catch(() => null);
     if (!res.ok) {
       const message = body && typeof body === 'object' && 'error' in body && typeof body.error === 'string' ? body.error : `Search failed (${res.status})`;

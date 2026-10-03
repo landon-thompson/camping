@@ -145,9 +145,12 @@ export class SyncEngine {
     const res = await this.fetchFn(url, {
       credentials: 'same-origin',
       cache: 'no-store',
+      // Cloudflare Access answers an expired sign-in with a redirect to its login page.
+      redirect: 'manual',
       ...init,
       headers: { 'content-type': 'application/json', ...init?.headers },
     });
+    if (res.type === 'opaqueredirect' || (res.status >= 300 && res.status < 400)) throw new HttpError(401, 'Sign in required');
     const type = res.headers.get('content-type') ?? '';
     // In `npm run dev` Vite answers unknown URLs with index.html.
     if (res.ok && !type.includes('json')) throw new HttpError(404, 'No sync server');
@@ -197,7 +200,8 @@ export class SyncEngine {
       // loop picks it up. Stop if the server made no progress, to avoid spinning.
       const handled = res.accepted.length + res.rejected.length;
       if (handled === 0) throw new Error('Server did not accept any changes');
-      if (batch.length < PUSH_BATCH) return;
+      // The server may take only part of a big batch (size limits); keep going.
+      if (batch.length < PUSH_BATCH && handled >= batch.length) return;
     }
   }
 

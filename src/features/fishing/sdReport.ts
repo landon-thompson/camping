@@ -1,3 +1,4 @@
+import { apiFetch } from '../../lib/apiFetch';
 import type { SdLakeReport } from '../../model/schemas';
 
 export const sdReportId = (water: string) => `sd_lake_report:${water.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
@@ -8,7 +9,7 @@ export const sdWaterFromKey = (key: string) => (key.startsWith('sd:') ? key.slic
 async function call(url: string, fetchFn: typeof fetch): Promise<Response> {
   let res: Response;
   try {
-    res = await fetchFn(url, { credentials: 'same-origin' });
+    res = await apiFetch(url, undefined, fetchFn);
   } catch {
     throw new Error('Couldn’t reach the app’s server (offline, or your sign-in expired — reload the app)');
   }

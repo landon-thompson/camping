@@ -1,0 +1,15 @@
+# Cloudflare Pages response headers (same as staticwebapp.config.json for Azure).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(self), camera=(self), microphone=()
+
+/sw.js
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
+/*.webmanifest
+  Content-Type: application/manifest+json
