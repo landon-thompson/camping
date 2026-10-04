@@ -4,7 +4,7 @@ A phone-first web app for planning our family's 2027 Minnesota camping season: g
 
 Everything is saved on your phone first and syncs to a small database when you have signal, so the app keeps working deep in the Superior National Forest.
 
-> **Hosting: use Cloudflare — see [docs/CLOUDFLARE.md](docs/CLOUDFLARE.md).** People sign in with their email and a one-time code (no Microsoft account, no list of allowed emails; everyone who signs in is recorded), and it costs $0. The Azure instructions below are kept for the original deployment until you move.
+> **Hosting: Cloudflare (a Worker) — see [docs/CLOUDFLARE.md](docs/CLOUDFLARE.md).** People sign in with their email and a one-time code (no Microsoft account, no list of allowed emails; everyone who signs in is recorded), and it costs $0. The Azure instructions below are kept for the original deployment until you move.
 
 ---
 

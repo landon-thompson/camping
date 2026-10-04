@@ -110,13 +110,13 @@ Coordinator reviewed every screen at 390px, then five Sonnet agents (separate wo
 - **Verify on the phone:** GFP's report-list HTML and PDF table layouts weren't readable from the sandbox; parsing was built from search snippets and tested on generated PDFs. No "similar lakes" range exists in SD reports, so there's no fewer/typical/more rating.
 
 ## Move to Cloudflare: email-code sign-in (2026-10-03)
-Owner: no Microsoft accounts; keep a login; don't maintain an allow-list, just capture emails; under 50 people → **Cloudflare Pages + Access (One-time PIN, policy "Everyone") + D1**, all free. Setup steps: `docs/CLOUDFLARE.md`.
-- Server: `functions/api/[[path]].ts` → `server/router.ts`. Verifies the Access JWT itself (signature, audience, issuer, expiry); D1 store with the same sync semantics as Azure SQL; `people` table (first/last seen, visits); `GET /api/me`, `GET /api/people` (owner only), `GET /api/login?next=` (return after sign-in). Share links are token-only lookups so they work across households.
+Owner: no Microsoft accounts; keep a login; don't maintain an allow-list, just capture emails; under 50 people → **Cloudflare Workers + Access (One-time PIN, policy "Everyone") + D1**, all free. Setup steps: `docs/CLOUDFLARE.md`.
+- Server: a Cloudflare Worker (`wrangler.jsonc`: `dist/` as static assets, `/api/*` → `server/worker.ts` → `server/router.ts`; D1 auto-created on first deploy). Owner's dashboard import made a Worker rather than Pages, so the Pages entry was dropped. Verifies the Access JWT itself (signature, audience, issuer, expiry); D1 store with the same sync semantics as Azure SQL; `people` table (first/last seen, visits); `GET /api/me`, `GET /api/people` (owner only), `GET /api/login?next=` (return after sign-in). Share links are token-only lookups so they work across households.
 - Households: `OWNER_EMAIL` + `FAMILY_EMAILS` share `family`; anyone else who signs in gets their own empty `person:<email>` space.
 - SD lake report PDFs are now parsed on the phone (`src/features/fishing/sdPdf.ts`, `sdParse.ts`; PDF reader lazy-loaded, not precached); the server only finds the report (`/api/sdfish/list`) and passes the PDF along (`/api/sdfish/pdf`). Azure Functions got the same two routes.
 - App: sign-in detects Cloudflare vs Azure; an expired Access session (redirect) shows "Sign in" instead of "offline"; Settings → People who signed in (owner); Settings explains "own space" and that emails are recorded.
 - Photos: not on Cloudflare (would need R2: payment method required). Photos stay on the phone.
-- Verified locally on the real Cloudflare runtime (`wrangler pages dev` + local D1): health, me, sync push/pull, people. **Verify on first deploy:** Access accepts the `pages.dev` address, the Bypass app for `/s`, `/assets`, `/api/share`, and whether Zero Trust Free asks for a card.
+- Verified locally on the real Cloudflare runtime (`wrangler dev` + local D1, plus a browser check): health, me, sync push/pull, people. **Verify on first deploy:** D1 auto-provisioning with the build token, the Bypass app for `/s`, `/assets`, `/api/share`, and whether Zero Trust Free asks for a card.
 
 ## Open items / to verify
 

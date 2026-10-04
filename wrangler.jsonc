@@ -1,0 +1,20 @@
+{
+  // Cloudflare Worker for Camp Planner (setup: docs/CLOUDFLARE.md).
+  // "name" must match the Worker's name in the Cloudflare dashboard.
+  "name": "camping",
+  "main": "server/worker.ts",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // The database. Leave database_id out and Cloudflare creates it on the first deploy.
+  "d1_databases": [{ "binding": "DB", "database_name": "camp-planner" }],
+  // Keep the settings you add in the dashboard (Variables and Secrets) across deploys.
+  "keep_vars": true,
+  // Only the live site; no per-branch preview copies (they would skip sign-in rules).
+  "preview_urls": false,
+  "observability": { "enabled": true }
+}
