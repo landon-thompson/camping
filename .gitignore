@@ -22,3 +22,11 @@ api/local.settings.json
 .claude/worktrees/
 .wrangler/
 .dev.vars
+
+# Lake recommender pipeline (raw downloads, tidy data, local refits with family logs)
+ml/cache/
+ml/data/
+ml/out/
+ml/.venv/
+__pycache__/
+*.pyc
