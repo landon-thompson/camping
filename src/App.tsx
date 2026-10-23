@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext';
+import { startLakeModelRefresh } from './features/lakerecs';
 import { isFamily, loginUrl, logoutUrl, forgetUser, platform, signInLabel } from './auth/identity';
 import { Layout } from './components/Layout';
 import { LinkButton } from './components/ui';
@@ -51,6 +52,8 @@ function Gate() {
     // Still usable on this phone, but the pill should say "Sign in", not "Starting…".
     else if (expired) syncEngine.setSignedOut();
   }, [canSync, expired]);
+  // Lake recommender model files are static: keep them fresh whether or not sync is on.
+  useEffect(() => startLakeModelRefresh(), []);
 
   if (!auth) return <Splash />;
   if (auth.kind === 'signed-out' && !auth.previousUser) return <SignIn />;
