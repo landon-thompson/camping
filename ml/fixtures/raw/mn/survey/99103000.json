@@ -1,0 +1,136 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Juliett",
+  "countyName": "Fixture County",
+  "areaAcres": 2400.0,
+  "maxDepth": 48,
+  "averageWaterClarity": 7.5,
+  "surveys": [
+   {
+    "surveyDate": "2003-08-09",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "MUE",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 4,
+      "CPUE": "0.67",
+      "quartileCount": "0.1-0.5",
+      "averageWeight": "5.89",
+      "quartileWeight": "6.30-11.70"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 66,
+      "CPUE": "11.00",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "1.73",
+      "quartileWeight": "1.68-3.12"
+     },
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 64,
+      "CPUE": "10.67",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "0.99"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 81,
+      "CPUE": "13.50",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.16"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 80,
+      "CPUE": "13.33",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.24"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 17,
+      "CPUE": "2.83",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.27",
+      "quartileWeight": "0.24-0.45"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2018-06-22",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "MUE",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 5,
+      "CPUE": "0.33",
+      "quartileCount": "0.1-0.5",
+      "averageWeight": "7.81"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 120,
+      "CPUE": "8.00",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "2.22",
+      "quartileWeight": "1.68-3.12"
+     },
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 144,
+      "CPUE": "9.60",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.52"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 99,
+      "CPUE": "6.60",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.12"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 114,
+      "CPUE": "19.00",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.21"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 73,
+      "CPUE": "12.17",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.39"
+     }
+    ]
+   }
+  ]
+ }
+}

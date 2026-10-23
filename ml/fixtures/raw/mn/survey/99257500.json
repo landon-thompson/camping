@@ -1,0 +1,80 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Yankee",
+  "countyName": "Fixture County",
+  "areaAcres": 81.2,
+  "surveys": [
+   {
+    "surveyDate": "1993-07-06",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "SMB",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 1,
+      "CPUE": "0.17",
+      "quartileCount": "0.2-0.8",
+      "averageWeight": "1.37",
+      "quartileWeight": "0.98-1.82"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 391,
+      "CPUE": "65.17",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.16",
+      "quartileWeight": "0.08-0.16"
+     },
+     {
+      "species": "BLB",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 5,
+      "CPUE": "0.83",
+      "quartileCount": "2.7-9.6",
+      "averageWeight": "0.36",
+      "quartileWeight": "0.28-0.52"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2023-07-15",
+    "surveyType": "Population Assessment",
+    "fishCatchSummaries": [
+     {
+      "species": "SMB",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 4,
+      "CPUE": "0.27",
+      "quartileCount": "0.2-0.8",
+      "averageWeight": "1.40",
+      "quartileWeight": "0.98-1.82"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 432,
+      "CPUE": "28.80",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.13"
+     },
+     {
+      "species": "BLB",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 20,
+      "CPUE": "1.33",
+      "quartileCount": "2.7-9.6",
+      "averageWeight": "0.37"
+     }
+    ]
+   }
+  ]
+ }
+}

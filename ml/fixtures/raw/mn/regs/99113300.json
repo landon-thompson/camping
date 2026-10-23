@@ -1,0 +1,11 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "specialRegulations": [
+   {
+    "species": "LAT",
+    "regulation": "FIXTURE TEXT (synthetic, not a real rule): lake trout season example for tests."
+   }
+  ]
+ }
+}

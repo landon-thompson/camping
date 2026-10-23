@@ -1,0 +1,134 @@
+{
+ "bySource": {
+  "mn-lakefinder": {
+   "lake-point-from-launch": {
+    "count": 1,
+    "examples": [
+     "mn:99092700"
+    ]
+   },
+   "lengths-not-gear-specific": {
+    "count": 4,
+    "examples": [
+     "99-0103-00 2022-08-11 WAE",
+     "99-0103-00 2022-08-11 NOP",
+     "99-0206-00 2023-07-04 NOP",
+     "99-0206-00 2023-07-04 YEP"
+    ]
+   },
+   "no-survey": {
+    "count": 3,
+    "examples": [
+     "99-0515-01: The requested lake survey data is not available.",
+     "99-0824-00: No lake survey found",
+     "99-2369-00: No lake survey found"
+    ]
+   },
+   "row-without-effort": {
+    "count": 5,
+    "examples": [
+     "99-0618-00 1994-07-01 WAE Standard gill nets",
+     "99-0618-00 1994-07-01 NOP Standard gill nets",
+     "99-0618-00 1994-07-01 YEP Standard gill nets",
+     "99-0618-00 1994-07-01 BLG Standard trap nets",
+     "99-0618-00 1994-07-01 BLC Standard trap nets"
+    ]
+   },
+   "sub-basin-uses-whole-lake": {
+    "count": 1,
+    "examples": [
+     "99-0515-01 -> 99-0515-00"
+    ]
+   },
+   "survey-unparseable": {
+    "count": 1,
+    "examples": [
+     "99-0721-00"
+    ]
+   },
+   "survey-without-date": {
+    "count": 1,
+    "examples": [
+     "99-1236-00: ''"
+    ]
+   }
+  },
+  "mn-water-access": {
+   "launch-not-matched-to-lake": {
+    "count": 1,
+    "examples": [
+     "Fixture Pond Unlisted Access (Fixture Pond Unlisted)"
+    ]
+   }
+  },
+  "osm-overpass": {
+   "below-min-acres": {
+    "count": 1,
+    "examples": [
+     "Fixture Pond Tiny (4.4 acres)"
+    ]
+   },
+   "duplicate-name-kept-largest": {
+    "count": 1,
+    "examples": [
+     "Fixture Lake Amber (way/900000052 dropped; kept way/900000010)"
+    ]
+   },
+   "slipway-not-near-a-kept-lake": {
+    "count": 1,
+    "examples": [
+     "node/900000304"
+    ]
+   }
+  },
+  "sd-gfp-gis": {
+   "launch-not-matched-to-lake": {
+    "count": 1,
+    "examples": [
+     "Fixture Far Away Ramp (Fixture Unknown Water)"
+    ]
+   }
+  },
+  "sd-gfp-reports": {
+   "no-survey-reports": {
+    "count": 1,
+    "examples": [
+     "Fixture Lake Elm"
+    ]
+   },
+   "pdf-unreadable": {
+    "count": 1,
+    "examples": [
+     "Fixture Lake Cottonwood #900108: PdfminerException"
+    ]
+   },
+   "species-without-dnr-code": {
+    "count": 1,
+    "examples": [
+     "Orangespotted Sunfish"
+    ]
+   }
+  }
+ },
+ "summary": [
+  "MN: 4 of 26 lakes have no usable survey",
+  "SD: 1 of 8 lakes have no usable survey",
+  "SD: 3 of 42 survey rows come from report summary sentences, not tables",
+  "SD: 1 survey PDFs could not be read",
+  "SD: 1 lakes have no GFP survey report",
+  "MN: 1 LakeFinder survey answers could not be parsed",
+  "MN: 1 water accesses not matched to a listed lake"
+ ],
+ "verify": [
+  "LakeFinder by_point: the maximum radius and whether answers are capped (LF_RESULT_CAP splits a grid cell when an answer reaches it).",
+  "LakeFinder lake_survey: lake feature keys (areaAcres / maxDepth / averageWaterClarity / region etc.) are matched loosely and not confirmed.",
+  "LakeFinder lake_survey: length distribution key and shape (matched loosely: any survey key containing 'length').",
+  "LakeFinder lake_survey: electrofishing gearCount is not hours; effort for electrofishing is totalCatch / CPUE when both are published.",
+  "LakeFinder stocking and special-regulation detail types (type=...) are discovered from LakeFinder's lake page at run time; their JSON shapes are matched loosely.",
+  "DNR water access: ramp/DOW attribute names are found by pattern like the app (waterAccess.ts).",
+  "SD GFP GIS: boat ramp layer is found by name in the Parks/Fisheries/Public_Lands folders.",
+  "SD GFP Fishery Reports: ?Waterbody= search may list reports of several same-named lakes.",
+  "SD lakes: state membership is a box test (east of -96.44 is dropped); border lakes may be shared with MN/ND/NE/IA.",
+  "SD lake area is computed from OpenStreetMap outlines (approximate); depth and clarity are not available."
+ ]
+}

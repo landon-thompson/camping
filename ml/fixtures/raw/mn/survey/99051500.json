@@ -1,0 +1,202 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Echo",
+  "countyName": "Fixture County",
+  "areaAcres": 3300.0,
+  "maxDepth": 60,
+  "averageWaterClarity": 9.0,
+  "surveys": [
+   {
+    "surveyDate": "1999-06-13",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 136,
+      "CPUE": "11.33",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.12"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 30,
+      "CPUE": "2.50",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "2.46"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 617,
+      "CPUE": "51.42",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.14",
+      "quartileWeight": "0.08-0.16"
+     },
+     {
+      "species": "TLC",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 120,
+      "CPUE": "10.00",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "0.54",
+      "quartileWeight": "0.35-0.65"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 206,
+      "CPUE": "17.17",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.33"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 40,
+      "CPUE": "3.33",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.27",
+      "quartileWeight": "0.24-0.45"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2010-07-27",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 116,
+      "CPUE": "9.67",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.16"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 53,
+      "CPUE": "4.42",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "3.49"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 205,
+      "CPUE": "17.08",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.10",
+      "quartileWeight": "0.08-0.16"
+     },
+     {
+      "species": "TLC",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 18,
+      "CPUE": "1.50",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "0.61",
+      "quartileWeight": "0.35-0.65"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 126,
+      "CPUE": "10.50",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.26"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 273,
+      "CPUE": "22.75",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.34",
+      "quartileWeight": "0.24-0.45"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2020-08-07",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 23,
+      "CPUE": "2.56",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.14",
+      "quartileWeight": "0.91-1.69"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 9,
+      "CPUE": "1.00",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "2.16",
+      "quartileWeight": "1.68-3.12"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 203,
+      "CPUE": "22.56",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.12"
+     },
+     {
+      "species": "TLC",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 80,
+      "CPUE": "8.89",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "0.59",
+      "quartileWeight": "0.35-0.65"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 76,
+      "CPUE": "8.44",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.13",
+      "quartileWeight": "0.14-0.26"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 100,
+      "CPUE": "11.11",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.32"
+     }
+    ]
+   }
+  ]
+ }
+}

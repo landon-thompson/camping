@@ -1,0 +1,32 @@
+{
+ "mn:99010300": [
+  {
+   "species": "WAE",
+   "text": "FIXTURE TEXT (synthetic, not a real rule): walleye protected slot example for tests.",
+   "url": "https://www.dnr.state.mn.us/lakefind/lake.html?id=99010300",
+   "fetchedAt": "2026-10-01T00:00:00Z"
+  }
+ ],
+ "mn:99103000": [
+  {
+   "species": "MUE",
+   "text": "FIXTURE TEXT (synthetic, not a real rule): muskellunge minimum size example for tests.",
+   "url": "https://www.dnr.state.mn.us/lakefind/lake.html?id=99103000",
+   "fetchedAt": "2026-10-01T00:00:00Z"
+  },
+  {
+   "species": null,
+   "text": "FIXTURE TEXT (synthetic): electric motors only example for tests.",
+   "url": "https://www.dnr.state.mn.us/lakefind/lake.html?id=99103000",
+   "fetchedAt": "2026-10-01T00:00:00Z"
+  }
+ ],
+ "mn:99113300": [
+  {
+   "species": "LAT",
+   "text": "FIXTURE TEXT (synthetic, not a real rule): lake trout season example for tests.",
+   "url": "https://www.dnr.state.mn.us/lakefind/lake.html?id=99113300",
+   "fetchedAt": "2026-10-01T00:00:00Z"
+  }
+ ]
+}

@@ -1,0 +1,67 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Tango",
+  "countyName": "Fixture County",
+  "areaAcres": 104.0,
+  "averageWaterClarity": 2.3,
+  "surveys": [
+   {
+    "surveyDate": "2014-07-27",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "SMB",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 4,
+      "CPUE": "0.27",
+      "quartileCount": "0.2-0.8",
+      "averageWeight": "1.53",
+      "quartileWeight": "0.98-1.82"
+     },
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 78,
+      "CPUE": "5.20",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.35",
+      "quartileWeight": "0.91-1.69"
+     },
+     {
+      "species": "HSF",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 8,
+      "CPUE": "0.67",
+      "quartileCount": "0.5-1.6",
+      "averageWeight": "0.25",
+      "quartileWeight": "0.17-0.33"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 182,
+      "CPUE": "15.17",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.24",
+      "quartileWeight": "0.14-0.26"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 149,
+      "CPUE": "12.42",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.47",
+      "quartileWeight": "0.24-0.45"
+     }
+    ]
+   }
+  ]
+ }
+}

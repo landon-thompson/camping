@@ -1,0 +1,11 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "specialRegulations": [
+   {
+    "species": "WAE",
+    "regulation": "FIXTURE TEXT (synthetic, not a real rule): walleye protected slot example for tests."
+   }
+  ]
+ }
+}

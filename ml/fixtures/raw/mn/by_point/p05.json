@@ -1,0 +1,49 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Golf",
+   "id": "99072100",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.2812,
+     47.10687
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Lima",
+   "id": "99123600",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.20422,
+     47.25414
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Mike",
+   "id": "99133900",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.04534,
+     47.24831
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Quebec",
+   "id": "99175100",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.21451,
+     47.35705
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,136 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Quebec",
+  "countyName": "Fixture County",
+  "surveys": [
+   {
+    "surveyDate": "1992-06-23",
+    "surveyType": "Population Assessment",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 52,
+      "CPUE": "4.33",
+      "quartileCount": "N/A",
+      "averageWeight": "1.60",
+      "quartileWeight": "0.91-1.69"
+     },
+     {
+      "species": "TLC",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 36,
+      "CPUE": "3.00",
+      "quartileCount": "N/A",
+      "averageWeight": "0.56"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 16,
+      "CPUE": "1.78",
+      "quartileCount": "N/A",
+      "averageWeight": "0.38",
+      "quartileWeight": "0.24-0.45"
+     },
+     {
+      "species": "RKB",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 42,
+      "CPUE": "4.67",
+      "quartileCount": "N/A",
+      "averageWeight": "0.40",
+      "quartileWeight": "0.21-0.39"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 116,
+      "CPUE": "12.89",
+      "quartileCount": "N/A",
+      "averageWeight": "0.24"
+     },
+     {
+      "species": "HSF",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 8,
+      "CPUE": "0.89",
+      "quartileCount": "N/A",
+      "averageWeight": "0.19",
+      "quartileWeight": "0.17-0.33"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2023-08-01",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 26,
+      "CPUE": "2.89",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.43"
+     },
+     {
+      "species": "TLC",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 60,
+      "CPUE": "6.67",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "0.56"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 3,
+      "CPUE": "0.50",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.38",
+      "quartileWeight": "0.24-0.45"
+     },
+     {
+      "species": "RKB",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 4,
+      "CPUE": "0.67",
+      "quartileCount": "0.9-3.2",
+      "averageWeight": "0.28",
+      "quartileWeight": "0.21-0.39"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 47,
+      "CPUE": "7.83",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.25",
+      "quartileWeight": "0.14-0.26"
+     },
+     {
+      "species": "HSF",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 6,
+      "CPUE": "1.00",
+      "quartileCount": "0.5-1.6",
+      "averageWeight": "0.27"
+     }
+    ]
+   }
+  ]
+ }
+}

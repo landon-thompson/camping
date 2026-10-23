@@ -1,0 +1,120 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Delta",
+  "countyName": "Fixture County",
+  "areaAcres": 870.5,
+  "maxDepth": 55,
+  "averageWaterClarity": 14.0,
+  "surveys": [
+   {
+    "surveyDate": "2012-07-14",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 15,
+      "CPUE": "2.50",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.76",
+      "quartileWeight": "0.91-1.69"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 180,
+      "CPUE": "30.00",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "2.52",
+      "quartileWeight": "1.68-3.12"
+     },
+     {
+      "species": "SMB",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 7,
+      "CPUE": "1.17",
+      "quartileCount": "0.2-0.8",
+      "averageWeight": "0.96",
+      "quartileWeight": "0.98-1.82"
+     },
+     {
+      "species": "RKB",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 18,
+      "CPUE": "3.00",
+      "quartileCount": "0.4-1.3",
+      "averageWeight": "0.32",
+      "quartileWeight": "0.21-0.39"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 21,
+      "CPUE": "3.50",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.24",
+      "quartileWeight": "0.14-0.26"
+     },
+     {
+      "species": "RKB",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 75,
+      "CPUE": "12.50",
+      "quartileCount": "0.9-3.2",
+      "averageWeight": "0.30",
+      "quartileWeight": "0.21-0.39"
+     },
+     {
+      "species": "PMK",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 24,
+      "CPUE": "4.00",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "0.12",
+      "quartileWeight": "0.10-0.20"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2021-08-18",
+    "surveyType": "Special Assessment",
+    "surveySubType": "Bass Electrofishing",
+    "fishCatchSummaries": [
+     {
+      "species": "SMB",
+      "gear": "Standard electrofishing",
+      "gearCount": 6,
+      "totalCatch": 68,
+      "CPUE": "22.67",
+      "averageWeight": "1.38"
+     },
+     {
+      "species": "LMB",
+      "gear": "Standard electrofishing",
+      "gearCount": 6,
+      "totalCatch": 121,
+      "CPUE": "40.33",
+      "averageWeight": "0.82",
+      "quartileWeight": "0.77-1.43"
+     },
+     {
+      "species": "PMK",
+      "gear": "Standard electrofishing",
+      "gearCount": 6,
+      "totalCatch": 63,
+      "CPUE": "21.00",
+      "averageWeight": "0.13"
+     }
+    ]
+   }
+  ]
+ }
+}

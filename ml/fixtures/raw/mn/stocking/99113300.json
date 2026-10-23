@@ -1,0 +1,43 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "stocking": [
+   {
+    "year": 2021,
+    "species": "LAT",
+    "size": "yearling",
+    "number": 4784
+   },
+   {
+    "year": 2023,
+    "species": "LAT",
+    "size": "yearling",
+    "number": 2928
+   },
+   {
+    "year": 2024,
+    "species": "LAT",
+    "size": "yearling",
+    "number": 4093
+   },
+   {
+    "year": 2015,
+    "species": "RBT",
+    "size": "yearling",
+    "number": 2953
+   },
+   {
+    "year": 2020,
+    "species": "RBT",
+    "size": "yearling",
+    "number": 1992
+   },
+   {
+    "year": 2021,
+    "species": "RBT",
+    "size": "yearling",
+    "number": 2969
+   }
+  ]
+ }
+}

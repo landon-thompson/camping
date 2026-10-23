@@ -1,0 +1,285 @@
+{
+ "features": [
+  {
+   "attributes": {
+    "OBJECTID": 1,
+    "ACCESS_NAME": "Fixture Lake Alpha Access N",
+    "LAKE_NAME": "Alpha",
+    "DOW_NUM": "99010300",
+    "RAMP_TYPE": "Concrete",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.477187,
+    "y": 46.96413
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 2,
+    "ACCESS_NAME": "Fixture Lake Alpha Access S",
+    "LAKE_NAME": "Alpha",
+    "DOW_NUM": "99010300",
+    "RAMP_TYPE": "Gravel",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.488007,
+    "y": 46.964775
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 3,
+    "ACCESS_NAME": "Fixture Lake Bravo Access N",
+    "LAKE_NAME": "Bravo",
+    "DOW_NUM": "99020600",
+    "RAMP_TYPE": "Gravel",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.219244,
+    "y": 46.977738
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 4,
+    "ACCESS_NAME": "Fixture Lake Charlie Access N",
+    "LAKE_NAME": "Charlie",
+    "DOW_NUM": "99030900",
+    "RAMP_TYPE": "Carry-in",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.981888,
+    "y": 46.956292
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 5,
+    "ACCESS_NAME": "Fixture Lake Delta Access N",
+    "LAKE_NAME": "Fixture Lake Delta",
+    "DOW_NUM": null,
+    "RAMP_TYPE": "Concrete Plank",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.827571,
+    "y": 46.953986
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 6,
+    "ACCESS_NAME": "Fixture Lake Delta Access S",
+    "LAKE_NAME": "Fixture Lake Delta",
+    "DOW_NUM": null,
+    "RAMP_TYPE": "",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.802551,
+    "y": 46.943509
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 7,
+    "ACCESS_NAME": "Fixture Lake Echo Access N",
+    "LAKE_NAME": "Echo",
+    "DOW_NUM": "99051500",
+    "RAMP_TYPE": "",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.57015,
+    "y": 46.974101
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 8,
+    "ACCESS_NAME": "Fixture Lake Foxtrot Access N",
+    "LAKE_NAME": "Foxtrot",
+    "DOW_NUM": "990618",
+    "RAMP_TYPE": "Natural",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.420765,
+    "y": 47.064772
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 9,
+    "ACCESS_NAME": "Fixture Lake Golf Access N",
+    "LAKE_NAME": "Golf",
+    "DOW_NUM": "99072100",
+    "RAMP_TYPE": "Bituminous",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.278834,
+    "y": 47.10495
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 10,
+    "ACCESS_NAME": "Fixture Lake Golf Access S",
+    "LAKE_NAME": "Golf",
+    "DOW_NUM": "99072100",
+    "RAMP_TYPE": "Carry-In Only",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.279572,
+    "y": 47.105151
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 11,
+    "ACCESS_NAME": "Fixture Lake Hotel Access N",
+    "LAKE_NAME": "Hotel",
+    "DOW_NUM": "99082400",
+    "RAMP_TYPE": "Carry-In Only",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.974187,
+    "y": 47.074226
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 12,
+    "ACCESS_NAME": "Fixture Lake India Access N",
+    "LAKE_NAME": "India",
+    "DOW_NUM": "99092700",
+    "RAMP_TYPE": "Concrete",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.791634,
+    "y": 47.107411
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 13,
+    "ACCESS_NAME": "Fixture Lake Juliett Access N",
+    "LAKE_NAME": "Juliett",
+    "DOW_NUM": "99103000",
+    "RAMP_TYPE": "Concrete",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.554805,
+    "y": 47.15885
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 14,
+    "ACCESS_NAME": "Fixture Lake Juliett Access S",
+    "LAKE_NAME": "Juliett",
+    "DOW_NUM": "99103000",
+    "RAMP_TYPE": "Gravel",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.540621,
+    "y": 47.148561
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 15,
+    "ACCESS_NAME": "Fixture Lake Kilo Access N",
+    "LAKE_NAME": "Fixture Lake Kilo",
+    "DOW_NUM": null,
+    "RAMP_TYPE": "Gravel",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.499004,
+    "y": 47.203765
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 16,
+    "ACCESS_NAME": "Fixture Lake Lima Access N",
+    "LAKE_NAME": "Lima",
+    "DOW_NUM": "99123600",
+    "RAMP_TYPE": "Carry-in",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.195223,
+    "y": 47.253629
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 17,
+    "ACCESS_NAME": "Fixture Lake Mike Access N",
+    "LAKE_NAME": "Mike",
+    "DOW_NUM": "99133900",
+    "RAMP_TYPE": "Concrete Plank",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.029294,
+    "y": 47.264006
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 18,
+    "ACCESS_NAME": "Fixture Lake Mike Access S",
+    "LAKE_NAME": "Mike",
+    "DOW_NUM": "99133900",
+    "RAMP_TYPE": "",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.01785,
+    "y": 47.266715
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 19,
+    "ACCESS_NAME": "Fixture Lake November Access N",
+    "LAKE_NAME": "November",
+    "DOW_NUM": "99144200",
+    "RAMP_TYPE": "",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.736403,
+    "y": 47.230328
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 20,
+    "ACCESS_NAME": "Fixture Lake Oscar Access N",
+    "LAKE_NAME": "Oscar",
+    "DOW_NUM": "99154500",
+    "RAMP_TYPE": "Natural",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.503626,
+    "y": 47.272943
+   }
+  }
+ ],
+ "exceededTransferLimit": true
+}

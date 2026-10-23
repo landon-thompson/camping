@@ -1,0 +1,38 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Echo",
+   "id": "99051500",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.58078,
+     46.99183
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Juliett",
+   "id": "99103000",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.56274,
+     47.14464
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Echo (East Basin)",
+   "id": "99051501",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.53078,
+     47.02183
+    ]
+   }
+  }
+ ]
+}

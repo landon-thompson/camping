@@ -1,0 +1,49 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Romeo",
+   "id": "99185400",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.92812,
+     47.38949
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Sierra",
+   "id": "99195700",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.80643,
+     47.38356
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Whiskey",
+   "id": "99236900",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.97539,
+     47.52482
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Xray",
+   "id": "99247200",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.76693,
+     47.5612
+    ]
+   }
+  }
+ ]
+}

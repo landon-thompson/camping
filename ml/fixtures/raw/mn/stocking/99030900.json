@@ -1,0 +1,25 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "stocking": [
+   {
+    "year": 2016,
+    "species": "Walleye",
+    "size": "fingerling",
+    "number": 4896
+   },
+   {
+    "year": 2017,
+    "species": "Walleye",
+    "size": "fingerling",
+    "number": 9537
+   },
+   {
+    "year": 2023,
+    "species": "Walleye",
+    "size": "fingerling",
+    "number": 7442
+   }
+  ]
+ }
+}
