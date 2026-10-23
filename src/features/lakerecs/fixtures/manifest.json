@@ -1,0 +1,98 @@
+{
+  "format": 1,
+  "version": "2026.10.0-fixture",
+  "createdAt": "2026-10-01T00:00:00Z",
+  "codeVersion": "fixture",
+  "species": [
+    {
+      "code": "WAE",
+      "name": "Walleye",
+      "primaryGear": "Gill net",
+      "unit": "fish per net",
+      "typicalCpue": {
+        "MN": 6,
+        "SD": null
+      }
+    },
+    {
+      "code": "NOP",
+      "name": "Northern pike",
+      "primaryGear": "Gill net",
+      "unit": "fish per net",
+      "typicalCpue": {
+        "MN": 4,
+        "SD": null
+      }
+    },
+    {
+      "code": "BLG",
+      "name": "Bluegill",
+      "primaryGear": "Trap net",
+      "unit": "fish per net",
+      "typicalCpue": {
+        "MN": 25,
+        "SD": null
+      }
+    }
+  ],
+  "tiles": [
+    {
+      "id": "t_47.5_-92",
+      "bbox": [
+        -92,
+        47.5,
+        -91,
+        48
+      ],
+      "url": "tiles/t_47.5_-92.json",
+      "bytes": 7009,
+      "sha256": "5e6acce1a5b08cbee23c6bd57edf4bf544bf177f2737ea94b065c40a6e024704",
+      "lakes": 6
+    },
+    {
+      "id": "t_47.5_-93",
+      "bbox": [
+        -93,
+        47.5,
+        -92,
+        48
+      ],
+      "url": "tiles/t_47.5_-93.json",
+      "bytes": 3115,
+      "sha256": "adf0ebbb72891cb8b872401aea2e2664970e969569a68ce17eeee2ab843aff15",
+      "lakes": 3
+    },
+    {
+      "id": "t_48_-92",
+      "bbox": [
+        -92,
+        48,
+        -91,
+        48.5
+      ],
+      "url": "tiles/t_48_-92.json",
+      "bytes": 1000,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "lakes": 0
+    }
+  ],
+  "validation": {
+    "n": 0,
+    "coverage80": 0,
+    "coverage50": 0,
+    "crpsModel": 0,
+    "crpsBaseline": 0,
+    "bySpecies": {}
+  },
+  "sources": [
+    {
+      "name": "Synthetic fixture",
+      "url": "https://example.invalid/",
+      "terms": "Test data only",
+      "fetchedAt": "2026-10-01"
+    }
+  ],
+  "gaps": [
+    "Fixture: synthetic numbers, not real lakes."
+  ]
+}
