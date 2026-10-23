@@ -1,0 +1,60 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Hotel",
+   "id": "99082400",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.94469,
+     47.08409
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Mike",
+   "id": "99133900",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.04534,
+     47.24831
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake November",
+   "id": "99144200",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.73183,
+     47.24061
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Romeo",
+   "id": "99185400",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.92812,
+     47.38949
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Sierra",
+   "id": "99195700",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.80643,
+     47.38356
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,66 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake India",
+  "countyName": "Fixture County",
+  "areaAcres": 220.0,
+  "maxDepth": 18,
+  "surveys": [
+   {
+    "surveyDate": "2017-08-05",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 31,
+      "CPUE": "3.44",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.52",
+      "quartileWeight": "0.91-1.69"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 23,
+      "CPUE": "2.56",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "2.17"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 245,
+      "CPUE": "27.22",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.11",
+      "quartileWeight": "0.08-0.16"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 191,
+      "CPUE": "21.22",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.20",
+      "quartileWeight": "0.14-0.26"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 26,
+      "CPUE": "2.89",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.32",
+      "quartileWeight": "0.24-0.45"
+     }
+    ]
+   }
+  ]
+ }
+}

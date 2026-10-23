@@ -1,0 +1,97 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Lima",
+  "countyName": "Fixture County",
+  "areaAcres": 300.0,
+  "surveys": [
+   {
+    "surveyDate": "",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 76,
+      "CPUE": "8.44",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.56",
+      "quartileWeight": "0.91-1.69"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 334,
+      "CPUE": "37.11",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "1.65",
+      "quartileWeight": "1.68-3.12"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 233,
+      "CPUE": "19.42",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.23"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2015-06-09",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 134,
+      "CPUE": "8.93",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "0.65"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 199,
+      "CPUE": "13.27",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "3.31",
+      "quartileWeight": "1.68-3.12"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 132,
+      "CPUE": "8.80",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.17"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 68,
+      "CPUE": "7.56",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.23"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 9,
+      "CPUE": "1.00",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.34"
+     }
+    ]
+   }
+  ]
+ }
+}

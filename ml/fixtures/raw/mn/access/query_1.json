@@ -1,0 +1,242 @@
+{
+ "features": [
+  {
+   "attributes": {
+    "OBJECTID": 21,
+    "ACCESS_NAME": "Fixture Lake Papa Access N",
+    "LAKE_NAME": "Papa",
+    "DOW_NUM": "99164800",
+    "RAMP_TYPE": "Bituminous",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.505922,
+    "y": 47.387329
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 22,
+    "ACCESS_NAME": "Fixture Lake Papa Access S",
+    "LAKE_NAME": "Papa",
+    "DOW_NUM": "99164800",
+    "RAMP_TYPE": "Carry-In Only",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.477927,
+    "y": 47.378557
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 23,
+    "ACCESS_NAME": "Fixture Lake Quebec Access N",
+    "LAKE_NAME": "Quebec",
+    "DOW_NUM": "991751",
+    "RAMP_TYPE": "Carry-In Only",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.186151,
+    "y": 47.337361
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 24,
+    "ACCESS_NAME": "Fixture Lake Romeo Access N",
+    "LAKE_NAME": "Fixture Lake Romeo",
+    "DOW_NUM": null,
+    "RAMP_TYPE": "Concrete",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.953693,
+    "y": 47.373097
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 25,
+    "ACCESS_NAME": "Fixture Lake Sierra Access N",
+    "LAKE_NAME": "Sierra",
+    "DOW_NUM": "99195700",
+    "RAMP_TYPE": "Concrete",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.814302,
+    "y": 47.402299
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 26,
+    "ACCESS_NAME": "Fixture Lake Sierra Access S",
+    "LAKE_NAME": "Sierra",
+    "DOW_NUM": "99195700",
+    "RAMP_TYPE": "Gravel",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.809476,
+    "y": 47.385925
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 27,
+    "ACCESS_NAME": "Fixture Lake Tango Access N",
+    "LAKE_NAME": "Tango",
+    "DOW_NUM": "99206000",
+    "RAMP_TYPE": "Gravel",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.570719,
+    "y": 47.409797
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 28,
+    "ACCESS_NAME": "Fixture Lake Uniform Access N",
+    "LAKE_NAME": "Uniform",
+    "DOW_NUM": "99216300",
+    "RAMP_TYPE": "Carry-in",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.566067,
+    "y": 47.512036
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 29,
+    "ACCESS_NAME": "Fixture Lake Victor Access N",
+    "LAKE_NAME": "Victor",
+    "DOW_NUM": "99226600",
+    "RAMP_TYPE": "Concrete Plank",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.213408,
+    "y": 47.56215
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 30,
+    "ACCESS_NAME": "Fixture Lake Victor Access S",
+    "LAKE_NAME": "Victor",
+    "DOW_NUM": "99226600",
+    "RAMP_TYPE": "",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.225553,
+    "y": 47.561862
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 31,
+    "ACCESS_NAME": "Fixture Lake Whiskey Access N",
+    "LAKE_NAME": "Whiskey",
+    "DOW_NUM": "99236900",
+    "RAMP_TYPE": "",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.98537,
+    "y": 47.509758
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 32,
+    "ACCESS_NAME": "Fixture Lake Xray Access N",
+    "LAKE_NAME": "Xray",
+    "DOW_NUM": "99247200",
+    "RAMP_TYPE": "Natural",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.787547,
+    "y": 47.557708
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 33,
+    "ACCESS_NAME": "Fixture Lake Yankee Access N",
+    "LAKE_NAME": "Fixture Lake Yankee",
+    "DOW_NUM": null,
+    "RAMP_TYPE": "Bituminous",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.464881,
+    "y": 47.522094
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 34,
+    "ACCESS_NAME": "Fixture Lake Yankee Access S",
+    "LAKE_NAME": "Fixture Lake Yankee",
+    "DOW_NUM": null,
+    "RAMP_TYPE": "Carry-In Only",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -93.466907,
+    "y": 47.540263
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 35,
+    "ACCESS_NAME": "Fixture East Basin Access",
+    "LAKE_NAME": "Fixture Lake Echo",
+    "DOW_NUM": "99051501",
+    "RAMP_TYPE": "Concrete",
+    "ADMIN": "Fixture County"
+   },
+   "geometry": {
+    "x": -93.53078,
+    "y": 47.02183
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 36,
+    "ACCESS_NAME": "Fixture Pond Unlisted Access",
+    "LAKE_NAME": "Fixture Pond Unlisted",
+    "DOW_NUM": "99999900",
+    "RAMP_TYPE": "Gravel",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.0,
+    "y": 47.2
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 37,
+    "ACCESS_NAME": "Fixture Lake Alpha Access N",
+    "LAKE_NAME": "Alpha",
+    "DOW_NUM": "99010300",
+    "RAMP_TYPE": "Concrete",
+    "ADMIN": "Fixture DNR"
+   },
+   "geometry": {
+    "x": -94.477187,
+    "y": 46.96413
+   }
+  }
+ ]
+}

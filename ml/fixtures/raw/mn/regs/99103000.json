@@ -1,0 +1,15 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "specialRegulations": [
+   {
+    "species": "Muskellunge",
+    "regulation": "FIXTURE TEXT (synthetic, not a real rule): muskellunge minimum size example for tests."
+   },
+   {
+    "species": null,
+    "regulation": "FIXTURE TEXT (synthetic): electric motors only example for tests."
+   }
+  ]
+ }
+}

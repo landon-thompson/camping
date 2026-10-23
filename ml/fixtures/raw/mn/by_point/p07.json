@@ -1,0 +1,49 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Juliett",
+   "id": "99103000",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.56274,
+     47.14464
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake November",
+   "id": "99144200",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.73183,
+     47.24061
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Oscar",
+   "id": "99154500",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.52727,
+     47.2693
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Tango",
+   "id": "99206000",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.55098,
+     47.40923
+    ]
+   }
+  }
+ ]
+}

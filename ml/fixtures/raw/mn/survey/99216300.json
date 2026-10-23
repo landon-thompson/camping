@@ -1,0 +1,160 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Uniform",
+  "countyName": "Fixture County",
+  "areaAcres": 1176.6,
+  "maxDepth": 81,
+  "averageWaterClarity": 9.6,
+  "surveys": [
+   {
+    "surveyDate": "2003-08-25",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WTS",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 11,
+      "CPUE": "1.83",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "2.26",
+      "quartileWeight": "1.26-2.34"
+     },
+     {
+      "species": "SMB",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 4,
+      "CPUE": "0.67",
+      "quartileCount": "0.2-0.8",
+      "averageWeight": "1.42",
+      "quartileWeight": "0.98-1.82"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 84,
+      "CPUE": "14.00",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.15",
+      "quartileWeight": "0.08-0.16"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 35,
+      "CPUE": "5.83",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "3.03"
+     },
+     {
+      "species": "PMK",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 11,
+      "CPUE": "1.83",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "0.14"
+     },
+     {
+      "species": "LMB",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 2,
+      "CPUE": "0.33",
+      "quartileCount": "0.2-0.8",
+      "averageWeight": "1.27",
+      "quartileWeight": "0.77-1.43"
+     },
+     {
+      "species": "RKB",
+      "gear": "Standard trap nets",
+      "gearCount": 6,
+      "totalCatch": 3,
+      "CPUE": "0.50",
+      "quartileCount": "0.9-3.2",
+      "averageWeight": "0.26",
+      "quartileWeight": "0.21-0.39"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2013-08-03",
+    "surveyType": "Population Assessment",
+    "fishCatchSummaries": [
+     {
+      "species": "WTS",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 11,
+      "CPUE": "1.83",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "1.72",
+      "quartileWeight": "1.26-2.34"
+     },
+     {
+      "species": "SMB",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 2,
+      "CPUE": "0.33",
+      "quartileCount": "0.2-0.8",
+      "averageWeight": "2.02",
+      "quartileWeight": "0.98-1.82"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 59,
+      "CPUE": "9.83",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.13",
+      "quartileWeight": "0.08-0.16"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 6,
+      "totalCatch": 11,
+      "CPUE": "1.83",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "2.57",
+      "quartileWeight": "1.68-3.12"
+     },
+     {
+      "species": "PMK",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 14,
+      "CPUE": "1.17",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "0.19"
+     },
+     {
+      "species": "LMB",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 1,
+      "CPUE": "0.08",
+      "quartileCount": "0.2-0.8",
+      "averageWeight": "1.42",
+      "quartileWeight": "0.77-1.43"
+     },
+     {
+      "species": "RKB",
+      "gear": "Standard trap nets",
+      "gearCount": 12,
+      "totalCatch": 11,
+      "CPUE": "0.92",
+      "quartileCount": "0.9-3.2",
+      "averageWeight": "0.28"
+     }
+    ]
+   }
+  ]
+ }
+}

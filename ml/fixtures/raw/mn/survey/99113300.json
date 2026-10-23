@@ -1,0 +1,144 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Kilo",
+  "countyName": "Fixture County",
+  "areaAcres": 950.0,
+  "maxDepth": 140,
+  "averageWaterClarity": 22.0,
+  "surveys": [
+   {
+    "surveyDate": "1991-07-03",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "LAT",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 16,
+      "CPUE": "1.78",
+      "quartileCount": "N/A",
+      "averageWeight": "2.51"
+     },
+     {
+      "species": "TLC",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 35,
+      "CPUE": "3.89",
+      "quartileCount": "N/A",
+      "averageWeight": "0.59",
+      "quartileWeight": "0.35-0.65"
+     },
+     {
+      "species": "WTS",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 40,
+      "CPUE": "4.44",
+      "quartileCount": "N/A",
+      "averageWeight": "1.51"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 31,
+      "CPUE": "3.44",
+      "quartileCount": "N/A",
+      "averageWeight": "2.12",
+      "quartileWeight": "1.68-3.12"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2008-07-17",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "LAT",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 23,
+      "CPUE": "1.53",
+      "quartileCount": "0.9-3.2",
+      "averageWeight": "2.90",
+      "quartileWeight": "2.10-3.90"
+     },
+     {
+      "species": "TLC",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 16,
+      "CPUE": "1.07",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "0.48",
+      "quartileWeight": "0.35-0.65"
+     },
+     {
+      "species": "WTS",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 70,
+      "CPUE": "4.67",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "1.99"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 65,
+      "CPUE": "4.33",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "1.91"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2024-08-16",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "LAT",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 13,
+      "CPUE": "1.44",
+      "quartileCount": "0.9-3.2",
+      "averageWeight": "3.94",
+      "quartileWeight": "2.10-3.90"
+     },
+     {
+      "species": "TLC",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 35,
+      "CPUE": "3.89",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "0.58"
+     },
+     {
+      "species": "WTS",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 56,
+      "CPUE": "6.22",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "2.00",
+      "quartileWeight": "1.26-2.34"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 9,
+      "totalCatch": 154,
+      "CPUE": "17.11",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "2.96"
+     }
+    ]
+   }
+  ]
+ }
+}

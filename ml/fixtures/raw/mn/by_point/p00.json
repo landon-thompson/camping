@@ -1,0 +1,49 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Alpha",
+   "id": "99010300",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.50018,
+     46.94795
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Bravo",
+   "id": "99020600",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.20905,
+     46.97244
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Foxtrot",
+   "id": "99061800",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.42352,
+     47.07945
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Golf",
+   "id": "99072100",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.2812,
+     47.10687
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Papa",
+   "id": "99164800",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.48176,
+     47.39771
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Uniform",
+   "id": "99216300",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.54966,
+     47.52877
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Victor",
+   "id": "99226600",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.23063,
+     47.56325
+    ]
+   }
+  }
+ ]
+}

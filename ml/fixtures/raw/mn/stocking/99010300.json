@@ -1,0 +1,43 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "stocking": [
+   {
+    "year": 2012,
+    "species": "WAE",
+    "size": "fry",
+    "number": 725683
+   },
+   {
+    "year": 2013,
+    "species": "WAE",
+    "size": "fry",
+    "number": 1277541
+   },
+   {
+    "year": 2017,
+    "species": "WAE",
+    "size": "fry",
+    "number": 839212
+   },
+   {
+    "year": 2013,
+    "species": "WAE",
+    "size": "fingerling",
+    "number": 22083
+   },
+   {
+    "year": 2017,
+    "species": "WAE",
+    "size": "fingerling",
+    "number": 22574
+   },
+   {
+    "year": 2021,
+    "species": "WAE",
+    "size": "fingerling",
+    "number": 10977
+   }
+  ]
+ }
+}

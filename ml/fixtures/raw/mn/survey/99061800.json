@@ -1,0 +1,53 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Foxtrot",
+  "countyName": "Fixture County",
+  "areaAcres": 410.0,
+  "surveys": [
+   {
+    "surveyDate": "1994-07-01",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "CPUE": "1.56",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.54"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "CPUE": "4.11",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "2.60"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "CPUE": "40.22",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.12",
+      "quartileWeight": "0.08-0.16"
+     },
+     {
+      "species": "BLG",
+      "gear": "Standard trap nets",
+      "CPUE": "5.67",
+      "quartileCount": "9.0-32.0",
+      "averageWeight": "0.19"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "CPUE": "3.83",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.35",
+      "quartileWeight": "0.24-0.45"
+     }
+    ]
+   }
+  ]
+ }
+}

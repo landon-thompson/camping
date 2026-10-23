@@ -1,0 +1,25 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "stocking": [
+   {
+    "year": 2013,
+    "species": "MUE",
+    "size": "fingerling",
+    "number": 755
+   },
+   {
+    "year": 2015,
+    "species": "MUE",
+    "size": "fingerling",
+    "number": 601
+   },
+   {
+    "year": 2017,
+    "species": "MUE",
+    "size": "fingerling",
+    "number": 388
+   }
+  ]
+ }
+}

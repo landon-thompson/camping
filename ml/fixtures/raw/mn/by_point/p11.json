@@ -1,0 +1,38 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Tango",
+   "id": "99206000",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.55098,
+     47.40923
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Xray",
+   "id": "99247200",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.76693,
+     47.5612
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Yankee",
+   "id": "99257500",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.45084,
+     47.5278
+    ]
+   }
+  }
+ ]
+}

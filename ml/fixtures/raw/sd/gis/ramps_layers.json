@@ -1,0 +1,11 @@
+{
+ "layers": [
+  {
+   "id": 0,
+   "name": "Boat Ramps",
+   "geometryType": "esriGeometryPoint",
+   "maxRecordCount": 1000,
+   "objectIdField": "OBJECTID"
+  }
+ ]
+}

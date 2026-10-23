@@ -1,0 +1,100 @@
+{
+ "features": [
+  {
+   "attributes": {
+    "OBJECTID": 1,
+    "NAME": "Fixture Amber North Ramp",
+    "LAKE": "Fixture Lake Amber",
+    "RAMP_TYPE": "Concrete"
+   },
+   "geometry": {
+    "x": -97.43,
+    "y": 44.12
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 2,
+    "NAME": "Fixture Amber South Access",
+    "LAKE": "Amber",
+    "RAMP_TYPE": "Gravel"
+   },
+   "geometry": {
+    "x": -97.46,
+    "y": 44.105
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 3,
+    "NAME": "Fixture Basswood Ramp",
+    "LAKE": "Fixture Lake Basswood",
+    "RAMP_TYPE": "Concrete"
+   },
+   "geometry": {
+    "x": -97.3,
+    "y": 44.229
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 4,
+    "NAME": "Fixture Cottonwood Access",
+    "LAKE": "",
+    "RAMP_TYPE": "Gravel"
+   },
+   "geometry": {
+    "x": -97.508,
+    "y": 44.348
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 5,
+    "NAME": "Fixture Flats Dam Ramp",
+    "LAKE": "Fixture Flats",
+    "RAMP_TYPE": "Concrete"
+   },
+   "geometry": {
+    "x": -97.185,
+    "y": 44.49
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 6,
+    "NAME": "Fixture Granite Ramp",
+    "LAKE": "Fixture Lake Granite",
+    "RAMP_TYPE": "Concrete"
+   },
+   "geometry": {
+    "x": -97.4,
+    "y": 44.535
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 7,
+    "NAME": "Fixture Heron Canoe Access",
+    "LAKE": "Fixture Lake Heron",
+    "RAMP_TYPE": "Carry-in only"
+   },
+   "geometry": {
+    "x": -96.99,
+    "y": 44.425
+   }
+  },
+  {
+   "attributes": {
+    "OBJECTID": 8,
+    "NAME": "Fixture Far Away Ramp",
+    "LAKE": "Fixture Unknown Water",
+    "RAMP_TYPE": "Concrete"
+   },
+   "geometry": {
+    "x": -97.59,
+    "y": 44.02
+   }
+  }
+ ]
+}

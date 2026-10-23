@@ -1,0 +1,49 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Bravo",
+   "id": "99020600",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.20905,
+     46.97244
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Charlie",
+   "id": "99030900",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.95726,
+     46.96092
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Golf",
+   "id": "99072100",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.2812,
+     47.10687
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Hotel",
+   "id": "99082400",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.94469,
+     47.08409
+    ]
+   }
+  }
+ ]
+}

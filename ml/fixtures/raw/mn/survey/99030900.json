@@ -1,0 +1,99 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Charlie",
+  "countyName": "Fixture County",
+  "areaAcres": 1180.0,
+  "maxDepth": 41,
+  "surveys": [
+   {
+    "surveyDate": "2001-06-04",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 296,
+      "CPUE": "19.73",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.27"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 138,
+      "CPUE": "9.20",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "2.40"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 70,
+      "CPUE": "4.67",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.10",
+      "quartileWeight": "0.08-0.16"
+     },
+     {
+      "species": "WTS",
+      "gear": "Standard gill nets",
+      "gearCount": 15,
+      "totalCatch": 39,
+      "CPUE": "2.60",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "1.61",
+      "quartileWeight": "1.26-2.34"
+     }
+    ]
+   },
+   {
+    "surveyDate": "2019-06-16",
+    "surveyType": "Standard Survey",
+    "fishCatchSummaries": [
+     {
+      "species": "WAE",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 102,
+      "CPUE": "8.50",
+      "quartileCount": "3.6-12.8",
+      "averageWeight": "1.69",
+      "quartileWeight": "0.91-1.69"
+     },
+     {
+      "species": "NOP",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 50,
+      "CPUE": "4.17",
+      "quartileCount": "2.2-8.0",
+      "averageWeight": "1.99"
+     },
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 177,
+      "CPUE": "14.75",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.15"
+     },
+     {
+      "species": "WTS",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 20,
+      "CPUE": "1.67",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "1.30",
+      "quartileWeight": "1.26-2.34"
+     }
+    ]
+   }
+  ]
+ }
+}

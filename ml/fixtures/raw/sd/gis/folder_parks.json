@@ -1,0 +1,13 @@
+{
+ "currentVersion": 10.9,
+ "services": [
+  {
+   "name": "Parks/Fixture_Campgrounds",
+   "type": "MapServer"
+  },
+  {
+   "name": "Parks/FixtureBoatRamps",
+   "type": "FeatureServer"
+  }
+ ]
+}

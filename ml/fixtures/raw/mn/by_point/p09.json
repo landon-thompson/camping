@@ -1,0 +1,49 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Quebec",
+   "id": "99175100",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.21451,
+     47.35705
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Romeo",
+   "id": "99185400",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.92812,
+     47.38949
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Victor",
+   "id": "99226600",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.23063,
+     47.56325
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Whiskey",
+   "id": "99236900",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.97539,
+     47.52482
+    ]
+   }
+  }
+ ]
+}

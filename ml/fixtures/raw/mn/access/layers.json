@@ -1,0 +1,17 @@
+{
+ "layers": [
+  {
+   "id": 0,
+   "name": "Water Access Sites",
+   "geometryType": "esriGeometryPoint",
+   "maxRecordCount": 20,
+   "objectIdField": "OBJECTID",
+   "fields": [
+    {
+     "name": "OBJECTID",
+     "type": "esriFieldTypeOID"
+    }
+   ]
+  }
+ ]
+}

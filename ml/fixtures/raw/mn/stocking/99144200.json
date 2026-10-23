@@ -1,0 +1,25 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "stocking": [
+   {
+    "year": 2017,
+    "species": "WAE",
+    "size": "fry",
+    "number": 176405
+   },
+   {
+    "year": 2018,
+    "species": "WAE",
+    "size": "fry",
+    "number": 164328
+   },
+   {
+    "year": 2020,
+    "species": "WAE",
+    "size": "fry",
+    "number": 183090
+   }
+  ]
+ }
+}

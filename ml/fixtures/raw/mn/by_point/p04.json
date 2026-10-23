@@ -1,0 +1,60 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Foxtrot",
+   "id": "99061800",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.42352,
+     47.07945
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Golf",
+   "id": "99072100",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.2812,
+     47.10687
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Kilo",
+   "id": "99113300",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.51874,
+     47.21016
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Lima",
+   "id": "99123600",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.20422,
+     47.25414
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Papa",
+   "id": "99164800",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -94.48176,
+     47.39771
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,54 @@
+{
+ "status": "OK",
+ "results": [
+  {
+   "name": "Fixture Lake Charlie",
+   "id": "99030900",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.95726,
+     46.96092
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Delta",
+   "id": "99041200",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.81041,
+     46.93842
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Echo",
+   "id": "99051500",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.58078,
+     46.99183
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake Hotel",
+   "id": "99082400",
+   "county": "Fixture County",
+   "point": {
+    "epsg:4326": [
+     -93.94469,
+     47.08409
+    ]
+   }
+  },
+  {
+   "name": "Fixture Lake India",
+   "id": "99092700",
+   "county": "Fixture County"
+  }
+ ]
+}

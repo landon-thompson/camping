@@ -1,0 +1,32 @@
+[
+ {
+  "name": "Minnesota DNR LakeFinder (lake surveys, lake list, stocking, special regulations)",
+  "url": "https://www.dnr.state.mn.us/lakefind/index.html",
+  "terms": "Official public data from the Minnesota DNR; shown with a link to each lake's LakeFinder page. Check the DNR site for terms of use (verify).",
+  "fetchedAt": "2026-10-01T00:00:00Z"
+ },
+ {
+  "name": "Minnesota DNR Public Water Access Sites (Minnesota Geospatial Commons)",
+  "url": "https://enterprise.gisdata.mn.gov/aghost/rest/services/us_mn_state_dnr/struc_water_access_sites/FeatureServer",
+  "terms": "Official public GIS data from the Minnesota DNR via the Minnesota Geospatial Commons (verify the dataset's license).",
+  "fetchedAt": "2026-10-01T00:00:00Z"
+ },
+ {
+  "name": "South Dakota GFP Fishery Reports (lake survey PDFs)",
+  "url": "https://apps.sd.gov/GF56FisheriesReports/",
+  "terms": "Official public reports from South Dakota Game, Fish and Parks; each estimate links its PDF (verify terms).",
+  "fetchedAt": "2026-10-01T00:00:00Z"
+ },
+ {
+  "name": "South Dakota GFP GIS (boat ramps / water access)",
+  "url": "https://gfpgis.sd.gov/arcgis/rest/services",
+  "terms": "Official public GIS services from South Dakota GFP (layer found by name at run time; verify).",
+  "fetchedAt": "2026-10-01T00:00:00Z"
+ },
+ {
+  "name": "OpenStreetMap via Overpass API (SD lakes, boat ramps)",
+  "url": "https://overpass-api.de/api/interpreter",
+  "terms": "© OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright). Community data: check on site.",
+  "fetchedAt": "2026-10-01T00:00:00Z"
+ }
+]

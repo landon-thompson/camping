@@ -1,0 +1,65 @@
+{
+ "status": "SUCCESS",
+ "result": {
+  "lakeName": "Fixture Lake Sierra",
+  "countyName": "Fixture County",
+  "areaAcres": 235.0,
+  "maxDepth": 81,
+  "averageWaterClarity": 7.7,
+  "surveys": [
+   {
+    "surveyDate": "2008-07-03",
+    "surveyType": "Population Assessment",
+    "fishCatchSummaries": [
+     {
+      "species": "YEP",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 208,
+      "CPUE": "17.33",
+      "quartileCount": "6.8-24.0",
+      "averageWeight": "0.14"
+     },
+     {
+      "species": "WTS",
+      "gear": "Standard gill nets",
+      "gearCount": 12,
+      "totalCatch": 12,
+      "CPUE": "1.00",
+      "quartileCount": "1.4-4.8",
+      "averageWeight": "3.43",
+      "quartileWeight": "1.26-2.34"
+     },
+     {
+      "species": "RKB",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 3,
+      "CPUE": "0.33",
+      "quartileCount": "0.9-3.2",
+      "averageWeight": "0.30"
+     },
+     {
+      "species": "HSF",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 4,
+      "CPUE": "0.44",
+      "quartileCount": "0.5-1.6",
+      "averageWeight": "0.23",
+      "quartileWeight": "0.17-0.33"
+     },
+     {
+      "species": "BLC",
+      "gear": "Standard trap nets",
+      "gearCount": 9,
+      "totalCatch": 104,
+      "CPUE": "11.56",
+      "quartileCount": "1.8-6.4",
+      "averageWeight": "0.42"
+     }
+    ]
+   }
+  ]
+ }
+}
