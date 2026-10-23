@@ -117,7 +117,11 @@ export interface SpeciesEstimate {
   /**
    * ~200 posterior samples of θ, sorted ascending, quantized to bytes on
    * tile.scale[code] and delta-encoded (first byte absolute, then
-   * differences), base64. Decode: decodeSamples() in the engine.
+   * differences), base64. Exactly:
+   *   byte_i = clamp(round((θ_i − lo) / (hi − lo) × 255), 0, 255)
+   *   d_0 = byte_0, d_i = byte_i − byte_{i−1}  (≥ 0 because sorted)
+   *   q = standard base64 (with padding) of the d bytes
+   *   decode: byte_i = Σ_{j≤i} d_j;  θ_i = lo + byte_i / 255 × (hi − lo)
    */
   q: string;
   evidence: Evidence;
@@ -193,4 +197,32 @@ export interface RecResult {
   modelVersion: string | null;
   /** Tiles needed for this origin that aren't on the phone yet. */
   missingTiles: string[];
+}
+
+// ------------------------------------------------------------ hooks (Agent C implements; Agent D consumes)
+// Module: src/features/lakerecs/index.ts exports
+//   useLakeRecs(ctx: Omit<RecContext, 'seed'> | null): UseLakeRecs
+//   useLakeModelStatus(): LakeModelStatus & { update(): Promise<void> }
+//   saveFishingLog(log: FishingLog): Promise<string>   // returns the record id
+//   recommendLakes(ctx: RecContext, data: { tiles: ModelTile[]; logs: FishingLog[]; manifest: ModelManifest | null }): RecResult
+//   DEFAULT_WEIGHTS
+
+export interface LakeModelStatus {
+  state: 'none' | 'loading' | 'ready' | 'updating' | 'offline' | 'error';
+  version: string | null;
+  createdAt: string | null;
+  tilesOnPhone: number;
+  /** Uncompressed bytes of model data stored on the phone. */
+  bytesOnPhone: number;
+  message?: string;
+}
+
+export interface UseLakeRecs {
+  loading: boolean;
+  result: RecResult | null;
+  status: LakeModelStatus;
+  /** Download the tiles this origin needs (no-op offline). */
+  download(): Promise<void>;
+  /** Adventurous mode: new random draw. */
+  rollAgain(): void;
 }

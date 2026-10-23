@@ -162,12 +162,14 @@ Unit tests for decode, scoring, modes (seeded Thompson), explanations, confidenc
 | Agent | Branch | Owns | Depends on |
 |---|---|---|---|
 | A — data pipeline | `lakerecs/a-data` | `ml/lakerecs/{fetch,sources,parse_*,tidy,schema}.py`, `ml/tests/test_*data*`, `ml/fixtures/raw/**`, `ml/README.md` (data part), `ml/requirements*.txt` | plan only |
-| B — model | `lakerecs/b-model` | `ml/lakerecs/{model,validate,export,encode}.py`, `ml/tests/test_*model*`, `.github/workflows/lake-model.yml`, sample output `public/lake-model/` (fixture-scale, clearly marked) | the §2 schema (builds a synthetic generator against it, so it can start in parallel) |
+| B — model | `lakerecs/b-model` | `ml/lakerecs/{model,validate,export,encode}.py`, `ml/tests/test_*model*`, `.github/workflows/lake-model.yml`, demo output in `ml/fixtures/demo-model/` only | the §2 schema (builds a synthetic generator against it, so it can start in parallel) |
 | C — engine | `lakerecs/c-engine` | `src/features/lakerecs/*.ts` (not `types.ts`), `fixtures/` | `types.ts` (exists) |
 | D — UI | `lakerecs/d-ui` | `src/features/lakerecs/*.tsx`, one-line inserts in `TripLakeSection.tsx` and `FishingPage.tsx`, a route in `features/gear/routes.tsx` | `types.ts`; C's functions (stubs in its own branch until C lands, swapped at integration) |
 | E — review/tests | `lakerecs/e-review` (from the integration branch) | tests anywhere, review notes | A–D merged into `lakerecs/integration` |
 
 All start from the `dev` commit that adds this plan. Each opens one PR into `dev`. Coordinator merges A–D into `lakerecs/integration` for E, applies E's fixes via the owning agent, then hands the PRs to the owner in order **C → D → A → B** (app first; the model files don't change app behaviour until present).
+
+**Demo data never ships.** The sandbox can't reach DNR/GFP, so agents use fixtures. Fixture lakes are named `Fixture Lake …` with synthetic numbers and live only under `ml/fixtures/` and `src/features/lakerecs/fixtures/`. `public/lake-model/` is written only by a real run (Actions or local with network). With no manifest published, the app says "Lake model not published yet".
 
 ## 8. Shared-file exceptions granted
 
