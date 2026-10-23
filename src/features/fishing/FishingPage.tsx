@@ -7,6 +7,7 @@ import type { NearbyLake } from '../../model/schemas';
 import { LakeFishing } from './LakeFishing';
 import { LakePicker } from './LakePicker';
 import { ToolsSubNav } from '../gear/nav';
+import { RecommendPanel } from '../lakerecs/ui/RecommendPanel';
 
 const KEY = 'fishingLakes';
 
@@ -38,6 +39,7 @@ export function FishingPage() {
     <div className="space-y-4">
       <PageTitle sub="Fish surveys for any Minnesota or South Dakota lake.">Fishing</PageTitle>
       <ToolsSubNav />
+      <RecommendPanel />
       <Card>
         <div role="group" aria-label="State" className="mb-3 grid grid-cols-2 gap-2">
           {(['MN', 'SD'] as const).map((st) => (

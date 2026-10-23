@@ -13,6 +13,7 @@ import { fetchOsmWaters, OSM_LABEL } from '../places/osm';
 import { LakeFishing } from './LakeFishing';
 import { SdLakeFishing } from './SdLakeFishing';
 import { sdLakeKey, sdWaterFromKey } from './sdReport';
+import { BestLakesCard } from '../lakerecs/ui/BestLakesCard';
 
 const miles = (km: number) => `${(km * 0.621371).toFixed(km < 16 ? 1 : 0)} mi`;
 const REFRESH_WHEN_MOVED_KM = 0.3;
@@ -147,6 +148,7 @@ export function TripLakeSection({ tripId }: { tripId: string }) {
 
   return (
     <div className="space-y-4">
+      <BestLakesCard tripId={tripId} />
       <Card
         title="Boat launches nearby"
         action={
